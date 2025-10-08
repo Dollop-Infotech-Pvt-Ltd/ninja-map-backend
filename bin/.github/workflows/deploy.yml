@@ -1,0 +1,50 @@
+name: Deploy Spring Boot to Cloudways
+
+on:
+  push:
+    branches:
+      - main  # change as needed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+      REMOTE_PATH: ${{ secrets.REMOTE_PATH }}
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v3
+
+    - name: ☕ Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: 🛠️ Build Spring Boot app
+      run: mvn clean package -DskipTests
+
+    - name: 📦 Rename JAR to ninja-map.jar
+      run: |
+        mkdir deployment
+        cp target/*.jar deployment/ninja-map.jar
+
+    - name: 🔑 Setup SSH
+      uses: webfactory/ssh-agent@v0.7.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: 🧹 Remove existing JAR
+      run: |
+        ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST "rm -f $REMOTE_PATH/ninja-map.jar"
+
+    - name: 🚀 Upload new JAR
+      run: |
+        scp -o StrictHostKeyChecking=no deployment/ninja-map.jar $SSH_USERNAME@$SSH_HOST:$REMOTE_PATH/
+
+    - name: 🔁 Restart ninja-map.service
+      run: |
+        ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST "sudo systemctl restart ninja-map.service"

@@ -15,6 +15,7 @@ public class AppConstants {
 	// ================== EMAIL ==================
 	public static final String EMAIL_ALREADY_REGISTERED = "Email already registered.";
 	public static final String MOBILE_ALREADY_REGISTERED = "Mobile already registered.";
+	public static final String FROM_EMAIL = "no-reply@yourdomain.com";
 
 	// ================== ROLE ==================
 	public static final String ROLE_NOT_FOUND = "Selected role does not exist.";
@@ -46,6 +47,9 @@ public class AppConstants {
 	public static final String EVENT_TYPE = "eventType";
 	public static final String PAYLOAD = "payload";
 	public static final String ID = "id";
+	public static final String SESSION_ID = "sessionId";
+	public static final String CURRENT_SESSION_ID = "currentSessionId";
+	public static final String KEEP_ONLY_CURRENT_SESSION = "keepOnlyCurrentSession";
 	public static final String PERMISSION_ID = "permissionId";
 	public static final String PERMISSION_TITLE = "permissionTitle";
 	public static final String PERMISSION_TYPE = "permissionType";
@@ -113,6 +117,8 @@ public class AppConstants {
 	public static final String ADMIN_ALREADY_EXISTS = "Admin already exists";
 	public static final String ADMIN_REACTIVATED = "Deleted admin account reactivated successfully.";
 	public static final String EMPLOYEE_ID_ALREADY_REGISTERED = "Employee ID already exists";
+	public static final String ADMIN_ACCOUNT_INACTIVE = "Admin account is inactive. Please contact super-admin.";
+	public static final String ADMIN_ACCOUNT_DELETED = "Admin account not found or deleted.";
 
 	// ================== TOKEN ==================
 	public static final String MISSING_TOKEN = "Missing token.";
@@ -124,6 +130,7 @@ public class AppConstants {
 	public static final String INVALID_TOKEN = "Invalid token.";
 	public static final String REFRESH_TOKEN_NOT_RECOGNIZED = "Refresh token is invalid, expired, or revoked.";
 	public static final String ACCESS_TOKEN_GENERATED = "Access token generated.";
+	public static final String ACCESS_TOKEN_FETCH = "Access Token fetched successfully";
 
 	// ================== SESSION ==================
 	public static final String SESSION_NOT_FOUND = "Session not found.";
@@ -215,6 +222,8 @@ public class AppConstants {
 	public static final String USER_STATUS_NOT_UPDATED = "User status could not be updated";
 	public static final String UNAUTHORIZED_DELETE = "You are not authorized to delete this account";
 	public static final String USER_ACCOUNT_DELETED_SUCCESSFULLY = "Your account deleted successfully";
+	public static final String USER_ACCOUNT_INACTIVE = "Your account is inactive. Please contact admin.";
+	public static final String USER_ACCOUNT_DELETED = "User account not found or deleted.";
 
 	// ================== BLOG_POST ==================
 	public static final String BLOG_POST_NOT_FOUND = "Blog post not found";

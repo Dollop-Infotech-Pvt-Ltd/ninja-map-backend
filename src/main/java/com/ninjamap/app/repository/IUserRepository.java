@@ -27,7 +27,7 @@ public interface IUserRepository extends JpaRepository<User, String> {
 	@Query("SELECT u FROM User u WHERE u.userId = :id AND u.isDeleted = false AND (:isActive IS NULL OR u.isActive = :isActive)")
 	Optional<User> findByIdAndOptionalIsActive(@Param("id") String id, @Param("isActive") Boolean isActive);
 
-	@Query("SELECT u FROM User u WHERE u.mobileNumber = :id AND u.isDeleted = false AND (:isActive IS NULL OR u.isActive = :isActive)")
+	@Query("SELECT u FROM User u WHERE u.mobileNumber = :mobileNumber AND u.isDeleted = false AND (:isActive IS NULL OR u.isActive = :isActive)")
 	Optional<User> findByMobileNumerAndOptionalIsActive(@Param("mobileNumber") String mobileNumber,
 			@Param("isActive") Boolean isActive);
 

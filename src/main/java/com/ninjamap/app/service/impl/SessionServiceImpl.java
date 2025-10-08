@@ -2,17 +2,21 @@ package com.ninjamap.app.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ninjamap.app.exception.BadRequestException;
 import com.ninjamap.app.exception.ResourceNotFoundException;
 import com.ninjamap.app.exception.UnauthorizedException;
 import com.ninjamap.app.model.Admin;
 import com.ninjamap.app.model.Session;
 import com.ninjamap.app.model.User;
 import com.ninjamap.app.payload.response.ApiResponse;
+import com.ninjamap.app.payload.response.SessionResponse;
 import com.ninjamap.app.repository.ISessionRepository;
 import com.ninjamap.app.service.IAdminService;
 import com.ninjamap.app.service.ISessionService;
@@ -23,8 +27,10 @@ import com.ninjamap.app.utils.JwtUtils;
 import com.ninjamap.app.utils.constants.AppConstants;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class SessionServiceImpl implements ISessionService {
 
 	private final ISessionRepository sessionRepository;
@@ -33,17 +39,6 @@ public class SessionServiceImpl implements ISessionService {
 	private final IUserService userService;
 	private final IAdminService adminService;
 	private final JwtUtils utils;
-
-	public SessionServiceImpl(ISessionRepository sessionRepository, HttpServletRequest httpServletRequest,
-			DeviceMetadataUtil deviceMetadataUtil, IUserService userService, IAdminService adminService,
-			JwtUtils utils) {
-		this.sessionRepository = sessionRepository;
-		this.httpServletRequest = httpServletRequest;
-		this.deviceMetadataUtil = deviceMetadataUtil;
-		this.userService = userService;
-		this.adminService = adminService;
-		this.utils = utils;
-	}
 
 	@Override
 	public void createSession(Object account, String accessToken, String refreshToken, String userAgent,
@@ -64,7 +59,7 @@ public class SessionServiceImpl implements ISessionService {
 			accountType = "ADMIN";
 			roleName = admin.getRole().getRoleName();
 		} else {
-			throw new IllegalArgumentException("Unknown account type for session creation");
+			throw new BadRequestException("Unknown account type for session creation");
 		}
 
 		Session session = Session.builder().accountId(accountId).accountType(accountType).roleName(roleName)
@@ -76,7 +71,7 @@ public class SessionServiceImpl implements ISessionService {
 	}
 
 	@Override
-	public List<Session> getActiveSessions() {
+	public List<SessionResponse> getActiveSessions() {
 		String token = utils.getToken(httpServletRequest);
 		String email = utils.extractEmail(token);
 
@@ -88,28 +83,34 @@ public class SessionServiceImpl implements ISessionService {
 		}
 
 		String accountId = account instanceof User user ? user.getUserId() : ((Admin) account).getAdminId();
-		return sessionRepository.findAllByAccountId(accountId);
+		List<Session> sessions = sessionRepository.findAllByAccountId(accountId);
+
+		return sessions.stream().map(session -> SessionResponse.builder().id(session.getId())
+				.accountId(session.getAccountId()).roleName(session.getRoleName()).deviceType(session.getDeviceType())
+				.ipAddress(session.getIpAddress()).location(session.getLocation()).loginTime(session.getLoginTime())
+				.lastActiveTime(session.getLastActiveTime()).userAgent(session.getUserAgent()).build()).toList();
 	}
 
 	@Transactional
 	@Override
-	public ApiResponse logout() {
+	public ResponseEntity<ApiResponse> logout() {
 		String token = utils.getToken(httpServletRequest);
 
 		if (!utils.isAccessToken(token)) {
 			throw new UnauthorizedException(AppConstants.INVALID_TOKEN_TYPE);
 		}
+		System.err.println(token);
 
 		Session session = sessionRepository.findByAccessToken(token)
 				.orElseThrow(() -> new UnauthorizedException(AppConstants.SESSION_ALREADY_LOGGED_OUT));
-
+		System.err.println(session);
 		sessionRepository.delete(session);
-		return AppUtils.buildSuccessResponse(AppConstants.LOGOUT);
+		return ResponseEntity.ok(AppUtils.buildSuccessResponse(AppConstants.LOGOUT));
 	}
 
 	@Transactional
 	@Override
-	public ApiResponse logoutBySessionControl(String currentSessionId, boolean keepOnlyCurrentSession) {
+	public ResponseEntity<ApiResponse> logoutBySessionControl(String currentSessionId, Boolean keepOnlyCurrentSession) {
 		Session currentSession = sessionRepository.findById(currentSessionId)
 				.orElseThrow(() -> new ResourceNotFoundException(AppConstants.SESSION_NOT_FOUND));
 
@@ -121,10 +122,9 @@ public class SessionServiceImpl implements ISessionService {
 			sessionRepository.delete(currentSession);
 		}
 
-		String msg = keepOnlyCurrentSession ? AppConstants.ALL_SESSION_LOGGED_OUT
-				: AppConstants.CURRENT_SESSION_LOGGED_OUT;
-
-		return AppUtils.buildSuccessResponse(msg);
+		return ResponseEntity
+				.ok(AppUtils.buildSuccessResponse(keepOnlyCurrentSession ? AppConstants.ALL_SESSION_LOGGED_OUT
+						: AppConstants.CURRENT_SESSION_LOGGED_OUT));
 	}
 
 	@Override
@@ -140,5 +140,17 @@ public class SessionServiceImpl implements ISessionService {
 
 		session.setAccessToken(newAccessToken);
 		sessionRepository.save(session);
+	}
+
+	@Override
+	public ResponseEntity<ApiResponse> getTokenFromId(String sessionId) {
+		Session session = sessionRepository.findById(sessionId)
+				.orElseThrow(() -> new ResourceNotFoundException(AppConstants.SESSION_NOT_FOUND));
+
+		Map<String, String> tokenData = Map.of(AppConstants.ACCESS_TOKEN, session.getAccessToken()
+//				,AppConstants.REFRESH_TOKEN, session.getRefreshToken()
+		);
+
+		return ResponseEntity.ok(AppUtils.buildSuccessResponse(AppConstants.ACCESS_TOKEN_FETCH, tokenData));
 	}
 }

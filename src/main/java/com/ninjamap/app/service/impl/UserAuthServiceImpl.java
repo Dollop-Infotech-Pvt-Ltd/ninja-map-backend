@@ -258,7 +258,7 @@ public class UserAuthServiceImpl implements IUserAuthService {
 //		SendEmailRequest emailRequest = SendEmailRequest.builder().to(email).username(username).otp(otp)
 //				.otpType(otpType).templateType(templateType)
 //				.dataTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy hh:mm a"))).build();
-//		notificationProducer.sendMessage(kafkaTopics.getEmailNotificationTopic(), emailRequest, OutboxType.OTP_EMAIL);
+//		notificationProducer.sendMessage(kafkaTopics.getEmailNotificationTopic(), emailRequest, OutboxType.EMAIL);
 //	}
 
 	private ApiResponse sendOtpAndGenerateAuthToken(String email, String fullName, String role, OtpType otpType,

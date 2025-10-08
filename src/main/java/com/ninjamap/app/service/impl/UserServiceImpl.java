@@ -76,7 +76,9 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		User user = getUserByEmailAndIsActive(username, true);
+//		User user = getUserByEmailAndIsActive(username, null);
+		User user = userRepository.findByEmail(username)
+				.orElseThrow(() -> new UsernameNotFoundException(AppConstants.USER_NOT_FOUND));
 		List<SimpleGrantedAuthority> authorities = user.getRole().getPermissions().stream()
 				.map(p -> new SimpleGrantedAuthority(p.getResource() + "." + p.getAction()))
 				.collect(Collectors.toList());
@@ -193,6 +195,9 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
 	@Override
 	public ResponseEntity<ApiResponse> sendDeleteOtp(String mobileNumber) {
 		User user = getUserByMobileNumberAndIsActive(mobileNumber, true);
+		System.err.println("TOKEN ID => " + getCurrectUserFromToken().getId());
+		System.err.println("USER ID => " + user.getUserId());
+		System.err.println("EQUALS OR NOT => " + user.getUserId().equals(getCurrectUserFromToken().getId()));
 
 		// Ensure the logged-in user is the owner of this mobile number
 		if (!user.getUserId().equals(getCurrectUserFromToken().getId()))

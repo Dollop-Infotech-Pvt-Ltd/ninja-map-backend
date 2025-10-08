@@ -104,7 +104,7 @@ public class UserController {
 	@PreAuthorize("hasAuthority('USER_MANAGEMENT.DELETE_USERS')")
 	@PostMapping("/delete/verify-otp")
 	public ResponseEntity<ApiResponse> verifyOtpAndDelete(
-			@RequestParam(name = AppConstants.ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String otp) {
+			@RequestParam(name = AppConstants.OTP, required = true) String otp) {
 		return userService.verifyOtpAndDelete(otp);
 	}
 

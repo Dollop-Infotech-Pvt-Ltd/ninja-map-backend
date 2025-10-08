@@ -73,6 +73,12 @@ public class DataSeeder implements CommandLineRunner {
 		permissions.add(Permission.builder().resource("ROLE_MANAGEMENT").type(PermissionType.WRITE)
 				.action("ASSIGN_ROLES").build());
 
+		// ====================== SESSION MANAGEMENT ======================
+		permissions.add(Permission.builder().resource("SESSION_MANAGEMENT").type(PermissionType.READ)
+				.action("VIEW_SESSION").build());
+		permissions.add(Permission.builder().resource("SESSION_MANAGEMENT").type(PermissionType.WRITE)
+				.action("LOGOUT_SESSION").build());
+
 		// ====================== POLICY MANAGEMENT ======================
 		permissions.add(Permission.builder().resource("PERMISSION_MANAGEMENT").type(PermissionType.READ)
 				.action("CREATE_PERMISSIONS").build());

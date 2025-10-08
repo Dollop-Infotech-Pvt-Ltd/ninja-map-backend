@@ -158,7 +158,8 @@ public class GlobalExceptionHandler {
 	// Handle custom file validation exceptions
 	@ExceptionHandler(FileValidationException.class)
 	public ResponseEntity<ErrorResponse> handleFileValidationException(FileValidationException ex) {
-		return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+//		ex.printStackTrace();
+		return buildErrorResponse(HttpStatus.PAYLOAD_TOO_LARGE, ex.getMessage());
 	}
 
 	// Handle any other runtime exceptions
@@ -169,6 +170,6 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ErrorResponse> handleMaxSizeException(MaxUploadSizeExceededException ex) {
 		long maxSizeInMB = 10; // match your Spring configuration
 		String message = "File size exceeds the maximum allowed limit of " + maxSizeInMB + " MB.";
-		return buildErrorResponse(HttpStatus.BAD_REQUEST, message);
+		return buildErrorResponse(HttpStatus.PAYLOAD_TOO_LARGE, message);
 	}
 }

@@ -19,7 +19,7 @@ public class ValidationConstants {
 	// Contact Number Validation
 	public static final String MOBILE_NUMBER_REQUIRED = "Mobile number is required";
 	public static final int MOBILE_NUMBER_LENGTH = 10;
-	public static final String MOBILE_NUMBER_PATTERN = "^[0-9]{10}$"; // Matches only number
+	public static final String MOBILE_NUMBER_PATTERN = "^(?:\\+234|234|0)?[789][01]\\d{8}$"; // Matches only number
 	public static final String MOBILE_NUMBER_PATTERN_MESSAGE = "Mobile number is invalid";
 
 	// Password Validation

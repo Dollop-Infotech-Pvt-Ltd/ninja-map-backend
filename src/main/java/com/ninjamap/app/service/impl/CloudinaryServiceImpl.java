@@ -9,7 +9,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import com.ninjamap.app.exception.FileValidationException;
 import com.ninjamap.app.service.ICloudinaryService;
 
 @Service
@@ -18,11 +17,11 @@ public class CloudinaryServiceImpl implements ICloudinaryService {
 	@Autowired
 	private Cloudinary cloudinary;
 
-	private static final long MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+//	private static final long MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 	@Override
 	public String uploadFile(MultipartFile file, String folderName) {
-		validateFile(file);
+//		validateFile(file);
 
 		try {
 			String originalFilename = file.getOriginalFilename();
@@ -82,15 +81,15 @@ public class CloudinaryServiceImpl implements ICloudinaryService {
 				|| extension.equals("csv");
 	}
 
-	private void validateFile(MultipartFile file) {
-		String filename = file.getOriginalFilename();
-		if (filename == null || !filename.contains(".")) {
-			throw new FileValidationException("Invalid file name: " + filename);
-		}
-
-		if (file.getSize() > MAX_FILE_SIZE_BYTES) {
-			long maxSizeInMB = MAX_FILE_SIZE_BYTES / (1024 * 1024);
-			throw new FileValidationException("File size exceeds maximum allowed limit of " + maxSizeInMB + " MB.");
-		}
-	}
+//	private void validateFile(MultipartFile file) {
+//		String filename = file.getOriginalFilename();
+//		if (filename == null || !filename.contains(".")) {
+//			throw new FileValidationException("Invalid file name: " + filename);
+//		}
+//
+//		if (file.getSize() > MAX_FILE_SIZE_BYTES) {
+//			long maxSizeInMB = MAX_FILE_SIZE_BYTES / (1024 * 1024);
+//			throw new FileValidationException("File size exceeds maximum allowed limit of " + maxSizeInMB + " MB.");
+//		}
+//	}
 }

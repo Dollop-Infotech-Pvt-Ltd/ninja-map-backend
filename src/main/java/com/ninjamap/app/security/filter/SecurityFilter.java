@@ -1,6 +1,8 @@
 package com.ninjamap.app.security.filter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -30,67 +32,61 @@ import lombok.AllArgsConstructor;
 @Component
 @AllArgsConstructor
 public class SecurityFilter extends OncePerRequestFilter {
-	private final JwtUtils jwtUtils;
 
+	private final JwtUtils jwtUtils;
 	private final UserServiceImpl userDetailsService;
 	private final AdminServiceImpl adminDetailsService;
 	private final IUserRepository userRepository;
 	private final IAdminRepository adminRepository;
-
 	private final ISessionRepository sessionRepository;
 
+	/**
+	 * Main filter method that intercepts every request (except OPTIONS) and
+	 * validates JWT tokens for User or Admin.
+	 */
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
 			throws ServletException, IOException {
+
 		String authHeader = request.getHeader("Authorization");
 		System.err.println("REQUEST URI ===> " + request.getRequestURI());
-//		System.err.println("..authheader in filter " + request.getHeader("X-XSRF-TOKEN"));
 
+		// Only process Bearer tokens
 		if (authHeader != null && authHeader.startsWith("Bearer ")) {
 			String token = authHeader.substring(7);
-			System.err.println(".........token " + token);
+			System.err.println("Token found: " + token);
 
 			try {
+				// Validate token type and expiration
 				if (jwtUtils.extractTokenType(token).equals(TokenType.ACCESS_TOKEN)
 						&& !jwtUtils.isTokenExpired(token)) {
 
-					String email = jwtUtils.extractEmail(token);
-					String role = jwtUtils.extractRole(token);
-					UserDetails userDetails;
-					boolean isActive;
-					boolean isDeleted;
-					if (role != null && "USER".equals(role)) {
-						User user = userRepository.findByEmail(email)
-								.orElseThrow(() -> new ResourceNotFoundException(AppConstants.USER_NOT_FOUND));
-						isActive = Boolean.TRUE.equals(user.getIsActive());
-						isDeleted = Boolean.TRUE.equals(user.getIsDeleted());
-						userDetails = userDetailsService.loadUserByUsername(email);
-						System.err.println("USER DETAILS ==> " + userDetails);
-					} else {
-						Admin admin = adminRepository.findByEmail(email)
-								.orElseThrow(() -> new ResourceNotFoundException(AppConstants.ADMIN_NOT_FOUND));
-						isActive = Boolean.TRUE.equals(admin.getIsActive());
-						isDeleted = Boolean.TRUE.equals(admin.getIsDeleted());
-						userDetails = adminDetailsService.loadUserByUsername(email);
-					}
-
-					// Logout if inactive or deleted
-					if (!isActive || isDeleted) {
-						sessionRepository.findByAccessToken(token).ifPresent(sessionRepository::delete);
-						SecurityContextHolder.clearContext();
-						response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-						response.getWriter().write("User inactive or deleted. Logged out.");
+					// Check if token exists in session repository
+					Optional<?> sessionOpt = sessionRepository.findByAccessToken(token);
+					if (sessionOpt.isEmpty()) {
+						respondUnauthorized(response, "Your session has expired or you have been logged out.");
 						return;
 					}
 
+					String email = jwtUtils.extractEmail(token);
+					String role = jwtUtils.extractRole(token);
+
+					// Get UserDetails for either User or Admin
+					AccountInfo accountInfo = getAccountInfoByRole(email, role, response);
+					if (accountInfo == null)
+						return; // Response already sent
+
+					UserDetails userDetails = accountInfo.userDetails;
+
+					// Set Spring Security context
 					UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
 							userDetails.getUsername(), null, userDetails.getAuthorities());
 					authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 					SecurityContextHolder.getContext().setAuthentication(authentication);
 
-					// --- SESSION MANAGEMENT ---
+					// Update session last active time
 					sessionRepository.findByAccessToken(token).ifPresent(session -> {
-						session.setLastActiveTime(java.time.LocalDateTime.now());
+						session.setLastActiveTime(LocalDateTime.now());
 						sessionRepository.save(session);
 					});
 				}
@@ -100,11 +96,77 @@ public class SecurityFilter extends OncePerRequestFilter {
 			}
 		}
 
+		// Proceed to next filter in chain
 		chain.doFilter(request, response);
+
 	}
 
+	/**
+	 * Skip filtering for OPTIONS requests (CORS preflight)
+	 */
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) {
 		return "OPTIONS".equalsIgnoreCase(request.getMethod());
+	}
+
+	/**
+	 * Sends 401 Unauthorized response and clears security context
+	 */
+	private void respondUnauthorized(HttpServletResponse response, String message) throws IOException {
+		SecurityContextHolder.clearContext();
+		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+		response.getWriter().write(message);
+	}
+
+	/**
+	 * Helper record to wrap UserDetails (immutable)
+	 */
+	private record AccountInfo(UserDetails userDetails) {
+	}
+
+	/**
+	 * Retrieve UserDetails for either User or Admin based on role. Also handles
+	 * inactive or deleted accounts with appropriate HTTP response.
+	 */
+	private AccountInfo getAccountInfoByRole(String email, String role, HttpServletResponse response)
+			throws IOException {
+
+		if ("USER".equals(role)) {
+			// Fetch user by email
+			User user = userRepository.findByEmail(email)
+					.orElseThrow(() -> new ResourceNotFoundException(AppConstants.USER_NOT_FOUND));
+
+			// Check account status
+			if (!Boolean.TRUE.equals(user.getIsActive()) && !Boolean.TRUE.equals(user.getIsDeleted())) {
+				response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+				response.getWriter().write(AppConstants.USER_ACCOUNT_INACTIVE);
+				return null;
+			} else if (!Boolean.TRUE.equals(user.getIsActive()) && Boolean.TRUE.equals(user.getIsDeleted())) {
+				response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+				response.getWriter().write(AppConstants.USER_ACCOUNT_DELETED);
+				return null;
+			}
+
+			// Load UserDetails
+			return new AccountInfo(userDetailsService.loadUserByUsername(email));
+		} else {
+			// Fetch admin by email
+			Admin admin = adminRepository.findByEmail(email)
+					.orElseThrow(() -> new ResourceNotFoundException(AppConstants.ADMIN_NOT_FOUND));
+
+			// Check account status
+			if (!Boolean.TRUE.equals(admin.getIsActive()) && !Boolean.TRUE.equals(admin.getIsDeleted())) {
+				response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+				response.getWriter().write(AppConstants.ADMIN_ACCOUNT_INACTIVE);
+				return null;
+			} else if (!Boolean.TRUE.equals(admin.getIsActive()) && Boolean.TRUE.equals(admin.getIsDeleted())) {
+				response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+				response.getWriter().write(AppConstants.ADMIN_ACCOUNT_DELETED);
+				return null;
+			}
+
+			// Load UserDetails
+			return new AccountInfo(adminDetailsService.loadUserByUsername(email));
+		}
 	}
 }

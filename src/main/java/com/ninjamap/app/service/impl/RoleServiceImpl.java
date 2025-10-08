@@ -1,6 +1,11 @@
 package com.ninjamap.app.service.impl;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
@@ -15,6 +20,7 @@ import com.ninjamap.app.model.Roles;
 import com.ninjamap.app.payload.request.RoleRequest;
 import com.ninjamap.app.payload.request.UpdateRoleRequest;
 import com.ninjamap.app.payload.response.ApiResponse;
+import com.ninjamap.app.payload.response.PermissionResponse;
 import com.ninjamap.app.payload.response.RoleResponse;
 import com.ninjamap.app.repository.IPermissionRepository;
 import com.ninjamap.app.repository.IRolesRepository;
@@ -159,8 +165,20 @@ public class RoleServiceImpl implements IRoleService {
 		return ResponseEntity.ok(AppUtils.buildSuccessResponse(AppConstants.ROLE_DELETE_SUCCESS));
 	}
 
+//	private RoleResponse mapToRoleResponse(Roles role) {
+//		return RoleResponse.builder().roleId(role.getRoleId()).roleName(role.getRoleName())
+//				.description(role.getDescription()).build();
+//	}
 	private RoleResponse mapToRoleResponse(Roles role) {
+		List<PermissionResponse> permissionResponses = role.getPermissions().stream()
+				.map(permission -> PermissionResponse.builder().permissionId(permission.getPermissionId())
+						.resource(permission.getResource()).type(permission.getType()).action(permission.getAction())
+						.build())
+				.toList();
+
 		return RoleResponse.builder().roleId(role.getRoleId()).roleName(role.getRoleName())
-				.description(role.getDescription()).build();
+				.description(role.getDescription()).permissions(permissionResponses).created(role.getCreatedDate())
+				.build();
 	}
+
 }

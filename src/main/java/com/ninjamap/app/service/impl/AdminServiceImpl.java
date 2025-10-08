@@ -119,7 +119,8 @@ public class AdminServiceImpl implements IAdminService, UserDetailsService {
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		Admin admin = getAdminByEmailAndIsActive(username, true);
+		Admin admin = adminRepository.findByEmail(username)
+				.orElseThrow(() -> new UsernameNotFoundException(AppConstants.ADMIN_NOT_FOUND));
 		List<SimpleGrantedAuthority> authorities = admin.getRole().getPermissions().stream()
 				.map(p -> new SimpleGrantedAuthority(p.getResource() + "." + p.getAction()))
 				.collect(Collectors.toList());

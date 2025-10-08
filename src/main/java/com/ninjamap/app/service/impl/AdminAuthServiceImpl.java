@@ -96,7 +96,7 @@ public class AdminAuthServiceImpl implements IAdminAuthService {
 //				SendEmailRequest emailRequest = mapToSendEmailRequest(admin.getEmail(), admin.getRole().getRoleName(),
 //						null, OtpType.LOGIN, EmailTemplateType.LOGIN_SUCCESS_NOTIFICATION);
 //				notificationProducer.sendMessage(kafkaTopics.getEmailNotificationTopic(), emailRequest,
-//						OutboxType.OTP_EMAIL);
+//						OutboxType.EMAIL);
 //			}
 
 			return response;
@@ -150,7 +150,7 @@ public class AdminAuthServiceImpl implements IAdminAuthService {
 		// Send notification email for password update
 //		SendEmailRequest emailRequest = mapToSendEmailRequest(admin.getEmail(), admin.getRole().getRoleName(), null,
 //				OtpType.FORGET_PASSWORD, EmailTemplateType.PASSWORD_UPDATE_NOTIFICATION);
-//		notificationProducer.sendMessage(kafkaTopics.getEmailNotificationTopic(), emailRequest, OutboxType.OTP_EMAIL);
+//		notificationProducer.sendMessage(kafkaTopics.getEmailNotificationTopic(), emailRequest, OutboxType.EMAIL);
 
 		return AppUtils.buildSuccessResponse(AppConstants.PASSWORD_RESET_SUCCESS);
 	}
@@ -201,7 +201,7 @@ public class AdminAuthServiceImpl implements IAdminAuthService {
 		// Send OTP email
 //		SendEmailRequest emailRequest = mapToSendEmailRequest(admin.getEmail(), admin.getRole().getRoleName(), otp,
 //				otpType, templateType);
-//		notificationProducer.sendMessage(kafkaTopics.getEmailNotificationTopic(), emailRequest, OutboxType.OTP_EMAIL);
+//		notificationProducer.sendMessage(kafkaTopics.getEmailNotificationTopic(), emailRequest, OutboxType.EMAIL);
 
 		Map<String, Object> res = Map.of(AppConstants.AUTH_TOKEN, token, AppConstants.OTP, otp);
 		return AppUtils
