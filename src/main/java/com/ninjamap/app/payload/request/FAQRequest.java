@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import com.ninjamap.app.utils.annotations.TrimValidator;
 import com.ninjamap.app.utils.constants.ValidationConstants;
 
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@TrimValidator
 public class FAQRequest {
 
 	@NotBlank(message = "Category is required")

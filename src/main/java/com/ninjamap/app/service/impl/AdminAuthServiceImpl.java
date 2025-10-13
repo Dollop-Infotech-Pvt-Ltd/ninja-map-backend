@@ -1,7 +1,5 @@
 package com.ninjamap.app.service.impl;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Set;
 
@@ -10,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import com.ninjamap.app.enums.EmailTemplateType;
 import com.ninjamap.app.enums.OtpType;
-import com.ninjamap.app.enums.OutboxType;
 import com.ninjamap.app.enums.TokenType;
 import com.ninjamap.app.exception.BadRequestException;
 import com.ninjamap.app.exception.ForbiddenException;
@@ -24,13 +21,12 @@ import com.ninjamap.app.payload.request.ForgetPasswordRequest;
 import com.ninjamap.app.payload.request.LoginRequest;
 import com.ninjamap.app.payload.request.OtpRequest;
 import com.ninjamap.app.payload.request.ResetPasswordRequest;
-import com.ninjamap.app.payload.request.SendEmailRequest;
 import com.ninjamap.app.payload.response.ApiResponse;
+import com.ninjamap.app.repository.ISessionRepository;
 import com.ninjamap.app.service.IAdminAuthService;
 import com.ninjamap.app.service.IAdminService;
 import com.ninjamap.app.service.IOtpService;
 import com.ninjamap.app.service.ISessionService;
-import com.ninjamap.app.repository.ISessionRepository;
 import com.ninjamap.app.utils.AppUtils;
 import com.ninjamap.app.utils.AuthServiceHelper;
 import com.ninjamap.app.utils.DeviceMetadataUtil;
@@ -158,24 +154,40 @@ public class AdminAuthServiceImpl implements IAdminAuthService {
 	// -------------------- REFRESH TOKEN -----------------------
 	@Override
 	public ApiResponse refreshToken() {
+		// Extract refresh token from request header
 		String refreshToken = jwtUtils.getToken(httpRequest);
 
-		if (!jwtUtils.validateRefreshToken(refreshToken))
+		// Validate the refresh token
+		if (!jwtUtils.validateRefreshToken(refreshToken)) {
 			throw new UnauthorizedException(AppConstants.INVALID_TOKEN);
+		}
 
+		// Fetch session associated with the refresh token
 		Session session = sessionRepository.findByRefreshToken(refreshToken)
 				.orElseThrow(() -> new ResourceNotFoundException(AppConstants.REFRESH_TOKEN_NOT_RECOGNIZED));
 
+		// Ensure session belongs to an admin
+		if (session.getAdmin() == null) {
+			throw new ForbiddenException("Refresh token does not belong to an admin");
+		}
+
+		// Fetch admin by email
 		String email = jwtUtils.extractEmail(refreshToken);
 		Admin admin = adminService.getAdminByEmailAndIsActive(email, true);
 
-		if (!session.getAccountId().equals(admin.getAdminId()))
+		// Verify the session actually belongs to this admin
+		if (!session.getAdmin().getAdminId().equals(admin.getAdminId())) {
 			throw new ForbiddenException(AppConstants.TOKEN_NOT_BELONG_TO_USER);
+		}
 
+		// Generate a new access token
 		String newAccessToken = jwtUtils.generateToken(email, admin.getRole().getRoleName(), TokenType.ACCESS_TOKEN,
 				OtpType.LOGIN, true);
+
+		// Update the session with the new access token
 		sessionService.updateAccessTokenForRefreshToken(admin, refreshToken, newAccessToken);
 
+		// Return the new access token in response
 		return AppUtils.buildSuccessResponse(AppConstants.ACCESS_TOKEN_GENERATED, newAccessToken);
 	}
 

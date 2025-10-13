@@ -170,21 +170,35 @@ public class UserAuthServiceImpl implements IUserAuthService {
 	// -------------------- REFRESH TOKEN -----------------------
 	@Override
 	public ApiResponse refreshToken() {
+		// Extract refresh token from request header
 		String refreshToken = jwtUtils.getToken(httpRequest);
-		if (!jwtUtils.validateRefreshToken(refreshToken))
-			throw new UnauthorizedException(AppConstants.INVALID_TOKEN);
 
+		// Validate refresh token
+		if (!jwtUtils.validateRefreshToken(refreshToken)) {
+			throw new UnauthorizedException(AppConstants.INVALID_TOKEN);
+		}
+
+		// Fetch session associated with this refresh token
 		Session session = sessionRepository.findByRefreshToken(refreshToken)
 				.orElseThrow(() -> new ResourceNotFoundException(AppConstants.REFRESH_TOKEN_NOT_RECOGNIZED));
 
-		String email = jwtUtils.extractEmail(refreshToken);
-		User user = userService.getUserByEmailAndIsActive(email, true);
+		// Ensure the session belongs to a user
+		if (session.getUser() == null) {
+			throw new ForbiddenException("Refresh token does not belong to a user");
+		}
 
-		if (!session.getAccountId().equals(user.getUserId()))
+		User user = userService.getUserByEmailAndIsActive(jwtUtils.extractEmail(refreshToken), true);
+
+		// Ensure the session actually belongs to this user
+		if (!session.getUser().getUserId().equals(user.getUserId())) {
 			throw new ForbiddenException(AppConstants.TOKEN_NOT_BELONG_TO_USER);
+		}
 
-		String newAccessToken = jwtUtils.generateToken(email, user.getRole().getRoleName(), TokenType.ACCESS_TOKEN,
-				OtpType.LOGIN, true);
+		// Generate new access token
+		String newAccessToken = jwtUtils.generateToken(user.getEmail(), user.getRole().getRoleName(),
+				TokenType.ACCESS_TOKEN, OtpType.LOGIN, true);
+
+		// Update session with the new access token
 		sessionService.updateAccessTokenForRefreshToken(user, refreshToken, newAccessToken);
 
 		return AppUtils.buildSuccessResponse(AppConstants.ACCESS_TOKEN_GENERATED, newAccessToken);

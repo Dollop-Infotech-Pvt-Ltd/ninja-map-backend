@@ -15,8 +15,6 @@ import com.ninjamap.app.enums.BlogCategory;
 import com.ninjamap.app.payload.request.BlogPostRequest;
 import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.response.ApiResponse;
-import com.ninjamap.app.payload.response.BlogPostResponse;
-import com.ninjamap.app.payload.response.PaginatedResponse;
 import com.ninjamap.app.service.IBlogPostService;
 import com.ninjamap.app.utils.annotations.UUIDValidator;
 import com.ninjamap.app.utils.constants.AppConstants;
@@ -31,56 +29,87 @@ import lombok.RequiredArgsConstructor;
 @Validated
 public class BlogPostController {
 
-	private final IBlogPostService blogPostService;
+    private final IBlogPostService blogPostService;
 
-	// Create new blog post
-	@PreAuthorize("hasAuthority('BLOG_POST_MANAGEMENT.CREATE_BLOGS')")
-	@PostMapping("/post")
-	public ResponseEntity<ApiResponse> createBlogPost(@Valid BlogPostRequest request) {
-		return blogPostService.createPost(request);
-	}
+    // ========================= CREATE BLOG =========================
+    @PreAuthorize("hasAuthority('BLOG_POST_MANAGEMENT.CREATE_BLOGS')")
+    @PostMapping("/post")
+    public ResponseEntity<ApiResponse> createBlogPost(@Valid BlogPostRequest request) {
+        return blogPostService.createPost(request);
+    }
 
-	// Update existing blog post
-	@PreAuthorize("hasAuthority('BLOG_POST_MANAGEMENT.EDIT_BLOGS')")
-	@PutMapping("/update")
-	public ResponseEntity<ApiResponse> updateBlogPost(
-			@RequestParam(name = AppConstants.ID, required = true) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String id,
-			@Valid BlogPostRequest request) {
-		return blogPostService.updateBlogPost(id, request);
-	}
+    // ========================= UPDATE BLOG =========================
+    @PreAuthorize("hasAuthority('BLOG_POST_MANAGEMENT.EDIT_BLOGS')")
+    @PutMapping("/update")
+    public ResponseEntity<ApiResponse> updateBlogPost(
+            @RequestParam(name = AppConstants.ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String id,
+            @Valid BlogPostRequest request) {
+        return blogPostService.updateBlogPost(id, request);
+    }
 
-	// Soft delete a blog post
-	@PreAuthorize("hasAuthority('BLOG_POST_MANAGEMENT.DELETE_BLOGS')")
+    // ========================= DELETE BLOG =========================
+    @PreAuthorize("hasAuthority('BLOG_POST_MANAGEMENT.DELETE_BLOGS')")
+    @DeleteMapping("/delete")
+    public ResponseEntity<ApiResponse> deleteBlogPost(
+            @RequestParam(name = AppConstants.ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String id) {
+        return blogPostService.deleteBlogPost(id);
+    }
 
-	@DeleteMapping("/delete")
-	public ResponseEntity<ApiResponse> deleteBlogPost(
-			@RequestParam(name = AppConstants.ID, required = true) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String id) {
-		return blogPostService.deleteBlogPost(id);
-	}
+    // ========================= GET BLOG BY ID =========================
+    @PreAuthorize("hasAuthority('BLOG_POST_MANAGEMENT.VIEW_BLOGS')")
+    @GetMapping("/get")
+    public ResponseEntity<ApiResponse> getBlogPostById(
+            @RequestParam(name = AppConstants.ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String id) {
+        return blogPostService.getPostById(id);
+    }
 
-	// Get single blog post by ID
-	@GetMapping("/get")
-	public ResponseEntity<ApiResponse> getBlogPostById(
-			@RequestParam(name = AppConstants.ID, required = true) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String id) {
-		return blogPostService.getPostById(id);
-	}
+    // ========================= GET ALL BLOGS =========================
+    @GetMapping("/get-all")
+    public ResponseEntity<ApiResponse> getAllBlogPostsForHomepage(
+            @RequestParam(required = false) BlogCategory category,
+            @RequestParam(name = AppConstants.PAGE_SIZE) Integer pageSize,
+            @RequestParam(name = AppConstants.PAGE_NUMBER) Integer pageNumber,
+            @RequestParam(name = AppConstants.SORT_DIRECTION, defaultValue = AppConstants.DESC, required = false) String sortDirection,
+            @RequestParam(name = AppConstants.SORT_KEY, required = false) String sortKey) {
 
-	// Get all posts with optional category filter and pagination
-	@GetMapping("/get-all")
-	public ResponseEntity<PaginatedResponse<BlogPostResponse>> getAllBlogPosts(
-			@RequestParam(required = false) BlogCategory category,
-			@RequestParam(name = AppConstants.PAGE_SIZE) Integer pageSize,
-			@RequestParam(name = AppConstants.PAGE_NUMBER) Integer pageNumber,
-			@RequestParam(name = AppConstants.SORT_DIRECTION, defaultValue = AppConstants.DESC, required = false) String sortDirection,
-			@RequestParam(name = AppConstants.SORT_KEY, required = false) String sortKey
-//			,@RequestParam(name = AppConstants.SEARCH_VALUE, required = false) String searchValue
-	) {
+        PaginationRequest paginationRequest = PaginationRequest.builder()
+                .pageSize(pageSize)
+                .pageNumber(pageNumber)
+                .sortDirection(sortDirection)
+                .sortKey(sortKey)
+                .build();
 
-		PaginationRequest paginationRequest = PaginationRequest.builder().pageSize(pageSize).pageNumber(pageNumber)
-				.sortDirection(sortDirection).sortKey(sortKey)
-//				.searchValue(searchValue)
-				.build();
+        return blogPostService.getHomepagePosts(category, paginationRequest);
+    }
 
-		return blogPostService.getAllPosts(category, paginationRequest);
-	}
+    // ========================= ENGAGEMENT ENDPOINTS =========================
+    @PreAuthorize("hasAuthority('BLOG_POST_MANAGEMENT.LIKE_BLOGS')")
+    @PutMapping("/like")
+    public ResponseEntity<ApiResponse> likeOrUnlikeBlogPost(
+            @RequestParam(name = AppConstants.ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String postId,
+            @RequestParam(name = AppConstants.IS_LIKE) Boolean isLike) {
+        return blogPostService.toggleLike(postId, isLike);
+    }
+
+    @PreAuthorize("hasAuthority('BLOG_POST_MANAGEMENT.SAVE_BLOGS')")
+    @PutMapping("/save")
+    public ResponseEntity<ApiResponse> saveOrUnsaveBlogPost(
+            @RequestParam(name = AppConstants.ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String postId,
+            @RequestParam(name = AppConstants.IS_SAVE) Boolean isSave) {
+        return blogPostService.toggleSave(postId, isSave);
+    }
+
+    @PreAuthorize("hasAuthority('BLOG_POST_MANAGEMENT.SHARE_BLOGS')")
+    @PutMapping("/share")
+    public ResponseEntity<ApiResponse> shareBlogPost(
+            @RequestParam(name = AppConstants.ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String postId) {
+        return blogPostService.sharePost(postId);
+    }
+
+    @PreAuthorize("hasAuthority('BLOG_POST_MANAGEMENT.VIEW_BLOGS')")
+    @PutMapping("/view")
+    public ResponseEntity<ApiResponse> viewBlogPost(
+            @RequestParam(name = AppConstants.ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String postId) {
+        return blogPostService.addView(postId);
+    }
 }

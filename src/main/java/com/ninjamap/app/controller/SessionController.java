@@ -21,21 +21,22 @@ import com.ninjamap.app.utils.constants.ValidationConstants;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/sessions")
+@RequiredArgsConstructor
 @Validated
 public class SessionController {
+
 	private final ISessionService sessionService;
 
-	/**
-	 * Get all active sessions for the current user/account.
-	 */
+	// ========================= GET ACTIVE SESSIONS =========================
 	@PreAuthorize("hasAuthority('SESSION_MANAGEMENT.VIEW_SESSION')")
 	@GetMapping("/active")
 	public ResponseEntity<List<SessionResponse>> getActiveSessions() {
 		return ResponseEntity.ok(sessionService.getActiveSessions());
 	}
 
+	// ========================= GET ACCESS TOKEN BY SESSION ID
+	// =========================
 	@PreAuthorize("hasAuthority('SESSION_MANAGEMENT.VIEW_SESSION')")
 	@GetMapping("/get-access-token")
 	public ResponseEntity<ApiResponse> getTokenBySessionId(
@@ -43,27 +44,19 @@ public class SessionController {
 		return sessionService.getTokenFromId(sessionId);
 	}
 
-	/**
-	 * Logout from all sessions.
-	 */
+	// ========================= LOGOUT ALL SESSIONS =========================
 	@PreAuthorize("hasAuthority('SESSION_MANAGEMENT.LOGOUT_SESSION')")
 	@PostMapping("/logout")
 	public ResponseEntity<ApiResponse> logout() {
 		return sessionService.logout();
 	}
 
-	/**
-	 * Logout specific sessions based on control options.
-	 * 
-	 * @param currentSessionId       The ID of the current session
-	 * @param keepOnlyCurrentSession Whether to keep only the current session active
-	 */
+	// ========================= LOGOUT BY SESSION CONTROL =========================
 	@PreAuthorize("hasAuthority('SESSION_MANAGEMENT.LOGOUT_SESSION')")
 	@PostMapping("/logout/control")
 	public ResponseEntity<ApiResponse> logoutBySessionControl(
 			@RequestParam(name = AppConstants.CURRENT_SESSION_ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String currentSessionId,
 			@RequestParam(name = AppConstants.KEEP_ONLY_CURRENT_SESSION) Boolean keepOnlyCurrentSession) {
-
 		return sessionService.logoutBySessionControl(currentSessionId, keepOnlyCurrentSession);
 	}
 }

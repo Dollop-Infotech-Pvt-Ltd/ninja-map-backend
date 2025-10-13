@@ -1,5 +1,6 @@
 package com.ninjamap.app.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -18,4 +19,21 @@ public interface IBlogPostRepository extends JpaRepository<BlogPost, String> {
 	Page<BlogPost> findByCategoryOptional(@Param("category") BlogCategory category, Pageable pageable);
 
 	Optional<BlogPost> findByIdAndIsDeletedFalse(String id);
+
+	// Top 3 latest articles in the same category, excluding current post
+	List<BlogPost> findTop3ByCategoryAndIdNotAndIsDeletedFalseOrderByCreatedDateDesc(BlogCategory category,
+			String excludedId);
+
+	// Featured posts (optional category)
+	@Query("SELECT b FROM BlogPost b " + "WHERE (:category IS NULL OR b.category = :category) "
+			+ "AND b.isFeaturedArticle = true AND b.isDeleted = false " + "ORDER BY b.createdDate DESC")
+	List<BlogPost> findTopFeaturedByCategory(@Param("category") BlogCategory category, Pageable pageable);
+
+	// Latest posts excluding featured (optional category)
+	@Query("SELECT b FROM BlogPost b " + "WHERE (:category IS NULL OR b.category = :category) "
+			+ "AND b.isDeleted = false " + "AND (:excludedIds IS NULL OR b.id NOT IN :excludedIds) "
+			+ "ORDER BY b.createdDate DESC")
+	List<BlogPost> findTopLatestByCategory(@Param("category") BlogCategory category,
+			@Param("excludedIds") List<String> excludedIds, Pageable pageable);
+
 }

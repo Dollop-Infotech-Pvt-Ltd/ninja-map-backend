@@ -5,7 +5,8 @@ public class AppConstants {
 	public static final String PERMISSION_NOT_FOUND = "Permission not found.";
 	public static final String SUB_PERMISSION_NOT_FOUND = "Sub Permission not found.";
 	public static final String PERMISSION_UPDATE_SUCCESSFULLY = "Permission updated successfully.";
-	public static final String PERMISSION_UPDATE_FAILED = "Permission updated successfully.";
+	public static final String PERMISSION_UPDATE_FAILED = "Permission updated successfully."; // Duplicate message?
+																								// Consider fixing
 	public static final String PERMISSION_FETCHED_SUCCESSFULLY = "Permissions fetched successfully.";
 	public static final String PERMISSION_REMOVED_SUCCESSFULLY = "Permission removed successfully";
 	public static final String SUB_PERMISSION_REMOVED_SUCCESS = "Sub Permission removed successfully";
@@ -34,7 +35,6 @@ public class AppConstants {
 	public static final String SUB_PERMISSION_NOT_ADDED = "Sub Permission could not be added";
 	public static final String ROLE_DELETE_SUCCESS = "Role deleted successfully";
 	public static final String ROLE_DELETE_FAILED = "Failed to delete Role";
-
 	public static final String PERMISSION_ALREADY_EXISTS = "Permission already exists for this role";
 
 	// ================== COMMON KEYS ==================
@@ -47,6 +47,8 @@ public class AppConstants {
 	public static final String EVENT_TYPE = "eventType";
 	public static final String PAYLOAD = "payload";
 	public static final String ID = "id";
+	public static final String IS_LIKE = "isLike";
+	public static final String IS_SAVE = "isSave";
 	public static final String SESSION_ID = "sessionId";
 	public static final String CURRENT_SESSION_ID = "currentSessionId";
 	public static final String KEEP_ONLY_CURRENT_SESSION = "keepOnlyCurrentSession";
@@ -57,6 +59,7 @@ public class AppConstants {
 	public static final String ROLE_ID = "roleId";
 	public static final String BLOG_POST_ID = "blogPostId";
 	public static final String COMMENT_ID = "commentId";
+	public static final String REPLY_ID = "replyId";
 	public static final String IS_ACTIVE = "isActive";
 	public static final String DOCUMENT_TYPE = "documentType";
 	public static final String SUBMITTED_AT = "submittedAt";
@@ -79,6 +82,11 @@ public class AppConstants {
 	public static final String COMPANY_NAME = "Ninja Map";
 	public static final String COMPANY_EMAIL = "ninjamap@gmail.com";
 	public static final String COMPANY_SUPPORT_LINK = "mailto:" + COMPANY_EMAIL;
+	public static final String BLOG_THUMBNAILS = "Blog_Thumbnails";
+	public static final String BLOG_POSTS = "Blog_Posts";
+	public static final String FAQ_FOLDER = "FAQ_Folder";
+	public static final String POLICY_DOCUMENTS = "Policy_Documents";
+	public static final String PROFILE_PICTURE = "Profile_Picture";
 
 	// ================== PAGINATION / SORT ==================
 	public static final String PAGE_SIZE = "pageSize";
@@ -102,7 +110,6 @@ public class AppConstants {
 	public static final String ADMIN_NOT_FOUND = "Admin not found.";
 	public static final String ADMIN_CREATED_SUCCESSFULLY = "Admin created successfully.";
 	public static final String ADMIN_NOT_CREATED = "Admin could not be created";
-
 	public static final String INVALID_CREDENTIALS = "Invalid credentials.";
 	public static final String ADMIN_DELETED = "Admin deleted successfully.";
 	public static final String ADMIN_PROFILE_UPDATED = "Admin Profile Successfully Updated";
@@ -197,7 +204,6 @@ public class AppConstants {
 	public static final String NO_CONTANT_AVAILABLE = "No content available.";
 	public static final String ABOUT_US_UPDATED = "About us successfully updated";
 	public static final String ABOUT_US_NOT_UPDATED = "About Us could not be updated";
-
 	public static final String ABOUT_US_SUCCESSFULLY_GET = "About Us retrieved successfully";
 	public static final String ABOUT_US_ADDED_SUCCESSFULLY = "About Us added successfully";
 	public static final String ABOUT_US_NOT_ADDED = "About Us could not be added";
@@ -235,6 +241,13 @@ public class AppConstants {
 	public static final String BLOG_POST_UPDATED = "Blog post updated successfully";
 	public static final String BLOG_POST_NOT_UPDATED = "Blog post could not be updated";
 	public static final String BLOG_POST_FETCHED = "Blog post fetched successfully";
+	public static final String BLOG_POST_LIKED = "Post liked successfully.";
+	public static final String BLOG_POST_UNLIKED = "Post unliked successfully.";
+	public static final String HOMEPAGE_POSTS_FETCHED = "Homepage posts fetched successfully.";
+	public static final String BLOG_POST_SAVED = "Blog post saved successfully.";
+	public static final String BLOG_POST_UNSAVED = "Blog post unsaved successfully.";
+	public static final String BLOG_POST_SHARED = "Blog post shared successfully.";
+	public static final String BLOG_POST_VIEWED = "Blog post view registered.";
 
 	// ================== COMMENT ==================
 	public static final String COMMENT_ADDED = "Comment added successfully.";
@@ -243,6 +256,13 @@ public class AppConstants {
 	public static final String COMMENT_NOT_DELETED = "Failed to delete comment.";
 	public static final String COMMENT_NOT_FOUND = "Comment not found.";
 	public static final String COMMENT_ALREADY_DELETED = "Comment is already deleted";
+	public static final String COMMENT_LIKED = "Comment liked successfully.";
+	public static final String COMMENT_UNLIKED = "Comment unliked successfully.";
+	public static final String COMMENT_DELETE_FORBIDDEN = "You are not allowed to delete this comment.";
+
+	public static final String REPLY_NOT_FOUND = "This comment is not a reply.";
+	public static final String REPLY_DELETED = "Reply deleted successfully.";
+	public static final String REPLY_DELETE_FORBIDDEN = "You are not allowed to delete this reply.";
 
 	// ================== FAQ ==================
 	public static final String FAQ_CREATED_SUCCESS = "FAQ created successfully";
@@ -255,5 +275,15 @@ public class AppConstants {
 	public static final String ADMIN_ID = "adminId";
 
 	public static final String TOO_MANY_REQUESTS = "Too many requests from IP: ";
+	public static final String OTP_VERIFICATION_SUBJECT = "Your OTP Code - Action Required";
 
+	public static final String REGISTRATION_SUBJECT = "Welcome to Ninja-Map Platform";
+
+	public static final String EMAIL_VERIFICATION_SUBJECT = "Verify Your Email Address";
+
+	public static final String NOTIFICATION_SUBJECT = "Notification from Ninja-Map Platform";
+
+	public static final String PASSWORD_UPDATE_NOTIFICATION_SUBJECT = "Your Password Has Been Updated Successfully";
+
+	public static final String LOGIN_SUCCESS_NOTIFICATION_SUBJECT = "Login Successful - Ninja-Map";
 }

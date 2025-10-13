@@ -1,19 +1,27 @@
 package com.ninjamap.app.service.impl;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.ninjamap.app.exception.ResourceAlreadyExistException;
 import com.ninjamap.app.exception.ResourceNotFoundException;
 import com.ninjamap.app.model.FAQ;
 import com.ninjamap.app.model.QuestionAnswer;
 import com.ninjamap.app.payload.request.FAQRequest;
+import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.request.QuestionAnswerDTO;
 import com.ninjamap.app.payload.response.ApiResponse;
 import com.ninjamap.app.payload.response.FAQResponse;
+import com.ninjamap.app.payload.response.PaginatedResponse;
 import com.ninjamap.app.repository.IFAQRepository;
+import com.ninjamap.app.security.SecurityConfig;
 import com.ninjamap.app.service.ICloudinaryService;
 import com.ninjamap.app.service.IFAQService;
 import com.ninjamap.app.utils.AppUtils;
@@ -24,16 +32,38 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class FAQServiceImpl implements IFAQService {
-
 	private final IFAQRepository ifaqRepository;
 	private final ICloudinaryService cloudinaryService;
 
 	@Override
 	public ResponseEntity<ApiResponse> createFAQ(FAQRequest request) {
+		// Check for duplicate category
+		if (ifaqRepository.existsByCategoryAndIsDeletedFalse(request.getCategory())) {
+			throw new ResourceAlreadyExistException("FAQ category already exists");
+		}
+
+		// Check for duplicate questions within the category
+//		List<String> existingQuestions = ifaqRepository.findQuestionsByCategory(request.getCategory());
+//		boolean hasDuplicate = request.getQuestions().stream()
+//				.anyMatch(q -> existingQuestions.contains(q.getQuestion()));
+//		if (hasDuplicate) {
+//			throw new ResourceAlreadyExistException("Duplicate question found in this category");
+//		}
+
+		// Check for duplicate questions within the request itself
+		Set<String> questionSet = new HashSet<>();
+		for (QuestionAnswerDTO q : request.getQuestions()) {
+			String normalizedQuestion = q.getQuestion().trim().toLowerCase(); // normalize
+			if (!questionSet.add(normalizedQuestion)) {
+				throw new ResourceAlreadyExistException(
+						"Duplicate question found in this category request: " + q.getQuestion());
+			}
+		}
+
 		// Upload the category image to Cloudinary if provided
 		String uploadedImageUrl = null;
 		if (request.getCategoryImageUrl() != null && !request.getCategoryImageUrl().isEmpty()) {
-			uploadedImageUrl = cloudinaryService.uploadFile(request.getCategoryImageUrl(), "Ninja_Map");
+			uploadedImageUrl = cloudinaryService.uploadFile(request.getCategoryImageUrl(), AppConstants.FAQ_FOLDER);
 		}
 
 		// Build FAQ entity
@@ -53,12 +83,19 @@ public class FAQServiceImpl implements IFAQService {
 	}
 
 	@Override
-	public ResponseEntity<List<FAQResponse>> getAllFAQs() {
-		// Fetch all FAQs from the repository
-		List<FAQ> list = ifaqRepository.findAllByIsDeletedFalse();
+	public ResponseEntity<PaginatedResponse<FAQResponse>> getAllFAQs(PaginationRequest request) {
+		// Build Pageable using AppUtils
+		Pageable pageable = AppUtils.buildPageableRequest(request, FAQ.class);
+
+		Page<FAQ> faqPage = ifaqRepository.searchByCategoryOrQuestions(request.getSearchValue(), pageable);
 
 		// Map entities to DTOs
-		return ResponseEntity.ok(list.stream().map(this::mapToResponse).toList());
+		Page<FAQResponse> responsePage = faqPage.map(this::mapToResponse);
+
+		// Build paginated response using constructor
+		PaginatedResponse<FAQResponse> response = new PaginatedResponse<>(responsePage);
+
+		return ResponseEntity.ok(response);
 	}
 
 	@Override
@@ -73,10 +110,25 @@ public class FAQServiceImpl implements IFAQService {
 	public ResponseEntity<ApiResponse> updateFAQ(String id, FAQRequest request) {
 		FAQ faq = findById(id);
 
+		// Check for duplicate category (exclude current FAQ)
+		if (ifaqRepository.existsByCategoryAndIsDeletedFalse(request.getCategory())
+				&& !faq.getCategory().equals(request.getCategory())) {
+			throw new ResourceAlreadyExistException("FAQ category already exists");
+		}
+
+		// Check for duplicate questions within the category (excluding current FAQ's
+		// questions)
+		List<String> existingQuestions = ifaqRepository.findQuestionsByCategory(request.getCategory());
+		boolean hasDuplicate = request.getQuestions().stream().anyMatch(q -> existingQuestions.contains(q.getQuestion())
+				&& faq.getQuestions().stream().noneMatch(fq -> fq.getQuestion().equals(q.getQuestion())));
+		if (hasDuplicate) {
+			throw new ResourceAlreadyExistException("Duplicate question found in this category");
+		}
+
 		// Upload the new category image to Cloudinary if provided
 		String uploadedImageUrl = faq.getCategoryImageUrl(); // default to existing
 		if (request.getCategoryImageUrl() != null && !request.getCategoryImageUrl().isEmpty()) {
-			uploadedImageUrl = cloudinaryService.uploadFile(request.getCategoryImageUrl(), "Ninja_Map");
+			uploadedImageUrl = cloudinaryService.uploadFile(request.getCategoryImageUrl(), AppConstants.FAQ_FOLDER);
 		}
 
 		// Update FAQ fields
@@ -97,7 +149,7 @@ public class FAQServiceImpl implements IFAQService {
 
 	private FAQ findById(String id) {
 		return ifaqRepository.findByIdAndIsDeletedFalse(id)
-				.orElseThrow(() -> new ResourceNotFoundException("FAQ not found"));
+				.orElseThrow(() -> new ResourceNotFoundException(AppConstants.FAQ_NOT_FOUND));
 
 	}
 

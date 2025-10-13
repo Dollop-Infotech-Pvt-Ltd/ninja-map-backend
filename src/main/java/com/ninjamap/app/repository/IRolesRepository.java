@@ -9,7 +9,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.ninjamap.app.model.Roles;
-import com.ninjamap.app.model.User;
 
 @Repository
 public interface IRolesRepository extends JpaRepository<Roles, String> {

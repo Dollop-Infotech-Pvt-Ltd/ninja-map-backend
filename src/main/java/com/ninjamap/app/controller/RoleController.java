@@ -33,56 +33,54 @@ import lombok.RequiredArgsConstructor;
 @Validated
 public class RoleController {
 
-	private final IRoleService roleService;
+    private final IRoleService roleService;
 
-	@PreAuthorize("hasAuthority('ROLE_MANAGEMENT.CREATE_ROLES')")
-	@PostMapping("/create")
-	public ResponseEntity<ApiResponse> createRole(@RequestBody @Valid RoleRequest request) {
-		return roleService.createRole(request);
-	}
+    // ========================= CREATE ROLE =========================
+    @PreAuthorize("hasAuthority('ROLE_MANAGEMENT.CREATE_ROLES')")
+    @PostMapping("/create")
+    public ResponseEntity<ApiResponse> createRole(@RequestBody @Valid RoleRequest request) {
+        return roleService.createRole(request);
+    }
 
-	@PreAuthorize("hasAuthority('ROLE_MANAGEMENT.EDIT_ROLES')")
-	@PutMapping("/update")
-	public ResponseEntity<ApiResponse> updateRole(
-			@RequestParam(name = AppConstants.ROLE_ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String roleId,
-			@RequestBody @Valid UpdateRoleRequest request) {
-		return roleService.updateRole(roleId, request);
-	}
+    // ========================= UPDATE ROLE =========================
+    @PreAuthorize("hasAuthority('ROLE_MANAGEMENT.EDIT_ROLES')")
+    @PutMapping("/update")
+    public ResponseEntity<ApiResponse> updateRole(
+            @RequestParam(name = AppConstants.ROLE_ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String roleId,
+            @RequestBody @Valid UpdateRoleRequest request) {
+        return roleService.updateRole(roleId, request);
+    }
 
-//	@PreAuthorize("hasAuthority('ROLE_MANAGEMENT.ASSIGN_ROLES')")
-//	@PutMapping("/update-permissions")
-//	public ResponseEntity<ApiResponse> updateRolePermissions(
-//			@RequestParam(name = AppConstants.ROLE_ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String roleId,
-//			@RequestBody Set<String> permissionIds) {
-//		return roleService.updateRolePermissions(roleId, permissionIds);
-//	}
+    // ========================= UPDATE ROLE PERMISSIONS (QUICK ACTIONS) =========================
+    @PreAuthorize("hasAuthority('ROLE_MANAGEMENT.ASSIGN_ROLES')")
+    @PutMapping("/update-permissions")
+    public ResponseEntity<ApiResponse> updateRolePermissionsByQuickActions(
+            @RequestParam(name = AppConstants.ROLE_ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String roleId,
+            @RequestBody Map<String, String> resourceActions) {
+        return roleService.updateRolePermissionsByQuickActions(roleId, resourceActions);
+    }
 
-	@PreAuthorize("hasAuthority('ROLE_MANAGEMENT.ASSIGN_ROLES')")
-	@PutMapping("/update-permissions")
-	public ResponseEntity<ApiResponse> updateRolePermissionsByQuickActions(
-			@RequestParam(name = AppConstants.ROLE_ID, required = true) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String roleId,
-			@RequestBody Map<String, String> resourceActions) {
-		return roleService.updateRolePermissionsByQuickActions(roleId, resourceActions);
-	}
+    // ========================= GET ALL ROLES =========================
+    @PreAuthorize("hasAuthority('ROLE_MANAGEMENT.VIEW_ROLES')")
+    @GetMapping("/get-all")
+    public ResponseEntity<List<RoleResponse>> getAllRoles() {
+        return roleService.getAllRoles();
+    }
 
-	@PreAuthorize("hasAuthority('ROLE_MANAGEMENT.VIEW_ROLES')")
-	@GetMapping("/get-all")
-	public ResponseEntity<List<RoleResponse>> getAllRoles() {
-		return roleService.getAllRoles();
-	}
+    // ========================= GET ROLE BY ID =========================
+    @PreAuthorize("hasAuthority('ROLE_MANAGEMENT.VIEW_ROLES')")
+    @GetMapping("/get")
+    public ResponseEntity<ApiResponse> getRoleById(
+            @RequestParam(name = AppConstants.ROLE_ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String roleId,
+            @RequestParam(name = AppConstants.IS_ACTIVE, required = false) Boolean isActive) {
+        return roleService.getRoleById(roleId, isActive);
+    }
 
-	@PreAuthorize("hasAuthority('ROLE_MANAGEMENT.VIEW_ROLES')")
-	@GetMapping("/get")
-	public ResponseEntity<ApiResponse> getRoleById(
-			@RequestParam(name = AppConstants.ROLE_ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String roleId,
-			@RequestParam(name = AppConstants.IS_ACTIVE, required = false) Boolean isActive) {
-		return roleService.getRoleById(roleId, isActive);
-	}
-
-	@PreAuthorize("hasAuthority('ROLE_MANAGEMENT.DELETE_ROLES')")
-	@DeleteMapping("/delete")
-	public ResponseEntity<ApiResponse> deleteRole(
-			@RequestParam(name = AppConstants.ROLE_ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String roleId) {
-		return roleService.deleteRole(roleId);
-	}
+    // ========================= DELETE ROLE =========================
+    @PreAuthorize("hasAuthority('ROLE_MANAGEMENT.DELETE_ROLES')")
+    @DeleteMapping("/delete")
+    public ResponseEntity<ApiResponse> deleteRole(
+            @RequestParam(name = AppConstants.ROLE_ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String roleId) {
+        return roleService.deleteRole(roleId);
+    }
 }

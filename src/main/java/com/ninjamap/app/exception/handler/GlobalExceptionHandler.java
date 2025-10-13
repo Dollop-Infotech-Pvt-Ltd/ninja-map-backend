@@ -34,142 +34,135 @@ import jakarta.validation.ConstraintViolationException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-	@ExceptionHandler(ResourceAlreadyExistException.class)
-	public ResponseEntity<ErrorResponse> handleResourceAlreadyExist(ResourceAlreadyExistException ex) {
-		return buildErrorResponse(HttpStatus.NOT_ACCEPTABLE, ex.getMessage());
-	}
+    // ====================== RESOURCE EXCEPTIONS ======================
+    @ExceptionHandler(ResourceAlreadyExistException.class)
+    public ResponseEntity<ErrorResponse> handleResourceAlreadyExist(ResourceAlreadyExistException ex) {
+        return buildErrorResponse(HttpStatus.NOT_ACCEPTABLE, ex.getMessage());
+    }
 
-	@ExceptionHandler(ResourceNotFoundException.class)
-	public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex) {
-		return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
-	}
+    @ExceptionHandler({ResourceNotFoundException.class, NoResourceFoundException.class})
+    public ResponseEntity<ErrorResponse> handleResourceNotFound(Exception ex) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
 
-	@ExceptionHandler(UnauthorizedException.class)
-	public ResponseEntity<ErrorResponse> handleUnauthorized(UnauthorizedException ex) {
-		return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
-	}
+    // ====================== AUTHORIZATION EXCEPTIONS ======================
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorized(UnauthorizedException ex) {
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
 
-	@ExceptionHandler(NoResourceFoundException.class)
-	public ResponseEntity<ErrorResponse> handleNoResourceFoundException(NoResourceFoundException ex) {
-		return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
-	}
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleForbidden(ForbiddenException ex) {
+        return buildErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
 
-	@ExceptionHandler(BadRequestException.class)
-	public ResponseEntity<ErrorResponse> handleBadRequest(BadRequestException ex) {
-		return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
-	}
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<ErrorResponse> handleExpiredJwt(ExpiredJwtException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, AppConstants.TOKEN_EXPIRED);
+    }
 
-	@ExceptionHandler(ForbiddenException.class)
-	public ResponseEntity<ErrorResponse> handleForbidden(ForbiddenException ex) {
-		return buildErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage());
-	}
+    // ====================== REQUEST / VALIDATION EXCEPTIONS ======================
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ErrorResponse> handleBadRequest(BadRequestException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
 
-	@ExceptionHandler(ExpiredJwtException.class)
-	public ResponseEntity<ErrorResponse> handleExpiredJwt(ExpiredJwtException ex) {
-		return buildErrorResponse(HttpStatus.BAD_REQUEST, AppConstants.TOKEN_EXPIRED);
-	}
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
 
-	@ExceptionHandler(IllegalArgumentException.class)
-	public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
-		return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
-	}
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMissingRequestParam(MissingServletRequestParameterException ex) {
+        String message = ex.getParameterName() + " is required";
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, message);
+    }
 
-	@ExceptionHandler(MissingServletRequestParameterException.class)
-	public ResponseEntity<ErrorResponse> handleMissingRequestParam(MissingServletRequestParameterException ex) {
-		String message = ex.getParameterName() + " is required";
-		return buildErrorResponse(HttpStatus.BAD_REQUEST, message);
-	}
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .findFirst()
+                .orElse(AppConstants.VALIDATION_FAILED);
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, message);
+    }
 
-	@ExceptionHandler(MethodArgumentNotValidException.class)
-	public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex) {
-		String message = ex.getBindingResult().getFieldErrors().stream()
-				.map(error -> error.getField() + ": " + error.getDefaultMessage()).findFirst()
-				.orElse(AppConstants.VALIDATION_FAILED);
-		return buildErrorResponse(HttpStatus.BAD_REQUEST, message);
-	}
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex) {
+        String message = ex.getConstraintViolations().stream()
+                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                .collect(Collectors.joining("; "));
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, message);
+    }
 
-	@ExceptionHandler(MissingPathVariableException.class)
-	public ResponseEntity<Map<String, String>> handleMissingPathVariable(MissingPathVariableException ex) {
-		Map<String, String> response = new HashMap<>();
-		response.put(AppConstants.ERROR, "Required path variable '" + ex.getVariableName() + "' is missing");
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-	}
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ErrorResponse> handleHandlerMethodValidation(HandlerMethodValidationException ex) {
+        String message = ex.getAllValidationResults().stream()
+                .flatMap(r -> r.getResolvableErrors().stream())
+                .map(err -> err.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+        if (message.isEmpty()) message = "Validation failure";
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, message);
+    }
 
-	@ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-	public ResponseEntity<Map<String, Object>> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
-		Map<String, Object> response = new HashMap<>();
-		response.put(AppConstants.ERROR, AppConstants.METHOD_NOT_ALLOWED);
-		response.put(AppConstants.MESSAGE, "Request method " + ex.getMethod() + " is not supported.");
-		response.put(AppConstants.STATUS, HttpStatus.METHOD_NOT_ALLOWED.value());
-		return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(response);
-	}
+    @ExceptionHandler(MissingPathVariableException.class)
+    public ResponseEntity<Map<String, String>> handleMissingPathVariable(MissingPathVariableException ex) {
+        return buildMapResponse(HttpStatus.BAD_REQUEST, AppConstants.ERROR,
+                "Required path variable '" + ex.getVariableName() + "' is missing");
+    }
 
-	@ExceptionHandler(HttpMessageNotReadableException.class)
-	public ResponseEntity<Map<String, String>> handleMessageNotReadable(HttpMessageNotReadableException ex) {
-		Map<String, String> response = new HashMap<>();
-		response.put(AppConstants.ERROR, AppConstants.REQUEST_BODY_MISSING);
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-	}
+    // ====================== HTTP EXCEPTIONS ======================
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<Map<String, Object>> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
+        Map<String, Object> response = new HashMap<>();
+        response.put(AppConstants.ERROR, AppConstants.METHOD_NOT_ALLOWED);
+        response.put(AppConstants.MESSAGE, "Request method " + ex.getMethod() + " is not supported.");
+        response.put(AppConstants.STATUS, HttpStatus.METHOD_NOT_ALLOWED.value());
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(response);
+    }
 
-	// Utility method to reduce duplication
-	private ResponseEntity<ErrorResponse> buildErrorResponse(HttpStatus status, String message) {
-		ErrorResponse errorResponse = ErrorResponse.builder().statusCode(status.value()).status(status).message(message)
-				.date(LocalDateTime.now()).build();
-		return ResponseEntity.status(status).body(errorResponse);
-	}
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, String>> handleMessageNotReadable(HttpMessageNotReadableException ex) {
+        return buildMapResponse(HttpStatus.BAD_REQUEST, AppConstants.ERROR, AppConstants.REQUEST_BODY_MISSING);
+    }
 
-	// Handle SQL constraint violations like duplicate entries
-	@ExceptionHandler(DataIntegrityViolationException.class)
-	public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
-		String message = "Database error occurred";
+    // ====================== DATABASE EXCEPTIONS ======================
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        String message = "Database error occurred";
+        if (ex.getRootCause() != null && ex.getRootCause().getMessage().contains("Duplicate entry")) {
+            message = "Duplicate entry found. Please use a different value.";
+        }
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, message);
+    }
 
-		// Optionally, check if it's a duplicate entry
-		if (ex.getRootCause() != null && ex.getRootCause().getMessage().contains("Duplicate entry")) {
-			message = "Duplicate entry found. Please use a different value.";
-		}
+    // ====================== FILE EXCEPTIONS ======================
+    @ExceptionHandler(FileValidationException.class)
+    public ResponseEntity<ErrorResponse> handleFileValidation(FileValidationException ex) {
+        return buildErrorResponse(HttpStatus.PAYLOAD_TOO_LARGE, ex.getMessage());
+    }
 
-		ErrorResponse errorResponse = ErrorResponse.builder().message(message).status(HttpStatus.BAD_REQUEST)
-				.statusCode(HttpStatus.BAD_REQUEST.value()).date(LocalDateTime.now()).response(null).build();
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
+        long maxSizeInMB = 10; // match your Spring configuration
+        String message = "File size exceeds the maximum allowed limit of " + maxSizeInMB + " MB.";
+        return buildErrorResponse(HttpStatus.PAYLOAD_TOO_LARGE, message);
+    }
 
-		return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-	}
+    // ====================== UTILITY METHODS ======================
+    private ResponseEntity<ErrorResponse> buildErrorResponse(HttpStatus status, String message) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .statusCode(status.value())
+                .status(status)
+                .message(message)
+                .date(LocalDateTime.now())
+                .build();
+        return ResponseEntity.status(status).body(errorResponse);
+    }
 
-	// Handle validation errors like invalid UUID, etc.
-	@ExceptionHandler(ConstraintViolationException.class)
-	public ResponseEntity<ErrorResponse> handleConstraintViolationException(ConstraintViolationException ex) {
-		// Combine all violation messages into a single string
-		String message = ex.getConstraintViolations().stream()
-				.map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
-				.collect(Collectors.joining("; ")); // joins all messages with a semicolon
-
-		return buildErrorResponse(HttpStatus.BAD_REQUEST, message);
-	}
-
-	@ExceptionHandler(HandlerMethodValidationException.class)
-	public ResponseEntity<ErrorResponse> handleValidationException(HandlerMethodValidationException ex) {
-		// Collect all validation error messages
-		String errorMessages = ex.getAllValidationResults().stream().flatMap(r -> r.getResolvableErrors().stream())
-				.map(err -> err.getDefaultMessage()).collect(Collectors.joining(", "));
-
-		return buildErrorResponse(HttpStatus.BAD_REQUEST,
-				errorMessages.isEmpty() ? "Validation failure" : errorMessages);
-	}
-
-	// Handle custom file validation exceptions
-	@ExceptionHandler(FileValidationException.class)
-	public ResponseEntity<ErrorResponse> handleFileValidationException(FileValidationException ex) {
-//		ex.printStackTrace();
-		return buildErrorResponse(HttpStatus.PAYLOAD_TOO_LARGE, ex.getMessage());
-	}
-
-	// Handle any other runtime exceptions
-//	@ExceptionHandler(RuntimeException.class)
-
-	// Handle Spring multipart max file size exceeded
-	@ExceptionHandler(MaxUploadSizeExceededException.class)
-	public ResponseEntity<ErrorResponse> handleMaxSizeException(MaxUploadSizeExceededException ex) {
-		long maxSizeInMB = 10; // match your Spring configuration
-		String message = "File size exceeds the maximum allowed limit of " + maxSizeInMB + " MB.";
-		return buildErrorResponse(HttpStatus.PAYLOAD_TOO_LARGE, message);
-	}
+    private <T> ResponseEntity<Map<String, T>> buildMapResponse(HttpStatus status, String key, T value) {
+        Map<String, T> response = new HashMap<>();
+        response.put(key, value);
+        return ResponseEntity.status(status).body(response);
+    }
 }

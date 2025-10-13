@@ -4,9 +4,12 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,14 +29,13 @@ public class Session extends AuditData {
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private String id;
 
-	@Column(name = "account_id", nullable = false)
-	private String accountId; // User or Admin ID
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id")
+	private User user;
 
-	@Column(name = "account_type", nullable = false)
-	private String accountType; // "USER" or "ADMIN"
-
-	@Column(name = "role_name", nullable = false)
-	private String roleName; // Dynamic role like SUPER_ADMIN, SUB_ADMIN, CUSTOMER, etc.
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "admin_id")
+	private Admin admin;
 
 	@Column(length = 512, nullable = false, unique = true)
 	private String accessToken;

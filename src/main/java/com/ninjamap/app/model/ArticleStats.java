@@ -27,4 +27,7 @@ public class ArticleStats {
 
 	@Builder.Default
 	private Integer shares = 0;
+
+	@Builder.Default
+	private Integer shaved = 0;
 }

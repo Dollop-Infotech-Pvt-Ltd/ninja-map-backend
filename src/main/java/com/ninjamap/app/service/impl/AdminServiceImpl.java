@@ -84,8 +84,8 @@ public class AdminServiceImpl implements IAdminService, UserDetailsService {
 				.employeeId(registerRequest.getEmployeeId()).bio(registerRequest.getBio()).build();
 
 		// Upload profile picture if provided
-		Optional.ofNullable(registerRequest.getProfilePicture()).filter(file -> !file.isEmpty())
-				.ifPresent(file -> admin.setProfilePicture(cloudinaryService.uploadFile(file, "Profile_Picture")));
+		Optional.ofNullable(registerRequest.getProfilePicture()).filter(file -> !file.isEmpty()).ifPresent(
+				file -> admin.setProfilePicture(cloudinaryService.uploadFile(file, AppConstants.PROFILE_PICTURE)));
 
 		System.err.println("ADMIN ==> " + admin);
 		// Save new admin
@@ -103,7 +103,7 @@ public class AdminServiceImpl implements IAdminService, UserDetailsService {
 	@Override
 	public Admin getAdminByEmailAndIsActive(String email, Boolean isActive) {
 		return adminRepository.findByEmailAndOptionalIsActive(email, isActive)
-				.orElseThrow(() -> new ResourceNotFoundException(AppConstants.USER_NOT_FOUND));
+				.orElseThrow(() -> new ResourceNotFoundException(AppConstants.ADMIN_NOT_FOUND));
 	}
 
 	@Override
@@ -151,7 +151,7 @@ public class AdminServiceImpl implements IAdminService, UserDetailsService {
 	public ResponseEntity<ApiResponse> update(UpdateAdminRequest updateRequest) {
 		Admin admin = getAdminByIdAndIsActive(updateRequest.getId(), null);
 
-		// Duplicate email check
+		// --- Duplicate email check ---
 		if (updateRequest.getEmail() != null && !updateRequest.getEmail().equalsIgnoreCase(admin.getEmail())) {
 			if (adminRepository.existsByEmailAndIsDeletedFalse(updateRequest.getEmail().trim())) {
 				throw new ResourceAlreadyExistException(AppConstants.ADMIN_ALREADY_EXISTS);
@@ -159,7 +159,7 @@ public class AdminServiceImpl implements IAdminService, UserDetailsService {
 			admin.setEmail(updateRequest.getEmail().trim());
 		}
 
-		// Duplicate mobile check
+		// --- Duplicate mobile check ---
 		if (updateRequest.getMobileNumber() != null
 				&& !updateRequest.getMobileNumber().equals(admin.getMobileNumber())) {
 			if (adminRepository.existsByMobileNumberAndIsDeletedFalse(updateRequest.getMobileNumber().trim())) {
@@ -168,20 +168,24 @@ public class AdminServiceImpl implements IAdminService, UserDetailsService {
 			admin.setMobileNumber(updateRequest.getMobileNumber().trim());
 		}
 
+		// --- Update basic fields ---
 		admin.setFirstName(updateRequest.getFirstName() != null ? updateRequest.getFirstName() : admin.getFirstName());
 		admin.setLastName(updateRequest.getLastName() != null ? updateRequest.getLastName() : admin.getLastName());
-		// Update bio if provided
+
 		if (updateRequest.getBio() != null) {
 			admin.setBio(updateRequest.getBio());
 		}
-		// Upload profile picture if provided
-		Optional.ofNullable(updateRequest.getProfilePicture()).filter(file -> !file.isEmpty())
-				.ifPresent(file -> admin.setProfilePicture(cloudinaryService.uploadFile(file, "Profile_Picture")));
 
-		Admin savedAdmin = saveAdmin(admin);
+		// --- Upload profile picture if provided ---
+		Optional.ofNullable(updateRequest.getProfilePicture()).filter(file -> !file.isEmpty()).ifPresent(
+				file -> admin.setProfilePicture(cloudinaryService.uploadFile(file, AppConstants.PROFILE_PICTURE)));
+
+		// Save directly using the same entity
+		Admin savedAdmin = adminRepository.save(admin);
 
 		ApiResponse response = (savedAdmin != null) ? AppUtils.buildSuccessResponse(AppConstants.ADMIN_PROFILE_UPDATED)
 				: AppUtils.buildFailureResponse(AppConstants.ADMIN_PROFILE_NOT_UPDATED);
+
 		return new ResponseEntity<>(response, response.getHttp());
 	}
 

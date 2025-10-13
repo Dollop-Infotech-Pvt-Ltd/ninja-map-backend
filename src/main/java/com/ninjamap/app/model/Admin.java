@@ -72,5 +72,9 @@ public class Admin extends AuditData {
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "role_id")
 	private Roles role;
+	
+	public String getFullName() {
+		return this.firstName + " " + this.lastName;
+	}
 
 }

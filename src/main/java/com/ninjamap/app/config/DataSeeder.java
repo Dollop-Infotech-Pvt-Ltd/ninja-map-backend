@@ -44,143 +44,98 @@ public class DataSeeder implements CommandLineRunner {
 		if (roleRepository.existsByRoleNameAndIsDeletedFalse("ADMIN")) {
 			return roleRepository.findByRoleName("ADMIN").orElseThrow();
 		}
+		List<Permission> permissions = List.of(
+				// USER MANAGEMENT
+				createPermission("USER_MANAGEMENT", PermissionType.READ, "VIEW_USERS"),
+				createPermission("USER_MANAGEMENT", PermissionType.WRITE, "CREATE_USERS"),
+				createPermission("USER_MANAGEMENT", PermissionType.WRITE, "EDIT_USERS"),
+				createPermission("USER_MANAGEMENT", PermissionType.DELETE, "DELETE_USERS"),
+				createPermission("USER_MANAGEMENT", PermissionType.READ, "EXPORT_USER_DATA"),
+				createPermission("USER_MANAGEMENT", PermissionType.WRITE, "IMPORT_USERS"),
 
-		List<Permission> permissions = new ArrayList<>();
+				// ROLE MANAGEMENT
+				createPermission("ROLE_MANAGEMENT", PermissionType.READ, "VIEW_ROLES"),
+				createPermission("ROLE_MANAGEMENT", PermissionType.WRITE, "CREATE_ROLES"),
+				createPermission("ROLE_MANAGEMENT", PermissionType.WRITE, "EDIT_ROLES"),
+				createPermission("ROLE_MANAGEMENT", PermissionType.WRITE, "ASSIGN_ROLES"),
+				createPermission("ROLE_MANAGEMENT", PermissionType.DELETE, "DELETE_ROLES"),
 
-		// ====================== USER MANAGEMENT ======================
-		permissions.add(Permission.builder().resource("USER_MANAGEMENT").type(PermissionType.READ).action("VIEW_USERS")
-				.build());
-		permissions.add(Permission.builder().resource("USER_MANAGEMENT").type(PermissionType.WRITE)
-				.action("CREATE_USERS").build());
-		permissions.add(Permission.builder().resource("USER_MANAGEMENT").type(PermissionType.WRITE).action("EDIT_USERS")
-				.build());
-		permissions.add(Permission.builder().resource("USER_MANAGEMENT").type(PermissionType.DELETE)
-				.action("DELETE_USERS").build());
-		permissions.add(Permission.builder().resource("USER_MANAGEMENT").type(PermissionType.READ)
-				.action("EXPORT_USER_DATA").build());
-		permissions.add(Permission.builder().resource("USER_MANAGEMENT").type(PermissionType.WRITE)
-				.action("IMPORT_USERS").build());
+				// SESSION MANAGEMENT
+				createPermission("SESSION_MANAGEMENT", PermissionType.READ, "VIEW_SESSION"),
+				createPermission("SESSION_MANAGEMENT", PermissionType.WRITE, "LOGOUT_SESSION"),
 
-		// ====================== ROLE MANAGEMENT ======================
-		permissions.add(Permission.builder().resource("ROLE_MANAGEMENT").type(PermissionType.READ).action("VIEW_ROLES")
-				.build());
-		permissions.add(Permission.builder().resource("ROLE_MANAGEMENT").type(PermissionType.WRITE)
-				.action("CREATE_ROLES").build());
-		permissions.add(Permission.builder().resource("ROLE_MANAGEMENT").type(PermissionType.WRITE).action("EDIT_ROLES")
-				.build());
-		permissions.add(Permission.builder().resource("ROLE_MANAGEMENT").type(PermissionType.DELETE)
-				.action("DELETE_ROLES").build());
-		permissions.add(Permission.builder().resource("ROLE_MANAGEMENT").type(PermissionType.WRITE)
-				.action("ASSIGN_ROLES").build());
+				// PERMISSION MANAGEMENT
+				createPermission("PERMISSION_MANAGEMENT", PermissionType.READ, "VIEW_PERMISSIONS"),
+				createPermission("PERMISSION_MANAGEMENT", PermissionType.WRITE, "CREATE_PERMISSIONS"),
+				createPermission("PERMISSION_MANAGEMENT", PermissionType.WRITE, "EDIT_PERMISSIONS"),
+				createPermission("PERMISSION_MANAGEMENT", PermissionType.DELETE, "DELETE_PERMISSIONS"),
 
-		// ====================== SESSION MANAGEMENT ======================
-		permissions.add(Permission.builder().resource("SESSION_MANAGEMENT").type(PermissionType.READ)
-				.action("VIEW_SESSION").build());
-		permissions.add(Permission.builder().resource("SESSION_MANAGEMENT").type(PermissionType.WRITE)
-				.action("LOGOUT_SESSION").build());
+				// ANALYTICS & REPORTS
+				createPermission("ANALYTICS_REPORTS", PermissionType.READ, "VIEW_ANALYTICS"),
+				createPermission("ANALYTICS_REPORTS", PermissionType.READ, "ADVANCED_ANALYTICS"),
+				createPermission("ANALYTICS_REPORTS", PermissionType.READ, "EXPORT_REPORTS"),
+				createPermission("ANALYTICS_REPORTS", PermissionType.WRITE, "CREATE_REPORTS"),
+				createPermission("ANALYTICS_REPORTS", PermissionType.READ, "REAL_TIME_DATA"),
 
-		// ====================== POLICY MANAGEMENT ======================
-		permissions.add(Permission.builder().resource("PERMISSION_MANAGEMENT").type(PermissionType.READ)
-				.action("CREATE_PERMISSIONS").build());
-		permissions.add(Permission.builder().resource("PERMISSION_MANAGEMENT").type(PermissionType.WRITE)
-				.action("VIEW_PERMISSIONS").build());
-		permissions.add(Permission.builder().resource("PERMISSION_MANAGEMENT").type(PermissionType.WRITE)
-				.action("EDIT_PERMISSIONS").build());
-		permissions.add(Permission.builder().resource("PERMISSION_MANAGEMENT").type(PermissionType.DELETE)
-				.action("DELETE_PERMISSIONS").build());
+				// NAVIGATION MANAGEMENT
+				createPermission("NAVIGATION_MANAGEMENT", PermissionType.READ, "VIEW_ROUTES"),
+				createPermission("NAVIGATION_MANAGEMENT", PermissionType.WRITE, "CREATE_ROUTES"),
+				createPermission("NAVIGATION_MANAGEMENT", PermissionType.WRITE, "EDIT_ROUTES"),
+				createPermission("NAVIGATION_MANAGEMENT", PermissionType.DELETE, "DELETE_ROUTES"),
+				createPermission("NAVIGATION_MANAGEMENT", PermissionType.WRITE, "ROUTE_OPTIMIZATION"),
+				createPermission("NAVIGATION_MANAGEMENT", PermissionType.WRITE, "PUBLISH_ROUTES"),
 
-		// ====================== ANALYTICS & REPORTS ======================
-		permissions.add(Permission.builder().resource("ANALYTICS_REPORTS").type(PermissionType.READ)
-				.action("VIEW_ANALYTICS").build());
-		permissions.add(Permission.builder().resource("ANALYTICS_REPORTS").type(PermissionType.READ)
-				.action("ADVANCED_ANALYTICS").build());
-		permissions.add(Permission.builder().resource("ANALYTICS_REPORTS").type(PermissionType.READ)
-				.action("EXPORT_REPORTS").build());
-		permissions.add(Permission.builder().resource("ANALYTICS_REPORTS").type(PermissionType.WRITE)
-				.action("CREATE_REPORTS").build());
-		permissions.add(Permission.builder().resource("ANALYTICS_REPORTS").type(PermissionType.READ)
-				.action("REAL_TIME_DATA").build());
+				// SYSTEM ADMINISTRATION
+				createPermission("SYSTEM_ADMINISTRATION", PermissionType.READ, "VIEW_LOGS"),
+				createPermission("SYSTEM_ADMINISTRATION", PermissionType.WRITE, "SYSTEM_SETTINGS"),
+				createPermission("SYSTEM_ADMINISTRATION", PermissionType.WRITE, "BACKUP_MANAGEMENT"),
+				createPermission("SYSTEM_ADMINISTRATION", PermissionType.WRITE, "MAINTENANCE_MODE"),
+				createPermission("SYSTEM_ADMINISTRATION", PermissionType.WRITE, "API_INTEGRATIONS"),
 
-		// ====================== NAVIGATION MANAGEMENT ======================
-		permissions.add(Permission.builder().resource("NAVIGATION_MANAGEMENT").type(PermissionType.READ)
-				.action("VIEW_ROUTES").build());
-		permissions.add(Permission.builder().resource("NAVIGATION_MANAGEMENT").type(PermissionType.WRITE)
-				.action("CREATE_ROUTES").build());
-		permissions.add(Permission.builder().resource("NAVIGATION_MANAGEMENT").type(PermissionType.WRITE)
-				.action("EDIT_ROUTES").build());
-		permissions.add(Permission.builder().resource("NAVIGATION_MANAGEMENT").type(PermissionType.DELETE)
-				.action("DELETE_ROUTES").build());
-		permissions.add(Permission.builder().resource("NAVIGATION_MANAGEMENT").type(PermissionType.WRITE)
-				.action("ROUTE_OPTIMIZATION").build());
-		permissions.add(Permission.builder().resource("NAVIGATION_MANAGEMENT").type(PermissionType.WRITE)
-				.action("PUBLISH_ROUTES").build());
+				// ABOUT US MANAGEMENT
+				createPermission("ABOUT_US_MANAGEMENT", PermissionType.READ, "CREATE_ABOUT_US"),
+				createPermission("ABOUT_US_MANAGEMENT", PermissionType.WRITE, "EDIT_ABOUT_US"),
 
-		// ====================== SYSTEM ADMINISTRATION ======================
-		permissions.add(Permission.builder().resource("SYSTEM_ADMINISTRATION").type(PermissionType.READ)
-				.action("VIEW_LOGS").build());
-		permissions.add(Permission.builder().resource("SYSTEM_ADMINISTRATION").type(PermissionType.WRITE)
-				.action("SYSTEM_SETTINGS").build());
-		permissions.add(Permission.builder().resource("SYSTEM_ADMINISTRATION").type(PermissionType.WRITE)
-				.action("BACKUP_MANAGEMENT").build());
-		permissions.add(Permission.builder().resource("SYSTEM_ADMINISTRATION").type(PermissionType.WRITE)
-				.action("MAINTENANCE_MODE").build());
-		permissions.add(Permission.builder().resource("SYSTEM_ADMINISTRATION").type(PermissionType.WRITE)
-				.action("API_INTEGRATIONS").build());
+				// ADMIN MANAGEMENT
+				createPermission("ADMIN_MANAGEMENT", PermissionType.READ, "VIEW_ADMINS"),
+				createPermission("ADMIN_MANAGEMENT", PermissionType.WRITE, "CREATE_ADMINS"),
+				createPermission("ADMIN_MANAGEMENT", PermissionType.WRITE, "EDIT_ADMINS"),
+				createPermission("ADMIN_MANAGEMENT", PermissionType.DELETE, "DELETE_ADMINS"),
 
-		// ====================== ABOUT US MANAGEMENT ======================
-		permissions.add(Permission.builder().resource("ABOUT_US_MANAGEMENT").type(PermissionType.READ)
-				.action("CREATE_ABOUT_US").build());
-		permissions.add(Permission.builder().resource("ABOUT_US_MANAGEMENT").type(PermissionType.WRITE)
-				.action("EDIT_ABOUT_US").build());
+				// BLOG POST MANAGEMENT
+				createPermission("BLOG_POST_MANAGEMENT", PermissionType.READ, "VIEW_BLOGS"),
+				createPermission("BLOG_POST_MANAGEMENT", PermissionType.WRITE, "CREATE_BLOGS"),
+				createPermission("BLOG_POST_MANAGEMENT", PermissionType.WRITE, "EDIT_BLOGS"),
+				createPermission("BLOG_POST_MANAGEMENT", PermissionType.DELETE, "DELETE_BLOGS"),
+				createPermission("BLOG_POST_MANAGEMENT", PermissionType.WRITE, "LIKE_BLOGS"),
+				createPermission("BLOG_POST_MANAGEMENT", PermissionType.WRITE, "SHARE_BLOGS"),
+				createPermission("BLOG_POST_MANAGEMENT", PermissionType.WRITE, "SAVE_BLOGS"),
+				
+				
+				createPermission("COMMENT_MANAGEMENT", PermissionType.WRITE, "CREATE_COMMENT"),
+				createPermission("COMMENT_MANAGEMENT", PermissionType.READ, "VIEW_COMMENT"),
+				createPermission("COMMENT_MANAGEMENT", PermissionType.WRITE, "LIKE_COMMENT"),
+				createPermission("COMMENT_MANAGEMENT", PermissionType.DELETE, "DELETE_COMMENT"),
 
-		// ====================== ADMIN MANAGEMENT ======================
-		permissions.add(Permission.builder().resource("ADMIN_MANAGEMENT").type(PermissionType.WRITE)
-				.action("CREATE_ADMINS").build());
-		permissions.add(Permission.builder().resource("ADMIN_MANAGEMENT").type(PermissionType.READ)
-				.action("VIEW_ADMINS").build());
-		permissions.add(Permission.builder().resource("ADMIN_MANAGEMENT").type(PermissionType.WRITE)
-				.action("EDIT_ADMINS").build());
-		permissions.add(Permission.builder().resource("ADMIN_MANAGEMENT").type(PermissionType.DELETE)
-				.action("DELETE_ADMINS").build());
+				// CONTACT US MANAGEMENT
+				createPermission("CONTACT_US_MANAGEMENT", PermissionType.READ, "VIEW_CONTACT_US"),
+				createPermission("CONTACT_US_MANAGEMENT", PermissionType.DELETE, "DELETE_CONTACT_US"),
 
-		// ====================== BLOG POST MANAGEMENT ======================
-		permissions.add(Permission.builder().resource("BLOG_POST_MANAGEMENT").type(PermissionType.READ)
-				.action("VIEW_BLOGS").build());
-		permissions.add(Permission.builder().resource("BLOG_POST_MANAGEMENT").type(PermissionType.WRITE)
-				.action("CREATE_BLOGS").build());
-		permissions.add(Permission.builder().resource("BLOG_POST_MANAGEMENT").type(PermissionType.WRITE)
-				.action("EDIT_BLOGS").build());
-		permissions.add(Permission.builder().resource("BLOG_POST_MANAGEMENT").type(PermissionType.DELETE)
-				.action("DELETE_BLOGS").build());
+				// FAQ MANAGEMENT
+				createPermission("FAQ_MANAGEMENT", PermissionType.READ, "VIEW_FAQS"),
+				createPermission("FAQ_MANAGEMENT", PermissionType.WRITE, "CREATE_FAQS"),
+				createPermission("FAQ_MANAGEMENT", PermissionType.WRITE, "EDIT_FAQS"),
+				createPermission("FAQ_MANAGEMENT", PermissionType.DELETE, "DELETE_FAQS"),
 
-		// ====================== CONTACT US MANAGEMENT ======================
-		permissions.add(Permission.builder().resource("CONTACT_US_MANAGEMENT").type(PermissionType.READ)
-				.action("VIEW_CONTACT_US").build());
-		permissions.add(Permission.builder().resource("CONTACT_US_MANAGEMENT").type(PermissionType.DELETE)
-				.action("DELETE_CONTACT_US").build());
-
-		// ====================== FAQ MANAGEMENT ======================
-		permissions.add(
-				Permission.builder().resource("FAQ_MANAGEMENT").type(PermissionType.READ).action("VIEW_FAQS").build());
-		permissions.add(Permission.builder().resource("FAQ_MANAGEMENT").type(PermissionType.WRITE).action("CREATE_FAQS")
-				.build());
-		permissions.add(
-				Permission.builder().resource("FAQ_MANAGEMENT").type(PermissionType.WRITE).action("EDIT_FAQS").build());
-		permissions.add(Permission.builder().resource("FAQ_MANAGEMENT").type(PermissionType.DELETE)
-				.action("DELETE_FAQS").build());
-
-		// ====================== POLICY MANAGEMENT ======================
-		permissions.add(Permission.builder().resource("POLICY_MANAGEMENT").type(PermissionType.READ)
-				.action("CREATE_POLICY_DOCUMENTS").build());
-		permissions.add(Permission.builder().resource("POLICY_MANAGEMENT").type(PermissionType.WRITE)
-				.action("VIEW_POLICY_DOCUMENTS").build());
-		permissions.add(Permission.builder().resource("POLICY_MANAGEMENT").type(PermissionType.WRITE)
-				.action("UPDATE_POLICY_DOCUMENTS").build());
-		permissions.add(Permission.builder().resource("POLICY_MANAGEMENT").type(PermissionType.DELETE)
-				.action("DELETE_POLICY_DOCUMENTS").build());
+				// POLICY MANAGEMENT
+				createPermission("POLICY_MANAGEMENT", PermissionType.READ, "CREATE_POLICY_DOCUMENTS"),
+				createPermission("POLICY_MANAGEMENT", PermissionType.WRITE, "VIEW_POLICY_DOCUMENTS"),
+				createPermission("POLICY_MANAGEMENT", PermissionType.WRITE, "UPDATE_POLICY_DOCUMENTS"),
+				createPermission("POLICY_MANAGEMENT", PermissionType.DELETE, "DELETE_POLICY_DOCUMENTS"));
 
 		// Save all permissions first
 		List<Permission> savedPermissions = permissionRepository.saveAll(permissions);
+
 		// Assign saved permissions to role
 		Roles adminRole = Roles.builder().roleName("ADMIN").description("Administrator role with all permissions")
 				.permissions(savedPermissions).build();
@@ -194,7 +149,7 @@ public class DataSeeder implements CommandLineRunner {
 		if (adminExists)
 			return;
 
-		Admin admin = Admin.builder().firstName("Admin").lastName("Admin").mobileNumber("9999999999")
+		Admin admin = Admin.builder().firstName("Admin").lastName("Admin").mobileNumber("9012345678")
 				.email(AppConstants.ADMIN_EMAIL).password(passwordEncoder.encode(AppConstants.ADMIN_PASSWORD))
 				.role(adminRole).employeeId("EMP001").build();
 
@@ -214,5 +169,12 @@ public class DataSeeder implements CommandLineRunner {
 
 		roleRepository.save(userRole);
 		System.out.println("USER role created successfully.");
+	}
+
+	/**
+	 * Helper method to create Permission with authority
+	 */
+	private Permission createPermission(String resource, PermissionType type, String action) {
+		return Permission.of(resource, type, action);
 	}
 }

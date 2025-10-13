@@ -76,7 +76,6 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-//		User user = getUserByEmailAndIsActive(username, null);
 		User user = userRepository.findByEmail(username)
 				.orElseThrow(() -> new UsernameNotFoundException(AppConstants.USER_NOT_FOUND));
 		List<SimpleGrantedAuthority> authorities = user.getRole().getPermissions().stream()
@@ -143,8 +142,8 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
 			existsUser.setBio(userRequest.getBio());
 		}
 		// Upload profile picture if provided
-		Optional.ofNullable(userRequest.getProfilePicture()).filter(file -> !file.isEmpty())
-				.ifPresent(file -> existsUser.setProfilePicture(cloudinaryService.uploadFile(file, "Profile_Picture")));
+		Optional.ofNullable(userRequest.getProfilePicture()).filter(file -> !file.isEmpty()).ifPresent(
+				file -> existsUser.setProfilePicture(cloudinaryService.uploadFile(file, AppConstants.PROFILE_PICTURE)));
 
 		User updatedUser = userRepository.save(existsUser);
 
@@ -271,8 +270,8 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
 				.password(passwordEncoder.encode(request.getPassword())).role(userRole).bio(request.getBio()).build();
 
 		// Upload profile picture if provided
-		Optional.ofNullable(request.getProfilePicture()).filter(file -> !file.isEmpty())
-				.ifPresent(file -> user.setProfilePicture(cloudinaryService.uploadFile(file, "Profile_Picture")));
+		Optional.ofNullable(request.getProfilePicture()).filter(file -> !file.isEmpty()).ifPresent(
+				file -> user.setProfilePicture(cloudinaryService.uploadFile(file, AppConstants.PROFILE_PICTURE)));
 
 		// Save user
 		User saved = userRepository.save(user);

@@ -6,9 +6,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.ninjamap.app.enums.BlogCategory;
 import com.ninjamap.app.utils.annotations.TrimValidator;
-import com.ninjamap.app.utils.annotations.UUIDValidator;
-import com.ninjamap.app.utils.constants.AppConstants;
-import com.ninjamap.app.utils.constants.ValidationConstants;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -28,18 +25,20 @@ public class BlogPostRequest {
 	@NotBlank(message = "Title is required")
 	private String title;
 
-	@NotBlank(message = "Content is required")
-	private String content;
+	@NotBlank(message = "Preview content is required")
+	private String previewContent; // shown in list view
+
+	@NotBlank(message = "Detailed content is required")
+	private String detailedContent; // full article content
 
 	@NotNull(message = "Category is required")
 	private BlogCategory category;
 
-	@NotNull(message = "Image is required")
-	private MultipartFile featuredImage;
+	private Boolean isFeaturedArticle;
 
-//	@Min(value = 1, message = "Read time must be at least 1 minute")
-//	private int readTimeMinutes;
+	private MultipartFile featuredImage; // Optional featured image
+
+	private MultipartFile thumbnailImage; // Optional thumbnail image
 
 	private Set<String> tags;
-
 }

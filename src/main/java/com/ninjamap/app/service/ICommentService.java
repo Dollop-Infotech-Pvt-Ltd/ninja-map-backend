@@ -17,4 +17,8 @@ public interface ICommentService {
 	ResponseEntity<ApiResponse> deleteComment(String commentId);
 
 	CommentResponse mapToCommentRespons(Comment comment);
+
+	ResponseEntity<ApiResponse> likeComment(String commentId, Boolean isLike);
+
+	ResponseEntity<ApiResponse> deleteReply(String replyId);
 }

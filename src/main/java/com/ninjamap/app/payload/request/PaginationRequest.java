@@ -26,6 +26,7 @@ public class PaginationRequest {
 	private Integer pageNumber;
 
 	@Pattern(regexp = ValidationConstants.SORT_ORDER_PATTERN, message = ValidationConstants.SORT_ORDER_PATTERN_MESSAGE)
+	@Builder.Default
 	private String sortDirection = "DESC";
 
 	private String sortKey;

@@ -20,54 +20,48 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/admin/auth")
 @RequiredArgsConstructor
 public class AdminAuthController {
-	private final IAdminAuthService adminAuthService;
 
-//	@GetMapping("/csrf")
-//	public ResponseEntity<CsrfToken> getCsrfToken(HttpServletRequest request) {
-//		// Force generation of CSRF token
-//		CsrfToken token = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
-//		return ResponseEntity.ok(token);
-//	}
+    private final IAdminAuthService adminAuthService;
 
-	// ========================= LOGIN =========================
-	@PostMapping("/login")
-	public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
-		return ResponseEntity.ok(adminAuthService.login(loginRequest));
-	}
+    // ========================= LOGIN =========================
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+        ApiResponse response = adminAuthService.login(loginRequest);
+        return ResponseEntity.status(response.getHttp()).body(response);
+    }
 
-	// OTP VERIFICATION (requires auth token in Authorization header)
-	// ========================= VERIFY OTP =========================
-	@PostMapping("/verify-otp")
-	public ResponseEntity<?> verifyOtp(@Valid @RequestBody OtpRequest request) {
-		System.err.println("VERIFY_OTP");
-		ApiResponse response = adminAuthService.verifyOtp(request);
-		return ResponseEntity.status(response.getHttp()).body(response);
-	}
+    // ========================= VERIFY OTP =========================
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ApiResponse> verifyOtp(@Valid @RequestBody OtpRequest request) {
+        ApiResponse response = adminAuthService.verifyOtp(request);
+        return ResponseEntity.status(response.getHttp()).body(response);
+    }
 
-	// ========================= RESEND OTP =========================
-	@PostMapping("/resend-otp")
-	public ResponseEntity<ApiResponse> resendOtp() {
-		ApiResponse response = adminAuthService.resendOtp();
-		return ResponseEntity.status(response.getHttp()).body(response);
-	}
+    // ========================= RESEND OTP =========================
+    @PostMapping("/resend-otp")
+    public ResponseEntity<ApiResponse> resendOtp() {
+        ApiResponse response = adminAuthService.resendOtp();
+        return ResponseEntity.status(response.getHttp()).body(response);
+    }
 
-	// ========================= FORGOT PASSWORD =========================
-	@PostMapping("/forget-password")
-	public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgetPasswordRequest request) {
-		ApiResponse response = adminAuthService.forgotPassword(request);
-		return ResponseEntity.status(response.getHttp()).body(response);
-	}
+    // ========================= FORGOT PASSWORD =========================
+    @PostMapping("/forget-password")
+    public ResponseEntity<ApiResponse> forgotPassword(@Valid @RequestBody ForgetPasswordRequest request) {
+        ApiResponse response = adminAuthService.forgotPassword(request);
+        return ResponseEntity.status(response.getHttp()).body(response);
+    }
 
-	// ========================= RESET PASSWORD =========================
-	@PostMapping("/reset-password")
-	public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-		ApiResponse response = adminAuthService.resetPassword(request);
-		return ResponseEntity.status(response.getHttp()).body(response);
-	}
+    // ========================= RESET PASSWORD =========================
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        ApiResponse response = adminAuthService.resetPassword(request);
+        return ResponseEntity.status(response.getHttp()).body(response);
+    }
 
-	// ========================= REFRESH TOKEN =========================
-	@PostMapping("/refresh-token")
-	public ResponseEntity<?> refresh() {
-		return ResponseEntity.ok(adminAuthService.refreshToken());
-	}
+    // ========================= REFRESH TOKEN =========================
+    @PostMapping("/refresh-token")
+    public ResponseEntity<ApiResponse> refreshToken() {
+        ApiResponse response = adminAuthService.refreshToken();
+        return ResponseEntity.status(response.getHttp()).body(response);
+    }
 }

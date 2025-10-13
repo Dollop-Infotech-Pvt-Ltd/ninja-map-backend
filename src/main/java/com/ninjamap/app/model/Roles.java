@@ -46,7 +46,7 @@ public class Roles extends AuditData {
 	@Column(nullable = false)
 	private String description;
 
-	@ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(name = "role_permissions", joinColumns = @JoinColumn(name = "role_id"), inverseJoinColumns = @JoinColumn(name = "permission_id"))
 	@Builder.Default
 	private List<Permission> permissions = new ArrayList<>();

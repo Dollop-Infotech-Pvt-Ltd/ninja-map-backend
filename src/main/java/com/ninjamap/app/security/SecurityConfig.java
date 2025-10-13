@@ -14,7 +14,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.ninjamap.app.config.CorsConfig;
-import com.ninjamap.app.security.filter.IpRateLimitFilter;
 import com.ninjamap.app.security.filter.SecurityFilter;
 
 import lombok.RequiredArgsConstructor;
@@ -26,7 +25,6 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
 	private final SecurityFilter jwtFilter;
-	private final IpRateLimitFilter ipRateLimitFilter;
 	private final CustomAuthenticationEntryPoint authenticationEntryPoint;
 	private final CustomAccessDeniedHandler accessDeniedHandler;
 	private final CorsConfig corsConfig;
@@ -36,8 +34,7 @@ public class SecurityConfig {
 	private static final List<String> PUBLIC_URLS = List.of("/api/auth/**", "/api/admin/auth/**", "/actuator/**",
 			"/api/about-us/get", "/api/contact-us/submit", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
 			"/v2/api-docs/**", "/swagger-resources/**", "/webjars/**", "/api/faqs/get", "/api/faqs/get-all",
-			"/api/comments/**", "/api/blogs/get", "/api/blogs/get-all", "/api/policies/get", "/api/policies/get-all",
-			"/oauth2/authorization/google");
+			"/api/blogs/get-all", "/api/policies/get", "/api/policies/get-all", "/oauth2/authorization/google");
 
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
