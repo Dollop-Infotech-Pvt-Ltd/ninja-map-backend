@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import com.ninjamap.app.enums.PermissionType;
 import com.ninjamap.app.model.Admin;
 import com.ninjamap.app.model.Permission;
+import com.ninjamap.app.model.PersonalInfo;
 import com.ninjamap.app.model.Roles;
 import com.ninjamap.app.repository.IAdminRepository;
 import com.ninjamap.app.repository.IPermissionRepository;
@@ -110,8 +111,7 @@ public class DataSeeder implements CommandLineRunner {
 				createPermission("BLOG_POST_MANAGEMENT", PermissionType.WRITE, "LIKE_BLOGS"),
 				createPermission("BLOG_POST_MANAGEMENT", PermissionType.WRITE, "SHARE_BLOGS"),
 				createPermission("BLOG_POST_MANAGEMENT", PermissionType.WRITE, "SAVE_BLOGS"),
-				
-				
+
 				createPermission("COMMENT_MANAGEMENT", PermissionType.WRITE, "CREATE_COMMENT"),
 				createPermission("COMMENT_MANAGEMENT", PermissionType.READ, "VIEW_COMMENT"),
 				createPermission("COMMENT_MANAGEMENT", PermissionType.WRITE, "LIKE_COMMENT"),
@@ -149,9 +149,12 @@ public class DataSeeder implements CommandLineRunner {
 		if (adminExists)
 			return;
 
-		Admin admin = Admin.builder().firstName("Admin").lastName("Admin").mobileNumber("9012345678")
-				.email(AppConstants.ADMIN_EMAIL).password(passwordEncoder.encode(AppConstants.ADMIN_PASSWORD))
-				.role(adminRole).employeeId("EMP001").build();
+		// Map DTO to entity using embedded PersonalInfo
+		PersonalInfo personalInfo = PersonalInfo.builder().firstName("Admin").lastName("Admin")
+				.mobileNumber("9012345678").email(AppConstants.ADMIN_EMAIL)
+				.password(passwordEncoder.encode(AppConstants.ADMIN_PASSWORD)).profilePicture(null).build();
+
+		Admin admin = Admin.builder().personalInfo(personalInfo).role(adminRole).employeeId("EMP001").build();
 
 		adminRepository.save(admin);
 		System.out.println(AppConstants.ADMIN_CREATED_SUCCESSFULLY);

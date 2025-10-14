@@ -3,6 +3,7 @@ package com.ninjamap.app.model;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -28,26 +29,14 @@ public class TempUser {
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private String id;
 
-	@Column(name = "email")
-	private String email;
-
-	@Column(name = "password")
-	private String password;
-
-	@Column(name = "first_name")
-	private String firstName;
-
-	@Column(name = "last_name")
-	private String lastName;
-
-	@Column(name = "mobile_number")
-	private String mobileNumber;
+	@Embedded
+	private PersonalInfo personalInfo;
 
 	@ManyToOne
 	@JoinColumn(name = "role_id")
 	private Roles role;
 
-	@Builder.Default
 	@Column(name = "created_at")
+	@Builder.Default
 	private LocalDateTime createdAt = LocalDateTime.now();
 }

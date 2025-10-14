@@ -16,6 +16,7 @@ import com.ninjamap.app.exception.ResourceNotFoundException;
 import com.ninjamap.app.exception.UnauthorizedException;
 import com.ninjamap.app.kafka.KafkaTopics;
 import com.ninjamap.app.kafka.NotificationProducer;
+import com.ninjamap.app.model.PersonalInfo;
 import com.ninjamap.app.model.Session;
 import com.ninjamap.app.model.TempUser;
 import com.ninjamap.app.model.User;
@@ -66,11 +67,12 @@ public class UserAuthServiceImpl implements IUserAuthService {
 	public ApiResponse login(LoginRequest request) {
 		User user = userService.getUserByEmailAndIsActive(request.getUsername(), true);
 
-		if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+		if (!passwordEncoder.matches(request.getPassword(), user.getPersonalInfo().getPassword())) {
 			throw new UnauthorizedException(AppConstants.INVALID_CREDENTIALS);
 		}
 
-		return sendOtpAndGenerateAuthToken(user.getEmail(), user.getFirstName() + " " + user.getLastName(),
+		return sendOtpAndGenerateAuthToken(user.getPersonalInfo().getEmail(),
+				user.getPersonalInfo().getFirstName() + " " + user.getPersonalInfo().getLastName(),
 				user.getRole().getRoleName(), OtpType.LOGIN, EmailTemplateType.OTP_VERIFICATION);
 	}
 
@@ -98,11 +100,6 @@ public class UserAuthServiceImpl implements IUserAuthService {
 			Map<String, Object> tokens = authHelper.generateAccessAndRefreshTokens(email, user.getRole().getRoleName(),
 					otpType);
 
-//			if (otpType == OtpType.LOGIN) {
-//				sendEmail(user.getEmail(), user.getFirstName() + " " + user.getLastName(), null, OtpType.LOGIN,
-//						EmailTemplateType.LOGIN_SUCCESS_NOTIFICATION);
-//			}
-
 			String accessToken = (String) tokens.get(AppConstants.ACCESS_TOKEN);
 			String refreshToken = (String) tokens.get(AppConstants.REFRESH_TOKEN);
 
@@ -110,6 +107,12 @@ public class UserAuthServiceImpl implements IUserAuthService {
 			String ipAddress = deviceMetadataUtil.getClientIp(httpRequest);
 
 			sessionService.createSession(user, accessToken, refreshToken, userAgent, ipAddress);
+
+//          if (otpType == OtpType.LOGIN) {
+//              sendEmail(user.getPersonalInfo().getEmail(),
+//                        user.getPersonalInfo().getFirstName() + " " + user.getPersonalInfo().getLastName(),
+//                        null, OtpType.LOGIN, EmailTemplateType.LOGIN_SUCCESS_NOTIFICATION);
+//          }
 
 			return AppUtils.buildSuccessResponse(AppConstants.OTP_VERIFIED_SUCCESSFULLY, tokens);
 		}
@@ -138,7 +141,8 @@ public class UserAuthServiceImpl implements IUserAuthService {
 	public ApiResponse forgotPassword(ForgetPasswordRequest request) {
 		String email = request.getUsername();
 		User user = userService.getUserByEmailAndIsActive(email, true);
-		return sendOtpAndGenerateAuthToken(email, user.getFirstName() + " " + user.getLastName(),
+		return sendOtpAndGenerateAuthToken(email,
+				user.getPersonalInfo().getFirstName() + " " + user.getPersonalInfo().getLastName(),
 				user.getRole().getRoleName(), OtpType.FORGET_PASSWORD, EmailTemplateType.OTP_VERIFICATION);
 	}
 
@@ -155,14 +159,16 @@ public class UserAuthServiceImpl implements IUserAuthService {
 		String email = jwtUtils.extractEmail(token);
 		User user = userService.getUserByEmailAndIsActive(email, true);
 
-		if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+		if (passwordEncoder.matches(request.getNewPassword(), user.getPersonalInfo().getPassword())) {
 			throw new BadRequestException(AppConstants.PASSWORD_SHOULD_BE_DIFFERENT);
 		}
 
-		user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+		user.getPersonalInfo().setPassword(passwordEncoder.encode(request.getNewPassword()));
 		userService.saveUser(user);
-//		sendEmail(user.getEmail(), user.getFirstName() + " " + user.getLastName(), null, null,
-//				EmailTemplateType.PASSWORD_UPDATE_NOTIFICATION);
+
+//      sendEmail(user.getPersonalInfo().getEmail(),
+//                user.getPersonalInfo().getFirstName() + " " + user.getPersonalInfo().getLastName(),
+//                null, null, EmailTemplateType.PASSWORD_UPDATE_NOTIFICATION);
 
 		return AppUtils.buildSuccessResponse(AppConstants.PASSWORD_RESET_SUCCESS);
 	}
@@ -170,35 +176,28 @@ public class UserAuthServiceImpl implements IUserAuthService {
 	// -------------------- REFRESH TOKEN -----------------------
 	@Override
 	public ApiResponse refreshToken() {
-		// Extract refresh token from request header
 		String refreshToken = jwtUtils.getToken(httpRequest);
 
-		// Validate refresh token
 		if (!jwtUtils.validateRefreshToken(refreshToken)) {
 			throw new UnauthorizedException(AppConstants.INVALID_TOKEN);
 		}
 
-		// Fetch session associated with this refresh token
 		Session session = sessionRepository.findByRefreshToken(refreshToken)
 				.orElseThrow(() -> new ResourceNotFoundException(AppConstants.REFRESH_TOKEN_NOT_RECOGNIZED));
 
-		// Ensure the session belongs to a user
 		if (session.getUser() == null) {
 			throw new ForbiddenException("Refresh token does not belong to a user");
 		}
 
 		User user = userService.getUserByEmailAndIsActive(jwtUtils.extractEmail(refreshToken), true);
 
-		// Ensure the session actually belongs to this user
 		if (!session.getUser().getUserId().equals(user.getUserId())) {
 			throw new ForbiddenException(AppConstants.TOKEN_NOT_BELONG_TO_USER);
 		}
 
-		// Generate new access token
-		String newAccessToken = jwtUtils.generateToken(user.getEmail(), user.getRole().getRoleName(),
+		String newAccessToken = jwtUtils.generateToken(user.getPersonalInfo().getEmail(), user.getRole().getRoleName(),
 				TokenType.ACCESS_TOKEN, OtpType.LOGIN, true);
 
-		// Update session with the new access token
 		sessionService.updateAccessTokenForRefreshToken(user, refreshToken, newAccessToken);
 
 		return AppUtils.buildSuccessResponse(AppConstants.ACCESS_TOKEN_GENERATED, newAccessToken);
@@ -213,19 +212,24 @@ public class UserAuthServiceImpl implements IUserAuthService {
 		if (userRepository.findByMobileNumberAndOptionalIsActive(request.getMobileNumber(), true).isPresent())
 			throw new ResourceAlreadyExistException(AppConstants.MOBILE_ALREADY_REGISTERED);
 
-		TempUser tempUser = tempUserRepository.findByEmail(request.getEmail()).orElse(TempUser.builder().build());
-		tempUser.setEmail(request.getEmail());
-		tempUser.setPassword(passwordEncoder.encode(request.getPassword()));
-		tempUser.setFirstName(request.getFirstName());
-		tempUser.setLastName(request.getLastName());
-		tempUser.setMobileNumber(request.getMobileNumber());
+		// Fetch existing TempUser or create a new one
+		TempUser tempUser = tempUserRepository.findByPersonalInfo_Email(request.getEmail())
+				.orElse(TempUser.builder().build());
+
+		// Build or overwrite PersonalInfo using builder to avoid nulls
+		PersonalInfo personalInfo = PersonalInfo.builder().email(request.getEmail())
+				.password(passwordEncoder.encode(request.getPassword())).firstName(request.getFirstName())
+				.lastName(request.getLastName()).mobileNumber(request.getMobileNumber()).build();
+
+		tempUser.setPersonalInfo(personalInfo);
 		tempUser.setRole(rolesRepository.findByRoleNameAndIsActiveAndIsDeleted("USER", true, false)
 				.orElseThrow(() -> new ResourceNotFoundException(AppConstants.ROLE_NOT_FOUND)));
 
 		tempUserRepository.save(tempUser);
 
-		return sendOtpAndGenerateAuthToken(tempUser.getEmail(), tempUser.getFirstName() + " " + tempUser.getLastName(),
-				"USER", OtpType.REGISTER, EmailTemplateType.OTP_VERIFICATION);
+		return sendOtpAndGenerateAuthToken(tempUser.getPersonalInfo().getEmail(),
+				tempUser.getPersonalInfo().getFirstName() + " " + tempUser.getPersonalInfo().getLastName(), "USER",
+				OtpType.REGISTER, EmailTemplateType.OTP_VERIFICATION);
 	}
 
 	// -------------------- HELPER METHODS -----------------------
@@ -253,34 +257,35 @@ public class UserAuthServiceImpl implements IUserAuthService {
 	}
 
 	private User promoteTempUser(String email) {
-		TempUser tempUser = tempUserRepository.findByEmail(email)
+		TempUser tempUser = tempUserRepository.findByPersonalInfo_Email(email)
 				.orElseThrow(() -> new ResourceNotFoundException(AppConstants.USER_NOT_FOUND));
 
-		User user = User.builder().email(tempUser.getEmail()).password(tempUser.getPassword())
-				.firstName(tempUser.getFirstName()).lastName(tempUser.getLastName())
-				.mobileNumber(tempUser.getMobileNumber()).role(tempUser.getRole()).build();
+		User user = User.builder().personalInfo(tempUser.getPersonalInfo()).role(tempUser.getRole()).build();
 
 		user = userService.saveUser(user);
 		tempUserRepository.delete(tempUser);
 
-//		sendEmail(user.getEmail(), user.getFirstName() + " " + user.getLastName(), null, OtpType.REGISTER,
-//				EmailTemplateType.REGISTRATION);
+//      sendEmail(user.getPersonalInfo().getEmail(),
+//                user.getPersonalInfo().getFirstName() + " " + user.getPersonalInfo().getLastName(),
+//                null, OtpType.REGISTER, EmailTemplateType.REGISTRATION);
+
 		return user;
 	}
 
 //	private void sendEmail(String email, String username, String otp, OtpType otpType, EmailTemplateType templateType) {
-//		SendEmailRequest emailRequest = SendEmailRequest.builder().to(email).username(username).otp(otp)
-//				.otpType(otpType).templateType(templateType)
-//				.dataTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy hh:mm a"))).build();
-//		notificationProducer.sendMessage(kafkaTopics.getEmailNotificationTopic(), emailRequest, OutboxType.EMAIL);
-//	}
+//	SendEmailRequest emailRequest = SendEmailRequest.builder().to(email).username(username).otp(otp)
+//			.otpType(otpType).templateType(templateType)
+//			.dataTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MMM-yyyy hh:mm a"))).build();
+//	notificationProducer.sendMessage(kafkaTopics.getEmailNotificationTopic(), emailRequest, OutboxType.EMAIL);
+//}
 
 	private ApiResponse sendOtpAndGenerateAuthToken(String email, String fullName, String role, OtpType otpType,
 			EmailTemplateType templateType) {
 		String token = jwtUtils.generateToken(email, role, TokenType.AUTH_TOKEN, otpType, false);
 		String otp = otpService.generateOtp(email, otpType);
 
-//		sendEmail(email, fullName, otp, otpType, templateType);
+//      sendEmail(email, fullName, otp, otpType, templateType);
+
 		return AppUtils.buildSuccessResponse(
 				templateType == EmailTemplateType.OTP_VERIFICATION ? AppConstants.OTP_SENT_FOR_LOGIN
 						: AppConstants.OTP_SENT,
@@ -292,13 +297,15 @@ public class UserAuthServiceImpl implements IUserAuthService {
 
 	private UserOrTemp fetchUserOrTempUser(String email, OtpType otpType) {
 		if (otpType == OtpType.REGISTER) {
-			TempUser tempUser = tempUserRepository.findByEmail(email)
+			TempUser tempUser = tempUserRepository.findByPersonalInfo_Email(email)
 					.orElseThrow(() -> new ResourceNotFoundException(AppConstants.USER_NOT_FOUND));
-			return new UserOrTemp(tempUser.getEmail(), tempUser.getFirstName() + " " + tempUser.getLastName(),
+			return new UserOrTemp(tempUser.getPersonalInfo().getEmail(),
+					tempUser.getPersonalInfo().getFirstName() + " " + tempUser.getPersonalInfo().getLastName(),
 					tempUser.getRole().getRoleName());
 		} else {
 			User user = userService.getUserByEmailAndIsActive(email, true);
-			return new UserOrTemp(user.getEmail(), user.getFirstName() + " " + user.getLastName(),
+			return new UserOrTemp(user.getPersonalInfo().getEmail(),
+					user.getPersonalInfo().getFirstName() + " " + user.getPersonalInfo().getLastName(),
 					user.getRole().getRoleName());
 		}
 	}

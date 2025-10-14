@@ -10,6 +10,7 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -20,7 +21,6 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
@@ -85,10 +85,9 @@ public class BlogPost extends AuditData {
 	@Builder.Default
 	private List<Comment> comments = List.of();
 
-	// One-to-one with stats
-	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-	@JoinColumn(name = "stats_id", referencedColumnName = "id")
-	private ArticleStats stats;
+	@Embedded
+	@Builder.Default
+	private ArticleStats stats = new ArticleStats();
 
 	// Many-to-Many relationships for user engagement
 	@ManyToMany(fetch = FetchType.LAZY)
@@ -115,9 +114,9 @@ public class BlogPost extends AuditData {
 	@Transient
 	public String getAuthorName() {
 		if (userAuthor != null)
-			return userAuthor.getFirstName() + " " + userAuthor.getLastName();
+			return userAuthor.getPersonalInfo().getFullName();
 		if (adminAuthor != null)
-			return adminAuthor.getFirstName() + " " + adminAuthor.getLastName();
+			return adminAuthor.getPersonalInfo().getFullName();
 		return "Unknown Author";
 	}
 
@@ -133,18 +132,18 @@ public class BlogPost extends AuditData {
 	@Transient
 	public String getAuthorBio() {
 		if (userAuthor != null)
-			return userAuthor.getBio();
+			return userAuthor.getPersonalInfo().getBio();
 		if (adminAuthor != null)
-			return adminAuthor.getBio();
+			return adminAuthor.getPersonalInfo().getBio();
 		return "";
 	}
 
 	@Transient
 	public String getAuthorProfile() {
 		if (userAuthor != null)
-			return userAuthor.getProfilePicture();
+			return userAuthor.getPersonalInfo().getProfilePicture();
 		if (adminAuthor != null)
-			return adminAuthor.getProfilePicture();
+			return adminAuthor.getPersonalInfo().getProfilePicture();
 		return "";
 	}
 

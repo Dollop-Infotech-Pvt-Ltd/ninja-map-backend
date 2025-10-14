@@ -23,10 +23,10 @@ public class RecipientService {
 	}
 
 	public String getEmail(User user, Admin admin) {
-		return user != null ? user.getEmail() : admin != null ? admin.getEmail() : null;
+		return user != null ? user.getPersonalInfo().getEmail() : admin != null ? admin.getPersonalInfo().getEmail() : null;
 	}
 
 	public String getPhone(User user, Admin admin) {
-		return user != null ? user.getMobileNumber() : admin != null ? admin.getMobileNumber() : null;
+		return user != null ? user.getPersonalInfo().getMobileNumber() : admin != null ? admin.getPersonalInfo().getMobileNumber() : null;
 	}
 }

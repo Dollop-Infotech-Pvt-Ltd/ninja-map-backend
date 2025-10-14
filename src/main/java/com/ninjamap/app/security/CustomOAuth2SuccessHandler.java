@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import com.ninjamap.app.enums.TokenType;
 import com.ninjamap.app.exception.ResourceNotFoundException;
 import com.ninjamap.app.model.Admin;
+import com.ninjamap.app.model.PersonalInfo;
 import com.ninjamap.app.model.Roles;
 import com.ninjamap.app.model.Session;
 import com.ninjamap.app.model.User;
@@ -98,9 +99,13 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
 					.orElseThrow(() -> new ResourceNotFoundException("Default USER role not found"));
 
 			User newUser = User.builder()
-					.email(email)
-					.firstName(firstName != null ? firstName : "Unknown")
-					.lastName(lastName != null ? lastName : "Unknown")
+					.personalInfo(
+						PersonalInfo.builder()
+							.email(email)
+							.firstName(firstName != null ? firstName : "Unknown")
+							.lastName(lastName != null ? lastName : "Unknown")
+							.build()
+					)
 					.isActive(true)
 					.isDeleted(false)
 					.role(userRole)

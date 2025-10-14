@@ -1,20 +1,19 @@
 package com.ninjamap.app.model;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Embeddable;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Entity
-@Table(name = "article_stats")
+@Embeddable
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class ArticleStats {
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.UUID)
-	private String id;
 
 	@Builder.Default
 	private Integer views = 0;

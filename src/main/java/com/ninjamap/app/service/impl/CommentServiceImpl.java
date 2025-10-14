@@ -140,9 +140,9 @@ public class CommentServiceImpl implements ICommentService {
 
         return CommentResponse.builder()
                 .id(comment.getId())
-                .name(user.getFirstName() + " " + user.getLastName())
+                .name(user.getPersonalInfo().getFullName())
                 .designation(user.getRole() != null ? user.getRole().getRoleName() : "User")
-                .profilePicture(user.getProfilePicture())
+                .profilePicture(user.getPersonalInfo().getProfilePicture())
                 .content(comment.getContent())
                 .createdDate(comment.getCreatedDate())
                 .likeCount(comment.getLikeCount())
