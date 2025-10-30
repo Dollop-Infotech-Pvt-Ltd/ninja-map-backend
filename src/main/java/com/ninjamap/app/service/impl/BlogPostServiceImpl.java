@@ -3,7 +3,6 @@ package com.ninjamap.app.service.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -11,14 +10,19 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.ninjamap.app.enums.BlogCategory;
 import com.ninjamap.app.exception.ResourceNotFoundException;
+import com.ninjamap.app.model.Admin;
 import com.ninjamap.app.model.ArticleStats;
 import com.ninjamap.app.model.BlogPost;
+import com.ninjamap.app.model.User;
 import com.ninjamap.app.payload.request.BlogPostRequest;
 import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.response.ApiResponse;
-import com.ninjamap.app.payload.response.BlogPostResponse;
+import com.ninjamap.app.payload.response.ArticleStatsResponse;
+import com.ninjamap.app.payload.response.AuthorResponse;
+import com.ninjamap.app.payload.response.BlogDetailResponse;
+import com.ninjamap.app.payload.response.BlogListItemResponse;
 import com.ninjamap.app.payload.response.CommentResponse;
-import com.ninjamap.app.payload.response.PaginatedResponse;
+import com.ninjamap.app.payload.response.HomepageResponse;
 import com.ninjamap.app.repository.IBlogPostRepository;
 import com.ninjamap.app.service.IAdminService;
 import com.ninjamap.app.service.IBlogPostService;
@@ -29,129 +33,272 @@ import com.ninjamap.app.utils.AppUtils;
 import com.ninjamap.app.utils.JwtUtils;
 import com.ninjamap.app.utils.constants.AppConstants;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class BlogPostServiceImpl implements IBlogPostService {
 
-	private final IBlogPostRepository blogPostRepository;
-	private final ICloudinaryService cloudinaryService;
-	private final IUserService userService;
-	private final IAdminService adminService;
-	private final JwtUtils jwtUtils;
-	private final ICommentService commentService;
+    private final IBlogPostRepository blogPostRepository;
+    private final ICloudinaryService cloudinaryService;
+    private final IUserService userService;
+    private final IAdminService adminService;
+    private final JwtUtils jwtUtils;
+    private final ICommentService commentService;
 
-	@Override
-	public ResponseEntity<ApiResponse> createPost(BlogPostRequest request) {
-		String role = jwtUtils.extractRole(jwtUtils.extractTokenFromHeader());
+    // ================= CREATE / UPDATE POST =================
+    @Override
+    public ResponseEntity<ApiResponse> createPost(BlogPostRequest request) {
+        User userAuthor = null;
+        Admin adminAuthor = null;
+        String role = jwtUtils.extractRole(jwtUtils.extractTokenFromHeader());
 
-		String authorId = "USER".equals(role) ? userService.getCurrectUserFromToken().getId()
-				: adminService.getCurrectAdminFromToken().getId();
+        if ("USER".equals(role)) userAuthor = getCurrentUser();
+        else adminAuthor = getCurrentAdmin();
 
-		// Handle featured image upload via Cloudinary
-		MultipartFile file = request.getFeaturedImage();
-		String featuredImageUrl = (file != null && !file.isEmpty()) ? cloudinaryService.uploadFile(file, "Blog_Posts")
-				: null;
+        BlogPost blogPost = BlogPost.builder()
+                .title(request.getTitle())
+                .previewContent(request.getPreviewContent())
+                .detailedContent(request.getDetailedContent())
+                .category(request.getCategory())
+                .isFeaturedArticle(Boolean.TRUE.equals(request.getIsFeaturedArticle()))
+                .thumbnailUrl(uploadIfPresent(request.getThumbnailImage(), AppConstants.BLOG_THUMBNAILS))
+                .featuredImageUrl(uploadIfPresent(request.getFeaturedImage(), AppConstants.BLOG_POSTS))
+                .userAuthor(userAuthor)
+                .adminAuthor(adminAuthor)
+                .readTimeMinutes(calculateReadTime(request.getDetailedContent()))
+                .tags(request.getTags())
+                .stats(initStats())
+                .build();
 
-		// Attach default stats
-		ArticleStats stats = ArticleStats.builder().views(0).likes(0).comments(0).shares(0).build();
+        return saveAndRespond(blogPost, AppConstants.BLOG_POST_CREATED, AppConstants.BLOG_POST_NOT_CREATED);
+    }
 
-		BlogPost blogPost = BlogPost.builder().title(request.getTitle()).content(request.getContent())
-				.category(request.getCategory()).authorId(authorId).authorRole(role).readTimeMinutes(0)
-				.featuredImageUrl(featuredImageUrl).tags(request.getTags()).stats(stats) // ✅ attach stats
-				.build();
+    @Override
+    public ResponseEntity<ApiResponse> updateBlogPost(String id, BlogPostRequest request) {
+        BlogPost existing = findPost(id);
 
-		BlogPost saved = blogPostRepository.save(blogPost);
+        existing.setTitle(request.getTitle());
+        existing.setPreviewContent(request.getPreviewContent());
+        existing.setDetailedContent(request.getDetailedContent());
+        existing.setCategory(request.getCategory());
+        existing.setReadTimeMinutes(calculateReadTime(request.getDetailedContent()));
+        existing.setTags(request.getTags() != null ? request.getTags() : existing.getTags());
 
-		// Build response based on save result
-		ApiResponse response = (saved != null) ? AppUtils.buildSuccessResponse(AppConstants.BLOG_POST_CREATED)
-				: AppUtils.buildFailureResponse(AppConstants.BLOG_POST_NOT_CREATED);
+        if (request.getThumbnailImage() != null && !request.getThumbnailImage().isEmpty())
+            existing.setThumbnailUrl(uploadIfPresent(request.getThumbnailImage(), AppConstants.BLOG_THUMBNAILS));
 
-		return new ResponseEntity<>(response, response.getHttp());
+        if (request.getFeaturedImage() != null && !request.getFeaturedImage().isEmpty())
+            existing.setFeaturedImageUrl(uploadIfPresent(request.getFeaturedImage(), AppConstants.BLOG_POSTS));
 
-	}
+        return saveAndRespond(existing, AppConstants.BLOG_POST_UPDATED, AppConstants.BLOG_POST_NOT_UPDATED);
+    }
 
-	@Override
-	public ResponseEntity<ApiResponse> updateBlogPost(String id, BlogPostRequest request) {
-		BlogPost existing = findById(id);
+    @Override
+    public ResponseEntity<ApiResponse> deleteBlogPost(String id) {
+        BlogPost post = findPost(id);
+        post.setIsActive(false);
+        post.setIsDeleted(true);
+        return saveAndRespond(post, AppConstants.BLOG_POST_DELETED, AppConstants.BLOG_POST_NOT_DELETED);
+    }
 
-		// Update fields
-		existing.setTitle(request.getTitle());
-		existing.setContent(request.getContent());
-		existing.setCategory(request.getCategory());
+    @Override
+    public ResponseEntity<ApiResponse> getPostById(String id) {
+        BlogPost post = findPost(id);
+        return ResponseEntity.ok(AppUtils.buildSuccessResponse(AppConstants.BLOG_POST_FETCHED, mapToDetailResponse(post)));
+    }
 
-		if (request.getFeaturedImage() != null && !request.getFeaturedImage().isEmpty()) {
-			String featuredImageUrl = cloudinaryService.uploadFile(request.getFeaturedImage(), "Blog_Posts");
-			existing.setFeaturedImageUrl(featuredImageUrl);
-		}
+    @Override
+    public ResponseEntity<ApiResponse> getHomepagePosts(BlogCategory category, PaginationRequest paginationRequest) {
+        Pageable pageable = AppUtils.buildPageableRequest(paginationRequest, BlogPost.class);
 
-		existing.setTags(request.getTags() != null ? request.getTags() : existing.getTags());
+        List<BlogPost> featuredPosts = blogPostRepository.findTopFeaturedByCategory(category, pageable);
+        List<String> featuredIds = featuredPosts.stream().map(BlogPost::getId).toList();
+        List<BlogPost> latestPosts = blogPostRepository.findTopLatestByCategory(category, featuredIds, pageable);
 
-		BlogPost saved = blogPostRepository.save(existing);
+        HomepageResponse response = HomepageResponse.builder()
+                .featuredArticles(featuredPosts.stream().map(this::mapToListItem).toList())
+                .latestArticles(latestPosts.stream().map(this::mapToListItem).toList())
+                .totalFeatured(featuredPosts.size())
+                .totalLatest(latestPosts.size())
+                .build();
 
-		// Build response based on save result
-		ApiResponse response = (saved != null) ? AppUtils.buildSuccessResponse(AppConstants.BLOG_POST_UPDATED)
-				: AppUtils.buildFailureResponse(AppConstants.BLOG_POST_NOT_UPDATED);
-		return new ResponseEntity<>(response, response.getHttp());
-	}
+        return ResponseEntity.ok(AppUtils.buildSuccessResponse(AppConstants.HOMEPAGE_POSTS_FETCHED, response));
+    }
 
-	private BlogPost findById(String id) {
-		return blogPostRepository.findByIdAndIsDeletedFalse(id)
-				.orElseThrow(() -> new ResourceNotFoundException(AppConstants.BLOG_POST_NOT_FOUND));
-	}
+    // ================= ENGAGEMENT =================
+    @Override
+    public ResponseEntity<ApiResponse> toggleLike(String postId, Boolean like) {
+        return updateUserSet(postId, like, "like");
+    }
 
-	@Override
-	public ResponseEntity<ApiResponse> deleteBlogPost(String id) {
-		BlogPost blogPost = findById(id);
+    @Override
+    public ResponseEntity<ApiResponse> toggleSave(String postId, Boolean save) {
+        return updateUserSet(postId, save, "save");
+    }
 
-		// Soft delete
-		blogPost.setIsActive(false);
-		blogPost.setIsDeleted(true);
+    @Override
+    public ResponseEntity<ApiResponse> sharePost(String postId) {
+        BlogPost post = findPost(postId);
+        User currentUser = getCurrentUser();
 
-		BlogPost saved = blogPostRepository.save(blogPost);
+        if (post.getSharedByUsers().add(currentUser)) incrementStats(post, "shares");
 
-		ApiResponse response = (saved != null) ? AppUtils.buildSuccessResponse(AppConstants.BLOG_POST_DELETED)
-				: AppUtils.buildFailureResponse(AppConstants.BLOG_POST_NOT_DELETED);
-		return new ResponseEntity<>(response, response.getHttp());
-	}
+        return saveAndRespond(post, AppConstants.BLOG_POST_SHARED, null);
+    }
 
-	@Override
-	public ResponseEntity<ApiResponse> getPostById(String id) {
-		return ResponseEntity
-				.ok(AppUtils.buildSuccessResponse(AppConstants.BLOG_POST_FETCHED, mapToResponse(findById(id))));
-	}
+    @Transactional
+    @Override
+    public ResponseEntity<ApiResponse> addView(String postId) {
+        BlogPost post = findPost(postId);
+        User currentUser = getCurrentUser();
 
-	@Override
-	public ResponseEntity<PaginatedResponse<BlogPostResponse>> getAllPosts(BlogCategory category,
-			PaginationRequest paginationRequest) {
-		Pageable pageable = AppUtils.buildPageableRequest(paginationRequest, BlogPost.class);
-		Page<BlogPost> page = blogPostRepository.findByCategoryOptional(category, pageable);
-		Page<BlogPostResponse> responsePage = page.map(this::mapToResponse);
-		PaginatedResponse<BlogPostResponse> paginatedResponse = new PaginatedResponse<>(responsePage);
+        if (!post.getViewedByUsers().contains(currentUser)) {
+            post.getViewedByUsers().add(currentUser);
+            incrementStats(post, "views");
+        }
 
-		return ResponseEntity.ok(paginatedResponse);
+        return saveAndRespond(post, AppConstants.BLOG_POST_VIEWED, null);
+    }
 
-	}
+    // ================= HELPERS =================
+    private BlogPost findPost(String id) {
+        return blogPostRepository.findByIdAndIsDeletedFalse(id)
+                .orElseThrow(() -> new ResourceNotFoundException(AppConstants.BLOG_POST_NOT_FOUND));
+    }
 
-	private BlogPostResponse mapToResponse(BlogPost blogPost) {
-		if (blogPost == null)
-			return null;
+    private User getCurrentUser() {
+        return userService.getUserByEmailAndIsActive(userService.getCurrectUserFromToken().getEmail(), null);
+    }
 
-		String authorName = "USER".equals(blogPost.getAuthorRole())
-				? userService.getCurrectUserFromToken().getFullName()
-				: adminService.getCurrectAdminFromToken().getFullName();
+    private Admin getCurrentAdmin() {
+        return adminService.getAdminByEmailAndIsActive(adminService.getCurrectAdminFromToken().getEmail(), null);
+    }
 
-		List<CommentResponse> commentResponses = blogPost.getComments().stream()
-				.map(commentService::mapToCommentRespons).collect(Collectors.toList());
+    private String uploadIfPresent(MultipartFile file, String folder) {
+        return (file != null && !file.isEmpty()) ? cloudinaryService.uploadFile(file, folder) : null;
+    }
 
-		return BlogPostResponse.builder().id(blogPost.getId()).title(blogPost.getTitle()).content(blogPost.getContent())
-				.category(blogPost.getCategory()).featuredImageUrl(blogPost.getFeaturedImageUrl())
-				.publishedDate(blogPost.getCreatedDate()).readTimeMinutes(blogPost.getReadTimeMinutes())
-				.views(blogPost.getStats() != null ? blogPost.getStats().getViews() : 0)
-				.likes(blogPost.getStats() != null ? blogPost.getStats().getLikes() : 0)
-				.comments(blogPost.getStats() != null ? blogPost.getStats().getComments() : 0)
-				.shares(blogPost.getStats() != null ? blogPost.getStats().getShares() : 0).authorName(authorName)
-				.authorRole(blogPost.getAuthorRole()).tags(blogPost.getTags()).commentsList(commentResponses).build();
-	}
+    private ArticleStats initStats() {
+        return ArticleStats.builder().views(0).likes(0).comments(0).shares(0).build();
+    }
+
+    private int calculateReadTime(String content) {
+        if (content == null || content.isEmpty()) return 0;
+        int words = content.split("\\s+").length;
+        return Math.max(1, words / 200);
+    }
+
+    private void incrementStats(BlogPost post, String field) {
+        if (post.getStats() == null) post.setStats(initStats());
+        switch (field) {
+            case "views" -> post.getStats().setViews(post.getStats().getViews() + 1);
+            case "likes" -> post.getStats().setLikes(post.getStats().getLikes() + 1);
+            case "shares" -> post.getStats().setShares(post.getStats().getShares() + 1);
+        }
+    }
+
+    private ResponseEntity<ApiResponse> updateUserSet(String postId, Boolean flag, String type) {
+        BlogPost post = findPost(postId);
+        User user = getCurrentUser();
+
+        switch (type) {
+            case "like" -> {
+                if (flag && post.getLikedByUsers().add(user)) incrementStats(post, "likes");
+                if (!flag && post.getLikedByUsers().remove(user))
+                    post.getStats().setLikes(Math.max(0, post.getStats().getLikes() - 1));
+            }
+            case "save" -> {
+                if (flag) post.getSavedByUsers().add(user);
+                else post.getSavedByUsers().remove(user);
+            }
+        }
+
+        String msg = switch (type) {
+            case "like" -> flag ? AppConstants.BLOG_POST_LIKED : AppConstants.BLOG_POST_UNLIKED;
+            case "save" -> flag ? AppConstants.BLOG_POST_SAVED : AppConstants.BLOG_POST_UNSAVED;
+            default -> "";
+        };
+
+        return saveAndRespond(post, msg, null);
+    }
+
+    private ResponseEntity<ApiResponse> saveAndRespond(BlogPost post, String successMsg, String failureMsg) {
+        try {
+            blogPostRepository.save(post);
+            return ResponseEntity.ok(AppUtils.buildSuccessResponse(successMsg));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(AppUtils.buildFailureResponse(failureMsg != null ? failureMsg : "Operation failed"));
+        }
+    }
+
+    // ================= MAPPING =================
+    private BlogListItemResponse mapToListItem(BlogPost post) {
+        return BlogListItemResponse.builder()
+                .id(post.getId())
+                .title(post.getTitle())
+                .previewContent(post.getPreviewContent())
+                .category(post.getCategory())
+                .readTimeMinutes(post.getReadTimeMinutes())
+                .thumbnailUrl(post.getThumbnailUrl())
+                .postDate(post.getCreatedDate())
+                .views(post.getStats() != null ? post.getStats().getViews() : 0)
+                .likes(post.getStats() != null ? post.getStats().getLikes() : 0)
+                .author(mapToAuthorResponse(post))
+                .build();
+    }
+
+    private AuthorResponse mapToAuthorResponse(BlogPost post) {
+        return AuthorResponse.builder()
+                .name(post.getAuthorName())
+                .designation(post.getAuthorRole())
+                .profilePicture(post.getAuthorProfile())
+                .bio(post.getAuthorBio())
+                .build();
+    }
+
+    private BlogDetailResponse mapToDetailResponse(BlogPost post) {
+        AuthorResponse author = mapToAuthorResponse(post);
+        ArticleStatsResponse stats = post.getStats() != null ? ArticleStatsResponse.builder()
+                .views(post.getStats().getViews())
+                .likes(post.getStats().getLikes())
+                .comments(post.getStats().getComments())
+                .shares(post.getStats().getShares())
+                .build() : null;
+
+        List<CommentResponse> comments = post.getComments().stream()
+                .filter(c -> c.getParentComment() == null && !Boolean.TRUE.equals(c.getIsDeleted()))
+                .map(commentService::mapToCommentRespons)
+                .collect(Collectors.toList());
+
+        List<BlogListItemResponse> relatedArticles = blogPostRepository
+                .findTop3ByCategoryAndIdNotAndIsDeletedFalseOrderByCreatedDateDesc(post.getCategory(), post.getId())
+                .stream()
+                .map(this::mapToListItem)
+                .collect(Collectors.toList());
+
+        User currentUser = getCurrentUser();
+        Boolean isLike = currentUser != null && post.getLikedByUsers().contains(currentUser);
+        Boolean isSave = currentUser != null && post.getSavedByUsers().contains(currentUser);
+
+        return BlogDetailResponse.builder()
+                .id(post.getId())
+                .title(post.getTitle())
+                .category(post.getCategory())
+                .previewContent(post.getPreviewContent())
+                .detailedContent(post.getDetailedContent())
+                .featuredImageUrl(post.getFeaturedImageUrl())
+                .readTimeMinutes(post.getReadTimeMinutes())
+                .postDate(post.getCreatedDate())
+                .author(author)
+                .stats(stats)
+                .tags(post.getTags())
+                .comments(comments)
+                .relatedArticles(relatedArticles)
+                .isLike(isLike)
+                .isSave(isSave)
+                .build();
+    }
 }

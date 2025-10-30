@@ -31,51 +31,64 @@ import lombok.RequiredArgsConstructor;
 @Validated
 public class PermissionController {
 
-	private final IPermissionService permissionService;
+    private final IPermissionService permissionService;
 
-	@PreAuthorize("hasAuthority('PERMISSION_MANAGEMENT.CREATE_PERMISSIONS')")
-	@PostMapping("/create")
-	public ResponseEntity<ApiResponse> createPermission(@RequestBody @Valid PermissionRequest request) {
-		return permissionService.createPermission(request);
-	}
+    // ========================= CREATE PERMISSION =========================
+    @PreAuthorize("hasAuthority('PERMISSION_MANAGEMENT.CREATE_PERMISSIONS')")
+    @PostMapping("/create")
+    public ResponseEntity<ApiResponse> createPermission(@RequestBody @Valid PermissionRequest request) {
+        return permissionService.createPermission(request);
+    }
 
-	@PreAuthorize("hasAuthority('PERMISSION_MANAGEMENT.VIEW_PERMISSIONS')")
-	@GetMapping("/get-all")
-	public ResponseEntity<List<PermissionResponse>> getAllPermissions(
-			@RequestParam(defaultValue = "All") String resource, @RequestParam(defaultValue = "All") String type,
-			@RequestParam(required = false) String searchKeyword) {
-		return permissionService.getAllPermissions(resource, type, searchKeyword);
-	}
+    // ========================= GET ALL PERMISSIONS =========================
+    @PreAuthorize("hasAuthority('PERMISSION_MANAGEMENT.VIEW_PERMISSIONS')")
+    @GetMapping("/get-all")
+    public ResponseEntity<List<PermissionResponse>> getAllPermissions(
+            @RequestParam(defaultValue = "All") String resource,
+            @RequestParam(defaultValue = "All") String type,
+            @RequestParam(required = false) String searchKeyword) {
 
-	@PreAuthorize("hasAuthority('PERMISSION_MANAGEMENT.VIEW_PERMISSIONS')")
-	@GetMapping("/get")
-	public ResponseEntity<ApiResponse> getPermissionById(
-			@RequestParam(name = AppConstants.PERMISSION_ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String permissionId,
-			@RequestParam(required = false) Boolean isActive) {
-		return permissionService.getPermissionById(permissionId, isActive);
-	}
+        return permissionService.getAllPermissions(resource, type, searchKeyword);
+    }
 
-	@PreAuthorize("hasAuthority('PERMISSION_MANAGEMENT.EDIT_PERMISSIONS')")
-	@PutMapping("/update")
-	public ResponseEntity<ApiResponse> updatePermission(
-			@RequestParam(name = AppConstants.PERMISSION_ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String permissionId,
-			@RequestBody @Valid PermissionRequest request) {
-		return permissionService.updatePermission(permissionId, request);
-	}
+    // ========================= GET PERMISSION BY ID =========================
+    @PreAuthorize("hasAuthority('PERMISSION_MANAGEMENT.VIEW_PERMISSIONS')")
+    @GetMapping("/get")
+    public ResponseEntity<ApiResponse> getPermissionById(
+            @RequestParam(name = AppConstants.PERMISSION_ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String permissionId,
+            @RequestParam(required = false) Boolean isActive) {
 
-	@PreAuthorize("hasAuthority('PERMISSION_MANAGEMENT.DELETE_PERMISSIONS')")
-	@DeleteMapping("/delete")
-	public ResponseEntity<ApiResponse> deletePermission(
-			@RequestParam(name = AppConstants.PERMISSION_ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String permissionId) {
-		return permissionService.deletePermission(permissionId);
-	}
+        return permissionService.getPermissionById(permissionId, isActive);
+    }
 
-	@PreAuthorize("hasAuthority('PERMISSION_MANAGEMENT.VIEW_PERMISSIONS')")
-	@GetMapping("/get-by-role")
-	public ResponseEntity<List<PermissionResponse>> getAllPermissionByRole(
-			@RequestParam(name = AppConstants.ROLE_ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String roleId,
-			@RequestParam(defaultValue = "All") String resource, @RequestParam(defaultValue = "All") String type,
-			@RequestParam(required = false) String searchKeyword) {
-		return permissionService.getAllPermissionByRoleId(roleId, resource, type);
-	}
+    // ========================= UPDATE PERMISSION =========================
+    @PreAuthorize("hasAuthority('PERMISSION_MANAGEMENT.EDIT_PERMISSIONS')")
+    @PutMapping("/update")
+    public ResponseEntity<ApiResponse> updatePermission(
+            @RequestParam(name = AppConstants.PERMISSION_ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String permissionId,
+            @RequestBody @Valid PermissionRequest request) {
+
+        return permissionService.updatePermission(permissionId, request);
+    }
+
+    // ========================= DELETE PERMISSION =========================
+    @PreAuthorize("hasAuthority('PERMISSION_MANAGEMENT.DELETE_PERMISSIONS')")
+    @DeleteMapping("/delete")
+    public ResponseEntity<ApiResponse> deletePermission(
+            @RequestParam(name = AppConstants.PERMISSION_ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String permissionId) {
+
+        return permissionService.deletePermission(permissionId);
+    }
+
+    // ========================= GET PERMISSIONS BY ROLE =========================
+    @PreAuthorize("hasAuthority('PERMISSION_MANAGEMENT.VIEW_PERMISSIONS')")
+    @GetMapping("/get-by-role")
+    public ResponseEntity<List<PermissionResponse>> getAllPermissionByRole(
+            @RequestParam(name = AppConstants.ROLE_ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String roleId,
+            @RequestParam(defaultValue = "All") String resource,
+            @RequestParam(defaultValue = "All") String type,
+            @RequestParam(required = false) String searchKeyword) {
+
+        return permissionService.getAllPermissionByRoleId(roleId, resource, type);
+    }
 }

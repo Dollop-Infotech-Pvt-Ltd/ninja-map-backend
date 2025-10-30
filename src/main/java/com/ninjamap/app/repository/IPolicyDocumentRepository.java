@@ -31,4 +31,18 @@ public interface IPolicyDocumentRepository extends JpaRepository<PolicyDocument,
 	List<PolicyDocument> findAllByFiltersWithoutPagination(@Param("isActive") Boolean isActive,
 			@Param("documentType") DocumentType documentType);
 
+	@Query("""
+			SELECT p
+			FROM PolicyDocument p
+			WHERE p.isDeleted = false
+			AND (:documentType IS NULL OR p.type = :documentType)
+			AND (:searchValue IS NULL OR :searchValue = ''
+			     OR LOWER(p.title) LIKE LOWER(CONCAT('%', :searchValue, '%'))
+			     OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchValue, '%')))
+			""")
+	Page<PolicyDocument> searchByTypeAndSearchValue(@Param("documentType") DocumentType documentType,
+			@Param("searchValue") String searchValue, Pageable pageable);
+
+	boolean existsByTypeAndTitleAndIsDeletedFalseAndIdNot(DocumentType type, String title, String id);
+
 }

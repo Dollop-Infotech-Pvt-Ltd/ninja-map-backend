@@ -31,61 +31,76 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AdminController {
 
-	private final IAdminService adminService;
+    private final IAdminService adminService;
 
-	@PreAuthorize("hasAuthority('ADMIN_MANAGEMENT.CREATE_ADMINS')")
-	@PostMapping("/create")
-	public ResponseEntity<?> create(@Valid AdminRequest request) {
-		return adminService.create(request);
-	}
+    // ========================= CREATE ADMIN =========================
+    @PreAuthorize("hasAuthority('ADMIN_MANAGEMENT.CREATE_ADMINS')")
+    @PostMapping("/create")
+    public ResponseEntity<?> create(@Valid AdminRequest request) {
+        return adminService.create(request);
+    }
 
-	@PreAuthorize("hasAuthority('ADMIN_MANAGEMENT.VIEW_ADMINS')")
-	@GetMapping("/get")
-	public ResponseEntity<?> getAdminById(
-			@RequestParam(name = AppConstants.ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String id,
-			@RequestParam(name = AppConstants.IS_ACTIVE, required = false) Boolean isActive) {
-		return adminService.getById(id, isActive);
-	}
+    // ========================= GET ADMIN BY ID =========================
+    @PreAuthorize("hasAuthority('ADMIN_MANAGEMENT.VIEW_ADMINS')")
+    @GetMapping("/get")
+    public ResponseEntity<?> getAdminById(
+            @RequestParam(name = AppConstants.ID) 
+            @UUIDValidator(message = ValidationConstants.INVALID_UUID) String id,
+            @RequestParam(name = AppConstants.IS_ACTIVE, required = false) Boolean isActive) {
+        return adminService.getById(id, isActive);
+    }
 
-	@PreAuthorize("hasAuthority('ADMIN_MANAGEMENT.VIEW_ADMINS')")
-	@GetMapping("/get-all")
-	public ResponseEntity<PaginatedResponse<AdminResponse>> getAllAdmins(
-			@RequestParam(name = AppConstants.PAGE_SIZE) Integer pageSize,
-			@RequestParam(name = AppConstants.PAGE_NUMBER) Integer pageNumber,
-			@RequestParam(name = AppConstants.SORT_DIRECTION, defaultValue = AppConstants.DESC, required = false) String sortDirection,
-			@RequestParam(name = AppConstants.SORT_KEY, required = false) String sortKey,
-			@RequestParam(name = AppConstants.SEARCH_VALUE, required = false) String searchValue) {
-		PaginationRequest paginationRequest = PaginationRequest.builder().pageSize(pageSize).pageNumber(pageNumber)
-				.sortDirection(sortDirection).sortKey(sortKey).searchValue(searchValue).build();
+    // ========================= GET ALL ADMINS =========================
+    @PreAuthorize("hasAuthority('ADMIN_MANAGEMENT.VIEW_ADMINS')")
+    @GetMapping("/get-all")
+    public ResponseEntity<PaginatedResponse<AdminResponse>> getAllAdmins(
+            @RequestParam(name = AppConstants.PAGE_SIZE) Integer pageSize,
+            @RequestParam(name = AppConstants.PAGE_NUMBER) Integer pageNumber,
+            @RequestParam(name = AppConstants.SORT_DIRECTION, defaultValue = AppConstants.DESC, required = false) String sortDirection,
+            @RequestParam(name = AppConstants.SORT_KEY, required = false) String sortKey,
+            @RequestParam(name = AppConstants.SEARCH_VALUE, required = false) String searchValue) {
 
-		return adminService.getAllAdmins(paginationRequest);
-	}
+        PaginationRequest paginationRequest = PaginationRequest.builder()
+                .pageSize(pageSize)
+                .pageNumber(pageNumber)
+                .sortDirection(sortDirection)
+                .sortKey(sortKey)
+                .searchValue(searchValue)
+                .build();
 
-	@PreAuthorize("hasAuthority('ADMIN_MANAGEMENT.EDIT_ADMINS')")
-	@PutMapping("/update")
-	public ResponseEntity<?> updateAdmin(@Valid UpdateAdminRequest request) {
-		return adminService.update(request);
-	}
+        return adminService.getAllAdmins(paginationRequest);
+    }
 
-	@PreAuthorize("hasAuthority('ADMIN_MANAGEMENT.DELETE_ADMINS')")
-	@DeleteMapping("/delete")
-	public ResponseEntity<?> deleteAdmin(
-			@RequestParam(name = AppConstants.ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String id) {
-		return adminService.delete(id);
-	}
+    // ========================= UPDATE ADMIN =========================
+    @PreAuthorize("hasAuthority('ADMIN_MANAGEMENT.EDIT_ADMINS')")
+    @PutMapping("/update")
+    public ResponseEntity<?> updateAdmin(@Valid UpdateAdminRequest request) {
+        return adminService.update(request);
+    }
 
-	@PreAuthorize("hasAuthority('ADMIN_MANAGEMENT.EDIT_ADMINS')")
-	@PatchMapping("/update-isActive-status")
-	public ResponseEntity<?> updateStatus(
-			@RequestParam(name = AppConstants.ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String id,
-			@RequestParam(name = AppConstants.IS_ACTIVE) Boolean isActive) {
-		return adminService.updateStatus(id, isActive);
-	}
+    // ========================= DELETE ADMIN =========================
+    @PreAuthorize("hasAuthority('ADMIN_MANAGEMENT.DELETE_ADMINS')")
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteAdmin(
+            @RequestParam(name = AppConstants.ID) 
+            @UUIDValidator(message = ValidationConstants.INVALID_UUID) String id) {
+        return adminService.delete(id);
+    }
 
-	@PreAuthorize("hasAuthority('ADMIN_MANAGEMENT.VIEW_ADMINS')")
-	@GetMapping("/get-loggedIn-user")
-	public ResponseEntity<?> getAdminById() {
-		return ResponseEntity.ok(adminService.getCurrectAdminFromToken());
-	}
+    // ========================= UPDATE ACTIVE STATUS =========================
+    @PreAuthorize("hasAuthority('ADMIN_MANAGEMENT.EDIT_ADMINS')")
+    @PatchMapping("/update-isActive-status")
+    public ResponseEntity<?> updateStatus(
+            @RequestParam(name = AppConstants.ID) 
+            @UUIDValidator(message = ValidationConstants.INVALID_UUID) String id,
+            @RequestParam(name = AppConstants.IS_ACTIVE) Boolean isActive) {
+        return adminService.updateStatus(id, isActive);
+    }
 
+    // ========================= GET LOGGED-IN ADMIN =========================
+    @PreAuthorize("hasAuthority('ADMIN_MANAGEMENT.VIEW_ADMINS')")
+    @GetMapping("/get-loggedIn-user")
+    public ResponseEntity<?> getLoggedInAdmin() {
+        return ResponseEntity.ok(adminService.getCurrectAdminFromToken());
+    }
 }

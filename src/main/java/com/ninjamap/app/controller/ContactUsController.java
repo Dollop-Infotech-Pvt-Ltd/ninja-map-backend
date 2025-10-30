@@ -30,39 +30,48 @@ import lombok.RequiredArgsConstructor;
 @Validated
 public class ContactUsController {
 
-	private final IContactUsService contactUsService;
+    private final IContactUsService contactUsService;
 
-	@PostMapping("/submit")
-	public ResponseEntity<ApiResponse> createContact(@Valid @RequestBody ContactUsRequest request) {
-		return contactUsService.saveContact(request);
-	}
+    // ========================= SUBMIT CONTACT =========================
+    @PostMapping("/submit")
+    public ResponseEntity<ApiResponse> createContact(@Valid @RequestBody ContactUsRequest request) {
+        return contactUsService.saveContact(request);
+    }
 
-	@PreAuthorize("hasAuthority('CONTACT_US_MANAGEMENT.VIEW_CONTACT_US')")
-	@GetMapping("/get-all")
-	public ResponseEntity<PaginatedResponse<ContactUsResponse>> getAllContacts(
-			@RequestParam(name = AppConstants.PAGE_SIZE) Integer pageSize,
-			@RequestParam(name = AppConstants.PAGE_NUMBER) Integer pageNumber,
-			@RequestParam(name = AppConstants.SORT_DIRECTION, defaultValue = AppConstants.DESC, required = false) String sortDirection,
-			@RequestParam(name = AppConstants.SORT_KEY, required = false) String sortKey,
-			@RequestParam(name = AppConstants.SEARCH_VALUE, required = false) String searchValue) {
+    // ========================= GET ALL CONTACTS =========================
+    @PreAuthorize("hasAuthority('CONTACT_US_MANAGEMENT.VIEW_CONTACT_US')")
+    @GetMapping("/get-all")
+    public ResponseEntity<PaginatedResponse<ContactUsResponse>> getAllContacts(
+            @RequestParam(name = AppConstants.PAGE_SIZE) Integer pageSize,
+            @RequestParam(name = AppConstants.PAGE_NUMBER) Integer pageNumber,
+            @RequestParam(name = AppConstants.SORT_DIRECTION, defaultValue = AppConstants.DESC, required = false) String sortDirection,
+            @RequestParam(name = AppConstants.SORT_KEY, required = false) String sortKey,
+            @RequestParam(name = AppConstants.SEARCH_VALUE, required = false) String searchValue) {
 
-		PaginationRequest paginationRequest = PaginationRequest.builder().pageSize(pageSize).pageNumber(pageNumber)
-				.sortDirection(sortDirection).sortKey(sortKey).searchValue(searchValue).build();
+        PaginationRequest paginationRequest = PaginationRequest.builder()
+                .pageSize(pageSize)
+                .pageNumber(pageNumber)
+                .sortDirection(sortDirection)
+                .sortKey(sortKey)
+                .searchValue(searchValue)
+                .build();
 
-		return contactUsService.getAllContacts(paginationRequest);
-	}
+        return contactUsService.getAllContacts(paginationRequest);
+    }
 
-	@PreAuthorize("hasAuthority('CONTACT_US_MANAGEMENT.VIEW_CONTACT_US')")
-	@GetMapping("/get")
-	public ResponseEntity<ApiResponse> getContactById(
-			@RequestParam(name = AppConstants.ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String id) {
-		return contactUsService.getContactById(id);
-	}
+    // ========================= GET CONTACT BY ID =========================
+    @PreAuthorize("hasAuthority('CONTACT_US_MANAGEMENT.VIEW_CONTACT_US')")
+    @GetMapping("/get")
+    public ResponseEntity<ApiResponse> getContactById(
+            @RequestParam(name = AppConstants.ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String id) {
+        return contactUsService.getContactById(id);
+    }
 
-	@PreAuthorize("hasAuthority('CONTACT_US_MANAGEMENT.DELETE_CONTACT_US')")
-	@DeleteMapping("/delete")
-	public ResponseEntity<ApiResponse> deleteContact(
-			@RequestParam(name = AppConstants.ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String id) {
-		return contactUsService.deleteContact(id);
-	}
+    // ========================= DELETE CONTACT =========================
+    @PreAuthorize("hasAuthority('CONTACT_US_MANAGEMENT.DELETE_CONTACT_US')")
+    @DeleteMapping("/delete")
+    public ResponseEntity<ApiResponse> deleteContact(
+            @RequestParam(name = AppConstants.ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String id) {
+        return contactUsService.deleteContact(id);
+    }
 }

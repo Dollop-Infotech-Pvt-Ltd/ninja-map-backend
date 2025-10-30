@@ -1,7 +1,7 @@
 package com.ninjamap.app.service.impl;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -11,8 +11,10 @@ import com.ninjamap.app.exception.ResourceAlreadyExistException;
 import com.ninjamap.app.exception.ResourceNotFoundException;
 import com.ninjamap.app.model.PolicyDocument;
 import com.ninjamap.app.payload.request.CreatePolicyDocumentRequest;
+import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.request.UpdatePolicyDocumentRequest;
 import com.ninjamap.app.payload.response.ApiResponse;
+import com.ninjamap.app.payload.response.PaginatedResponse;
 import com.ninjamap.app.payload.response.PolicyDocumentResponse;
 import com.ninjamap.app.repository.IPolicyDocumentRepository;
 import com.ninjamap.app.service.ICloudinaryService;
@@ -48,7 +50,7 @@ public class PolicyDocumentServiceImpl implements IPolicyDocumentService {
 		// Handle image upload
 		MultipartFile file = request.getDocumentImage();
 		if (file != null && !file.isEmpty()) {
-			String imageUrl = cloudinaryService.uploadFile(file, "Ninja_Map");
+			String imageUrl = cloudinaryService.uploadFile(file, AppConstants.POLICY_DOCUMENTS);
 			document.setDocumentImage(imageUrl);
 		}
 
@@ -63,32 +65,39 @@ public class PolicyDocumentServiceImpl implements IPolicyDocumentService {
 
 	@Override
 	public ResponseEntity<ApiResponse> updatePolicyDocument(UpdatePolicyDocumentRequest request) {
-		// Fetch the existing document or throw 404
+		// Fetch existing document
 		PolicyDocument document = documentRepository.findById(request.getId()).orElseThrow(
 				() -> new ResourceNotFoundException("PolicyDocument not found with id: " + request.getId()));
 
 		// Update title if provided
 		String newTitle = request.getTitle();
 		if (newTitle != null && !newTitle.isBlank() && !newTitle.equals(document.getTitle())) {
-			// Check for duplicate with same type and title
-			boolean exists = documentRepository.existsByTypeAndTitleAndIsDeletedFalse(document.getType(), newTitle);
+			boolean exists = documentRepository.existsByTypeAndTitleAndIsDeletedFalseAndIdNot(document.getType(),
+					newTitle, document.getId());
 			if (exists) {
 				throw new ResourceAlreadyExistException("A document with this type and title already exists");
 			}
 			document.setTitle(newTitle);
 		}
 
-		// Update description if provided
+		// Update description
 		String newDescription = request.getDescription();
 		if (newDescription != null && !newDescription.isBlank()) {
 			document.setDescription(newDescription);
 		}
 
+		// Update image if provided
+		MultipartFile file = request.getDocumentImage();
+		if (file != null && !file.isEmpty()) {
+			String imageUrl = cloudinaryService.uploadFile(file, AppConstants.POLICY_DOCUMENTS);
+			document.setDocumentImage(imageUrl);
+		}
+
+		// Save updated document
 		PolicyDocument updatedDocument = documentRepository.save(document);
 
-		ApiResponse response = (updatedDocument != null)
-				? AppUtils.buildSuccessResponse(AppConstants.POLICY_UPDATED_SUCCESS, mapToResponse(updatedDocument))
-				: AppUtils.buildFailureResponse(AppConstants.POLICY_NOT_UPDATED);
+		ApiResponse response = AppUtils.buildSuccessResponse(AppConstants.POLICY_UPDATED_SUCCESS,
+				mapToResponse(updatedDocument));
 
 		return new ResponseEntity<>(response, response.getHttp());
 	}
@@ -145,21 +154,23 @@ public class PolicyDocumentServiceImpl implements IPolicyDocumentService {
 //	}
 
 	@Override
-	public ResponseEntity<List<PolicyDocumentResponse>> getAllPolicyDocuments(DocumentType documentType,
-			String searchValue) {
-		// Fetch all filtered results
-		List<PolicyDocument> documents = documentRepository.findAllByFiltersWithoutPagination(true, documentType);
+	public ResponseEntity<PaginatedResponse<PolicyDocumentResponse>> getAllPolicyDocuments(DocumentType documentType,
+			PaginationRequest request) {
 
-		// Optional: Apply search filter if searchValue is provided
-		if (searchValue != null && !searchValue.isEmpty()) {
-			documents = documents.stream()
-					.filter(doc -> doc.getTitle().toLowerCase().contains(searchValue.toLowerCase())
-							|| doc.getDescription().toLowerCase().contains(searchValue.toLowerCase()))
-					.toList();
-		}
+		Pageable pageable = AppUtils.buildPageableRequest(request, PolicyDocument.class);
+
+		// Single repository method handles all: optional documentType + optional
+		// searchValue
+		Page<PolicyDocument> documentPage = documentRepository.searchByTypeAndSearchValue(documentType,
+				request.getSearchValue(), pageable);
 
 		// Map entities to DTOs
-		return ResponseEntity.ok(documents.stream().map(this::mapToResponse).toList());
+		Page<PolicyDocumentResponse> responsePage = documentPage.map(this::mapToResponse);
+
+		// Build paginated response
+		PaginatedResponse<PolicyDocumentResponse> response = new PaginatedResponse<>(responsePage);
+
+		return ResponseEntity.ok(response);
 	}
 
 	private PolicyDocument findById(String id) {

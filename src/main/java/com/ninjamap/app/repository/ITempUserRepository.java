@@ -7,7 +7,9 @@ import org.springframework.stereotype.Repository;
 
 import com.ninjamap.app.model.TempUser;
 
+
 @Repository
 public interface ITempUserRepository extends JpaRepository<TempUser, String> {
-	Optional<TempUser> findByEmail(String email);
+	
+	Optional<TempUser> findByPersonalInfo_Email(String personalInfo_Email);
 }

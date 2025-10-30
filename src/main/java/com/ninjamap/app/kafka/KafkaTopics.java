@@ -10,6 +10,9 @@ public class KafkaTopics {
 
 	@Value("${app.topic.email-notifications-topic}")
 	private String emailNotificationTopic;
+	
+	@Value("${app.topic.sms-notifications-topic}")
+	private String smsNotificationTopic;
 
 	public String getNotificationTopic() {
 		return notificationTopic;
@@ -17,5 +20,10 @@ public class KafkaTopics {
 
 	public String getEmailNotificationTopic() {
 		return emailNotificationTopic;
+	}
+	
+	
+	public String getSmsNotificationTopic() {
+		return smsNotificationTopic;
 	}
 }

@@ -42,4 +42,9 @@ public class Permission extends AuditData {
 
 	@Column(nullable = false, unique = true)
 	private String action; // Specific action, e.g., VIEW_USERS, CREATE_USERS
+
+	// Helper factory method for convenience
+	public static Permission of(String resource, PermissionType type, String action) {
+		return Permission.builder().resource(resource).type(type).action(action).build();
+	}
 }

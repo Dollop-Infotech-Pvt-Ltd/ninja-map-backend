@@ -91,8 +91,8 @@ public class PermissionServiceImpl implements IPermissionService {
 
 	@Override
 	public PermissionResponse mapToPermissionResponse(Permission permission) {
-		return new PermissionResponse(permission.getPermissionId(), permission.getResource(), permission.getType(),
-				permission.getAction());
+		return PermissionResponse.builder().permissionId(permission.getPermissionId())
+				.resource(permission.getResource()).type(permission.getType()).action(permission.getAction()).build();
 	}
 
 	@Override

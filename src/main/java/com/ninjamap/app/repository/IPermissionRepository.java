@@ -13,7 +13,6 @@ import com.ninjamap.app.model.Permission;
 
 @Repository
 public interface IPermissionRepository extends JpaRepository<Permission, String> {
-	boolean existsByActionAndIsDeletedFalse(String action);
 
 	// Check if a permission with the same resource and action exists
 	boolean existsByResourceAndActionAndIsDeletedFalse(String resource, String action);
@@ -22,8 +21,6 @@ public interface IPermissionRepository extends JpaRepository<Permission, String>
 			+ "AND (:isActive IS NULL OR p.isActive = :isActive)")
 	Optional<Permission> findByIdAndOptionalIsActive(@Param("permissionId") String permissionId,
 			@Param("isActive") Boolean isActive);
-
-	List<Permission> findAllByIsDeletedFalse();
 
 	List<Permission> findAllByPermissionIdInAndIsDeletedFalse(List<String> ids);
 

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import com.ninjamap.app.exception.ResourceAlreadyExistException;
 import com.ninjamap.app.exception.ResourceNotFoundException;
 import com.ninjamap.app.model.Admin;
+import com.ninjamap.app.model.PersonalInfo;
 import com.ninjamap.app.model.Roles;
 import com.ninjamap.app.payload.request.AdminRequest;
 import com.ninjamap.app.payload.request.PaginationRequest;
@@ -61,7 +62,7 @@ public class AdminServiceImpl implements IAdminService, UserDetailsService {
 				registerRequest.getMobileNumber()).orElse(null);
 
 		if (existingAdmin != null) {
-			if (existingAdmin.getEmail().equals(registerRequest.getEmail())) {
+			if (existingAdmin.getPersonalInfo().getEmail().equals(registerRequest.getEmail())) {
 				throw new ResourceAlreadyExistException(AppConstants.ADMIN_ALREADY_EXISTS);
 			} else {
 				throw new ResourceAlreadyExistException(AppConstants.MOBILE_ALREADY_REGISTERED);
@@ -77,15 +78,19 @@ public class AdminServiceImpl implements IAdminService, UserDetailsService {
 		Roles adminRole = rolesRepository.findByRoleIdAndIsDeletedFalse(registerRequest.getRoleId())
 				.orElseThrow(() -> new ResourceNotFoundException(AppConstants.ADMIN_ROLE_NOT_FOUND));
 
-		// Map DTO to entity
-		Admin admin = Admin.builder().email(registerRequest.getEmail()).firstName(registerRequest.getFirstName())
-				.lastName(registerRequest.getLastName()).mobileNumber(registerRequest.getMobileNumber())
-				.password(passwordEncoder.encode(registerRequest.getPassword())).role(adminRole)
-				.employeeId(registerRequest.getEmployeeId()).bio(registerRequest.getBio()).build();
+		// Map DTO to entity using embedded PersonalInfo
+		PersonalInfo personalInfo = PersonalInfo.builder().firstName(registerRequest.getFirstName())
+				.lastName(registerRequest.getLastName()).email(registerRequest.getEmail())
+				.mobileNumber(registerRequest.getMobileNumber())
+				.password(passwordEncoder.encode(registerRequest.getPassword())).bio(registerRequest.getBio())
+				.profilePicture(null).build();
+
+		Admin admin = Admin.builder().personalInfo(personalInfo).role(adminRole)
+				.employeeId(registerRequest.getEmployeeId()).build();
 
 		// Upload profile picture if provided
-		Optional.ofNullable(registerRequest.getProfilePicture()).filter(file -> !file.isEmpty())
-				.ifPresent(file -> admin.setProfilePicture(cloudinaryService.uploadFile(file, "Profile_Picture")));
+		Optional.ofNullable(registerRequest.getProfilePicture()).filter(file -> !file.isEmpty()).ifPresent(file -> admin
+				.getPersonalInfo().setProfilePicture(cloudinaryService.uploadFile(file, AppConstants.PROFILE_PICTURE)));
 
 		System.err.println("ADMIN ==> " + admin);
 		// Save new admin
@@ -97,13 +102,12 @@ public class AdminServiceImpl implements IAdminService, UserDetailsService {
 
 		// Return ResponseEntity with proper HTTP status
 		return new ResponseEntity<>(response, response.getHttp());
-
 	}
 
 	@Override
 	public Admin getAdminByEmailAndIsActive(String email, Boolean isActive) {
 		return adminRepository.findByEmailAndOptionalIsActive(email, isActive)
-				.orElseThrow(() -> new ResourceNotFoundException(AppConstants.USER_NOT_FOUND));
+				.orElseThrow(() -> new ResourceNotFoundException(AppConstants.ADMIN_NOT_FOUND));
 	}
 
 	@Override
@@ -119,12 +123,13 @@ public class AdminServiceImpl implements IAdminService, UserDetailsService {
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		Admin admin = getAdminByEmailAndIsActive(username, true);
+		Admin admin = adminRepository.findByPersonalInfoEmail(username)
+				.orElseThrow(() -> new UsernameNotFoundException(AppConstants.ADMIN_NOT_FOUND));
 		List<SimpleGrantedAuthority> authorities = admin.getRole().getPermissions().stream()
 				.map(p -> new SimpleGrantedAuthority(p.getResource() + "." + p.getAction()))
 				.collect(Collectors.toList());
-		return new org.springframework.security.core.userdetails.User(admin.getEmail(), admin.getPassword(),
-				authorities);
+		return new org.springframework.security.core.userdetails.User(admin.getPersonalInfo().getEmail(),
+				admin.getPersonalInfo().getPassword(), authorities);
 	}
 
 	@Override
@@ -150,37 +155,45 @@ public class AdminServiceImpl implements IAdminService, UserDetailsService {
 	public ResponseEntity<ApiResponse> update(UpdateAdminRequest updateRequest) {
 		Admin admin = getAdminByIdAndIsActive(updateRequest.getId(), null);
 
-		// Duplicate email check
-		if (updateRequest.getEmail() != null && !updateRequest.getEmail().equalsIgnoreCase(admin.getEmail())) {
-			if (adminRepository.existsByEmailAndIsDeletedFalse(updateRequest.getEmail().trim())) {
+		// --- Duplicate email check ---
+		if (updateRequest.getEmail() != null
+				&& !updateRequest.getEmail().equalsIgnoreCase(admin.getPersonalInfo().getEmail())) {
+			if (adminRepository.existsByPersonalInfoEmailAndIsDeletedFalse(updateRequest.getEmail().trim())) {
 				throw new ResourceAlreadyExistException(AppConstants.ADMIN_ALREADY_EXISTS);
 			}
-			admin.setEmail(updateRequest.getEmail().trim());
+			admin.getPersonalInfo().setEmail(updateRequest.getEmail().trim());
 		}
 
-		// Duplicate mobile check
+		// --- Duplicate mobile check ---
 		if (updateRequest.getMobileNumber() != null
-				&& !updateRequest.getMobileNumber().equals(admin.getMobileNumber())) {
-			if (adminRepository.existsByMobileNumberAndIsDeletedFalse(updateRequest.getMobileNumber().trim())) {
+				&& !updateRequest.getMobileNumber().equals(admin.getPersonalInfo().getMobileNumber())) {
+			if (adminRepository
+					.existsByPersonalInfoMobileNumberAndIsDeletedFalse(updateRequest.getMobileNumber().trim())) {
 				throw new ResourceAlreadyExistException(AppConstants.MOBILE_ALREADY_REGISTERED);
 			}
-			admin.setMobileNumber(updateRequest.getMobileNumber().trim());
+			admin.getPersonalInfo().setMobileNumber(updateRequest.getMobileNumber().trim());
 		}
 
-		admin.setFirstName(updateRequest.getFirstName() != null ? updateRequest.getFirstName() : admin.getFirstName());
-		admin.setLastName(updateRequest.getLastName() != null ? updateRequest.getLastName() : admin.getLastName());
-		// Update bio if provided
+		// --- Update basic fields ---
+		admin.getPersonalInfo().setFirstName(updateRequest.getFirstName() != null ? updateRequest.getFirstName()
+				: admin.getPersonalInfo().getFirstName());
+		admin.getPersonalInfo().setLastName(updateRequest.getLastName() != null ? updateRequest.getLastName()
+				: admin.getPersonalInfo().getLastName());
+
 		if (updateRequest.getBio() != null) {
-			admin.setBio(updateRequest.getBio());
+			admin.getPersonalInfo().setBio(updateRequest.getBio());
 		}
-		// Upload profile picture if provided
-		Optional.ofNullable(updateRequest.getProfilePicture()).filter(file -> !file.isEmpty())
-				.ifPresent(file -> admin.setProfilePicture(cloudinaryService.uploadFile(file, "Profile_Picture")));
 
-		Admin savedAdmin = saveAdmin(admin);
+		// --- Upload profile picture if provided ---
+		Optional.ofNullable(updateRequest.getProfilePicture()).filter(file -> !file.isEmpty()).ifPresent(file -> admin
+				.getPersonalInfo().setProfilePicture(cloudinaryService.uploadFile(file, AppConstants.PROFILE_PICTURE)));
+
+		// Save directly using the same entity
+		Admin savedAdmin = adminRepository.save(admin);
 
 		ApiResponse response = (savedAdmin != null) ? AppUtils.buildSuccessResponse(AppConstants.ADMIN_PROFILE_UPDATED)
 				: AppUtils.buildFailureResponse(AppConstants.ADMIN_PROFILE_NOT_UPDATED);
+
 		return new ResponseEntity<>(response, response.getHttp());
 	}
 
@@ -224,10 +237,11 @@ public class AdminServiceImpl implements IAdminService, UserDetailsService {
 			return null;
 		}
 
-		return AdminResponse.builder().id(admin.getAdminId()).fullName(admin.getFirstName() + " " + admin.getLastName())
-				.email(admin.getEmail()).mobileNumber(admin.getMobileNumber()).employeeId(admin.getEmployeeId())
-				.bio(admin.getBio()).isActive(admin.getIsActive()).joiningDate(admin.getCreatedDate())
-				.role(admin.getRole().getRoleName()).build();
-	}
+		PersonalInfo info = admin.getPersonalInfo();
 
+		return AdminResponse.builder().id(admin.getAdminId()).fullName(info.getFullName()).email(info.getEmail())
+				.mobileNumber(info.getMobileNumber()).employeeId(admin.getEmployeeId()).bio(info.getBio())
+				.isActive(admin.getIsActive()).joiningDate(admin.getCreatedDate()).role(admin.getRole().getRoleName())
+				.build();
+	}
 }

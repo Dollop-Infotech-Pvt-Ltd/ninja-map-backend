@@ -2,8 +2,9 @@ package com.ninjamap.app.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.Map;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +14,7 @@ import com.ninjamap.app.model.Admin;
 import com.ninjamap.app.model.Session;
 import com.ninjamap.app.model.User;
 import com.ninjamap.app.payload.response.ApiResponse;
+import com.ninjamap.app.payload.response.SessionResponse;
 import com.ninjamap.app.repository.ISessionRepository;
 import com.ninjamap.app.service.IAdminService;
 import com.ninjamap.app.service.ISessionService;
@@ -23,8 +25,10 @@ import com.ninjamap.app.utils.JwtUtils;
 import com.ninjamap.app.utils.constants.AppConstants;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class SessionServiceImpl implements ISessionService {
 
 	private final ISessionRepository sessionRepository;
@@ -34,66 +38,62 @@ public class SessionServiceImpl implements ISessionService {
 	private final IAdminService adminService;
 	private final JwtUtils utils;
 
-	public SessionServiceImpl(ISessionRepository sessionRepository, HttpServletRequest httpServletRequest,
-			DeviceMetadataUtil deviceMetadataUtil, IUserService userService, IAdminService adminService,
-			JwtUtils utils) {
-		this.sessionRepository = sessionRepository;
-		this.httpServletRequest = httpServletRequest;
-		this.deviceMetadataUtil = deviceMetadataUtil;
-		this.userService = userService;
-		this.adminService = adminService;
-		this.utils = utils;
-	}
+	// ------------------ CREATE SESSION ------------------
 
 	@Override
 	public void createSession(Object account, String accessToken, String refreshToken, String userAgent,
 			String ipAddress) {
 		String deviceType = deviceMetadataUtil.getDeviceType(userAgent);
-		CompletableFuture<String> locationFuture = deviceMetadataUtil.getLocationFromIp(ipAddress);
+		String location = deviceMetadataUtil.getLocationFromIp(ipAddress).join();
 
-		String accountId;
-		String accountType;
-		String roleName;
-
+		Session session;
 		if (account instanceof User user) {
-			accountId = user.getUserId();
-			accountType = "USER";
-			roleName = user.getRole().getRoleName();
+			session = Session.builder().user(user).accessToken(accessToken).refreshToken(refreshToken)
+					.deviceType(deviceType).ipAddress(ipAddress).location(location).loginTime(LocalDateTime.now())
+					.lastActiveTime(LocalDateTime.now()).userAgent(userAgent).build();
 		} else if (account instanceof Admin admin) {
-			accountId = admin.getAdminId();
-			accountType = "ADMIN";
-			roleName = admin.getRole().getRoleName();
+			session = Session.builder().admin(admin).accessToken(accessToken).refreshToken(refreshToken)
+					.deviceType(deviceType).ipAddress(ipAddress).location(location).loginTime(LocalDateTime.now())
+					.lastActiveTime(LocalDateTime.now()).userAgent(userAgent).build();
 		} else {
 			throw new IllegalArgumentException("Unknown account type for session creation");
 		}
 
-		Session session = Session.builder().accountId(accountId).accountType(accountType).roleName(roleName)
-				.accessToken(accessToken).refreshToken(refreshToken).deviceType(deviceType).ipAddress(ipAddress)
-				.location(locationFuture.join()).loginTime(LocalDateTime.now()).lastActiveTime(LocalDateTime.now())
-				.userAgent(userAgent).build();
-
 		sessionRepository.save(session);
 	}
 
+	// ------------------ GET ACTIVE SESSIONS ------------------
 	@Override
-	public List<Session> getActiveSessions() {
+	public List<SessionResponse> getActiveSessions() {
 		String token = utils.getToken(httpServletRequest);
 		String email = utils.extractEmail(token);
+		String role = utils.extractRole(token);
 
-		Object account;
-		try {
-			account = userService.getUserByEmailAndIsActive(email, true);
-		} catch (ResourceNotFoundException e) {
-			account = adminService.getAdminByEmailAndIsActive(email, true);
+		List<Session> sessions;
+
+		if ("USER".equals(role)) {
+			User user = userService.getUserByEmailAndIsActive(email, true);
+			sessions = sessionRepository.findAllByUser(user);
+		} else {
+			Admin admin = adminService.getAdminByEmailAndIsActive(email, true);
+			sessions = sessionRepository.findAllByAdmin(admin);
 		}
 
-		String accountId = account instanceof User user ? user.getUserId() : ((Admin) account).getAdminId();
-		return sessionRepository.findAllByAccountId(accountId);
+		return sessions.stream()
+				.map(session -> SessionResponse.builder().id(session.getId())
+						.userId(session.getUser() != null ? session.getUser().getUserId() : null)
+						.adminId(session.getAdmin() != null ? session.getAdmin().getAdminId() : null)
+						.deviceType(session.getDeviceType()).ipAddress(session.getIpAddress())
+						.location(session.getLocation()).loginTime(session.getLoginTime())
+						.lastActiveTime(session.getLastActiveTime()).userAgent(session.getUserAgent()).build())
+				.toList();
 	}
+
+	// ------------------ LOGOUT ------------------
 
 	@Transactional
 	@Override
-	public ApiResponse logout() {
+	public ResponseEntity<ApiResponse> logout() {
 		String token = utils.getToken(httpServletRequest);
 
 		if (!utils.isAccessToken(token)) {
@@ -104,41 +104,62 @@ public class SessionServiceImpl implements ISessionService {
 				.orElseThrow(() -> new UnauthorizedException(AppConstants.SESSION_ALREADY_LOGGED_OUT));
 
 		sessionRepository.delete(session);
-		return AppUtils.buildSuccessResponse(AppConstants.LOGOUT);
+		return ResponseEntity.ok(AppUtils.buildSuccessResponse(AppConstants.LOGOUT));
 	}
 
 	@Transactional
 	@Override
-	public ApiResponse logoutBySessionControl(String currentSessionId, boolean keepOnlyCurrentSession) {
+	public ResponseEntity<ApiResponse> logoutBySessionControl(String currentSessionId, Boolean keepOnlyCurrentSession) {
 		Session currentSession = sessionRepository.findById(currentSessionId)
 				.orElseThrow(() -> new ResourceNotFoundException(AppConstants.SESSION_NOT_FOUND));
 
-		String accountId = currentSession.getAccountId();
-
 		if (keepOnlyCurrentSession) {
-			sessionRepository.deleteByAccountIdAndIdNot(accountId, currentSessionId);
+			if (currentSession.getUser() != null) {
+				sessionRepository.deleteByUserAndIdNot(currentSession.getUser(), currentSessionId);
+			} else if (currentSession.getAdmin() != null) {
+				sessionRepository.deleteByAdminAndIdNot(currentSession.getAdmin(), currentSessionId);
+			}
 		} else {
 			sessionRepository.delete(currentSession);
 		}
 
-		String msg = keepOnlyCurrentSession ? AppConstants.ALL_SESSION_LOGGED_OUT
-				: AppConstants.CURRENT_SESSION_LOGGED_OUT;
-
-		return AppUtils.buildSuccessResponse(msg);
+		return ResponseEntity
+				.ok(AppUtils.buildSuccessResponse(keepOnlyCurrentSession ? AppConstants.ALL_SESSION_LOGGED_OUT
+						: AppConstants.CURRENT_SESSION_LOGGED_OUT));
 	}
+
+	// ------------------ REFRESH TOKEN UPDATE ------------------
 
 	@Override
 	public void updateAccessTokenForRefreshToken(Object account, String oldRefreshToken, String newAccessToken) {
 		Session session = sessionRepository.findByRefreshToken(oldRefreshToken)
 				.orElseThrow(() -> new ResourceNotFoundException(AppConstants.REFRESH_TOKEN_NOT_FOUND));
 
-		String accountId = account instanceof User user ? user.getUserId() : ((Admin) account).getAdminId();
-
-		if (!session.getAccountId().equals(accountId)) {
-			throw new UnauthorizedException(AppConstants.TOKEN_NOT_BELONG_TO_USER);
+		if (account instanceof User user) {
+			if (session.getUser() == null || !session.getUser().getUserId().equals(user.getUserId())) {
+				throw new UnauthorizedException(AppConstants.TOKEN_NOT_BELONG_TO_USER);
+			}
+		} else if (account instanceof Admin admin) {
+			if (session.getAdmin() == null || !session.getAdmin().getAdminId().equals(admin.getAdminId())) {
+				throw new UnauthorizedException(AppConstants.TOKEN_NOT_BELONG_TO_USER);
+			}
+		} else {
+			throw new IllegalArgumentException("Unknown account type");
 		}
 
 		session.setAccessToken(newAccessToken);
 		sessionRepository.save(session);
+	}
+
+	// ------------------ GET TOKEN FROM SESSION ------------------
+
+	@Override
+	public ResponseEntity<ApiResponse> getTokenFromId(String sessionId) {
+		Session session = sessionRepository.findById(sessionId)
+				.orElseThrow(() -> new ResourceNotFoundException(AppConstants.SESSION_NOT_FOUND));
+
+		Map<String, String> tokenData = Map.of(AppConstants.ACCESS_TOKEN, session.getAccessToken());
+
+		return ResponseEntity.ok(AppUtils.buildSuccessResponse(AppConstants.ACCESS_TOKEN_FETCH, tokenData));
 	}
 }

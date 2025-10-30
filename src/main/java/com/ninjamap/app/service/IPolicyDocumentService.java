@@ -1,13 +1,13 @@
 package com.ninjamap.app.service;
 
-import java.util.List;
-
 import org.springframework.http.ResponseEntity;
 
 import com.ninjamap.app.enums.DocumentType;
 import com.ninjamap.app.payload.request.CreatePolicyDocumentRequest;
+import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.request.UpdatePolicyDocumentRequest;
 import com.ninjamap.app.payload.response.ApiResponse;
+import com.ninjamap.app.payload.response.PaginatedResponse;
 import com.ninjamap.app.payload.response.PolicyDocumentResponse;
 
 public interface IPolicyDocumentService {
@@ -37,7 +37,8 @@ public interface IPolicyDocumentService {
 	 */
 //	PaginatedResponse<PolicyDocumentResponse> getAllPolicyDocuments(DocumentType documentType,
 //			PaginationRequest paginationRequest);
-	ResponseEntity<List<PolicyDocumentResponse>> getAllPolicyDocuments(DocumentType documentType, String searchValue);
+	ResponseEntity<PaginatedResponse<PolicyDocumentResponse>> getAllPolicyDocuments(DocumentType documentType,
+			PaginationRequest paginationRequest);
 
 	/**
 	 * Update the active status of a Policy Document

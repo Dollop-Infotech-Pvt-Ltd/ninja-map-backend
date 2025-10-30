@@ -20,6 +20,7 @@ import com.ninjamap.app.exception.BadRequestException;
 import com.ninjamap.app.exception.ForbiddenException;
 import com.ninjamap.app.exception.ResourceAlreadyExistException;
 import com.ninjamap.app.exception.ResourceNotFoundException;
+import com.ninjamap.app.model.PersonalInfo;
 import com.ninjamap.app.model.Roles;
 import com.ninjamap.app.model.User;
 import com.ninjamap.app.payload.request.PaginationRequest;
@@ -76,11 +77,16 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		User user = getUserByEmailAndIsActive(username, true);
+		User user = userRepository.findByPersonalInfo_Email(username)
+				.orElseThrow(() -> new UsernameNotFoundException(AppConstants.USER_NOT_FOUND));
 		List<SimpleGrantedAuthority> authorities = user.getRole().getPermissions().stream()
 				.map(p -> new SimpleGrantedAuthority(p.getResource() + "." + p.getAction()))
 				.collect(Collectors.toList());
-		return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), authorities);
+		return new org.springframework.security.core.userdetails.User(
+				user.getPersonalInfo().getEmail(),
+				user.getPersonalInfo().getPassword(),
+				authorities
+		);
 	}
 
 	@Override
@@ -94,10 +100,18 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
 			return null;
 		}
 
-		return UserResponse.builder().id(user.getUserId()).email(user.getEmail())
-				.fullName(user.getFirstName() + " " + user.getLastName()).mobileNumber(user.getMobileNumber())
-				.profilePicture(user.getProfilePicture()).isActive(user.getIsActive()).bio(user.getBio())
-				.joiningDate(user.getCreatedDate()).role(user.getRole().getRoleName()).build();
+		PersonalInfo pi = user.getPersonalInfo();
+		return UserResponse.builder()
+				.id(user.getUserId())
+				.email(pi.getEmail())
+				.fullName(pi.getFirstName() + " " + pi.getLastName())
+				.mobileNumber(pi.getMobileNumber())
+				.profilePicture(pi.getProfilePicture())
+				.isActive(user.getIsActive())
+				.bio(pi.getBio())
+				.joiningDate(user.getCreatedDate())
+				.role(user.getRole().getRoleName())
+				.build();
 	}
 
 	@Override
@@ -115,34 +129,36 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
 		User existsUser = userRepository.findByUserIdAndIsDeletedFalse(userRequest.getId())
 				.orElseThrow(() -> new ResourceNotFoundException(AppConstants.USER_NOT_FOUND));
 
+		PersonalInfo pi = existsUser.getPersonalInfo();
+
 		// Duplicate email check
-		if (userRequest.getEmail() != null && !userRequest.getEmail().equals(existsUser.getEmail())) {
+		if (userRequest.getEmail() != null && !userRequest.getEmail().equals(pi.getEmail())) {
 			if (userRepository.existsByEmailAndIsDeletedFalse(userRequest.getEmail())) {
 				throw new ResourceAlreadyExistException(AppConstants.EMAIL_ALREADY_REGISTERED);
 			}
-			existsUser.setEmail(userRequest.getEmail());
+			pi.setEmail(userRequest.getEmail());
 		}
 
 		// Duplicate mobile number check
-		if (userRequest.getMobileNumber() != null
-				&& !userRequest.getMobileNumber().equals(existsUser.getMobileNumber())) {
+		if (userRequest.getMobileNumber() != null && !userRequest.getMobileNumber().equals(pi.getMobileNumber())) {
 			if (userRepository.existsByMobileNumberAndIsDeletedFalse(userRequest.getMobileNumber())) {
 				throw new ResourceAlreadyExistException(AppConstants.MOBILE_ALREADY_REGISTERED);
 			}
-			existsUser.setMobileNumber(userRequest.getMobileNumber());
+			pi.setMobileNumber(userRequest.getMobileNumber());
 		}
 
-		existsUser.setFirstName(
-				userRequest.getFirstName() != null ? userRequest.getFirstName() : existsUser.getFirstName());
-		existsUser
-				.setLastName(userRequest.getLastName() != null ? userRequest.getLastName() : existsUser.getLastName());
+		pi.setFirstName(userRequest.getFirstName() != null ? userRequest.getFirstName() : pi.getFirstName());
+		pi.setLastName(userRequest.getLastName() != null ? userRequest.getLastName() : pi.getLastName());
+
+		existsUser.setPersonalInfo(pi);
+
 		// Update bio if provided
 		if (userRequest.getBio() != null) {
-			existsUser.setBio(userRequest.getBio());
+			existsUser.getPersonalInfo().setBio(userRequest.getBio());
 		}
 		// Upload profile picture if provided
-		Optional.ofNullable(userRequest.getProfilePicture()).filter(file -> !file.isEmpty())
-				.ifPresent(file -> existsUser.setProfilePicture(cloudinaryService.uploadFile(file, "Profile_Picture")));
+		Optional.ofNullable(userRequest.getProfilePicture()).filter(file -> !file.isEmpty()).ifPresent(
+				file -> pi.setProfilePicture(cloudinaryService.uploadFile(file, AppConstants.PROFILE_PICTURE)));
 
 		User updatedUser = userRepository.save(existsUser);
 
@@ -150,7 +166,6 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
 				? AppUtils.buildSuccessResponse(AppConstants.USER_PROFILE_SUCCESSFULLY_UPDATED)
 				: AppUtils.buildFailureResponse(AppConstants.USER_PROFILE_NOT_UPDATED);
 		return new ResponseEntity<ApiResponse>(response, response.getHttp());
-
 	}
 
 	@Override
@@ -193,12 +208,15 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
 	@Override
 	public ResponseEntity<ApiResponse> sendDeleteOtp(String mobileNumber) {
 		User user = getUserByMobileNumberAndIsActive(mobileNumber, true);
+		System.err.println("TOKEN ID => " + getCurrectUserFromToken().getId());
+		System.err.println("USER ID => " + user.getUserId());
+		System.err.println("EQUALS OR NOT => " + user.getUserId().equals(getCurrectUserFromToken().getId()));
 
 		// Ensure the logged-in user is the owner of this mobile number
 		if (!user.getUserId().equals(getCurrectUserFromToken().getId()))
 			throw new ForbiddenException(AppConstants.UNAUTHORIZED_DELETE);
 
-		String otp = otpService.generateOtp(user.getEmail(), OtpType.DELETE_ACCOUNT);
+		String otp = otpService.generateOtp(user.getPersonalInfo().getEmail(), OtpType.DELETE_ACCOUNT);
 
 		return ResponseEntity.ok(AppUtils.buildSuccessResponse(AppConstants.OTP_SENT, otp));
 	}
@@ -209,7 +227,7 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
 
 		User user = getUserByIdAndIsActive(currectUser.getId(), true);
 
-		String otp = otpService.generateOtp(user.getEmail(), OtpType.DELETE_ACCOUNT);
+		String otp = otpService.generateOtp(user.getPersonalInfo().getEmail(), OtpType.DELETE_ACCOUNT);
 
 		return ResponseEntity.ok(AppUtils.buildSuccessResponse(AppConstants.OTP_SENT, otp));
 	}
@@ -220,7 +238,7 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
 
 		User user = getUserByIdAndIsActive(currectUser.getId(), true);
 
-		boolean isVerified = otpService.validateOtp(user.getEmail(), otp, OtpType.DELETE_ACCOUNT);
+		boolean isVerified = otpService.validateOtp(user.getPersonalInfo().getEmail(), otp, OtpType.DELETE_ACCOUNT);
 
 		if (!isVerified) {
 			throw new BadRequestException(AppConstants.INVALID_OR_EXPIRED_OTP);
@@ -246,12 +264,11 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
 		User existingUser = userRepository
 				.findByEmailOrMobileNumberAndIsDeletedFalse(request.getEmail(), request.getMobileNumber()).orElse(null);
 
-//		System.err.println("===> " + existingUser.getIsActive() + ", ISDELETED => " + existingUser.getIsDeleted());
 		if (existingUser != null) {
-			if (existingUser.getEmail().equals(request.getEmail())) {
+			if (existingUser.getPersonalInfo().getEmail().equals(request.getEmail())) {
 				throw new ResourceAlreadyExistException(AppConstants.EMAIL_ALREADY_REGISTERED);
 			}
-			if (existingUser.getMobileNumber().equals(request.getMobileNumber())) {
+			if (existingUser.getPersonalInfo().getMobileNumber().equals(request.getMobileNumber())) {
 				throw new ResourceAlreadyExistException(AppConstants.MOBILE_ALREADY_REGISTERED);
 			}
 		}
@@ -261,13 +278,21 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
 				.orElseThrow(() -> new ResourceNotFoundException("USER " + AppConstants.ROLE_NOT_FOUND));
 
 		// Build User entity
-		User user = User.builder().firstName(request.getFirstName()).lastName(request.getLastName())
-				.email(request.getEmail()).mobileNumber(request.getMobileNumber())
-				.password(passwordEncoder.encode(request.getPassword())).role(userRole).bio(request.getBio()).build();
+		User user = User.builder()
+				.personalInfo(PersonalInfo.builder()
+						.firstName(request.getFirstName())
+						.lastName(request.getLastName())
+						.email(request.getEmail())
+						.mobileNumber(request.getMobileNumber())
+						.password(passwordEncoder.encode(request.getPassword()))
+						.bio(request.getBio())
+						.build())
+				.role(userRole)
+				.build();
 
 		// Upload profile picture if provided
-		Optional.ofNullable(request.getProfilePicture()).filter(file -> !file.isEmpty())
-				.ifPresent(file -> user.setProfilePicture(cloudinaryService.uploadFile(file, "Profile_Picture")));
+		Optional.ofNullable(request.getProfilePicture()).filter(file -> !file.isEmpty()).ifPresent(
+				file -> user.getPersonalInfo().setProfilePicture(cloudinaryService.uploadFile(file, AppConstants.PROFILE_PICTURE)));
 
 		// Save user
 		User saved = userRepository.save(user);

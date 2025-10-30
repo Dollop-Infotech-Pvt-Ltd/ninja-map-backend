@@ -6,8 +6,6 @@ import com.ninjamap.app.enums.BlogCategory;
 import com.ninjamap.app.payload.request.BlogPostRequest;
 import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.response.ApiResponse;
-import com.ninjamap.app.payload.response.BlogPostResponse;
-import com.ninjamap.app.payload.response.PaginatedResponse;
 
 public interface IBlogPostService {
 	ResponseEntity<ApiResponse> createPost(BlogPostRequest request);
@@ -18,7 +16,14 @@ public interface IBlogPostService {
 
 	ResponseEntity<ApiResponse> getPostById(String id);
 
-	ResponseEntity<PaginatedResponse<BlogPostResponse>> getAllPosts(BlogCategory blogCategory,
-			PaginationRequest paginationRequest);
+	ResponseEntity<ApiResponse> sharePost(String postId);
+
+	ResponseEntity<ApiResponse> toggleSave(String postId, Boolean save);
+
+	ResponseEntity<ApiResponse> toggleLike(String postId, Boolean like);
+
+	ResponseEntity<ApiResponse> getHomepagePosts(BlogCategory category, PaginationRequest paginationRequest);
+
+	ResponseEntity<ApiResponse> addView(String postId);
 
 }
