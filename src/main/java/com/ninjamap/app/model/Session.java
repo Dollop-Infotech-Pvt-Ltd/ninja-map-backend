@@ -37,10 +37,10 @@ public class Session extends AuditData {
 	@JoinColumn(name = "admin_id")
 	private Admin admin;
 
-	@Column(length = 512, nullable = false, unique = true)
+	@Column(columnDefinition = "TEXT", nullable = false, unique = true)
 	private String accessToken;
 
-	@Column(length = 512, nullable = false, unique = true)
+	@Column(columnDefinition = "TEXT", nullable = false, unique = true)
 	private String refreshToken;
 
 	@Column(name = "device_type")

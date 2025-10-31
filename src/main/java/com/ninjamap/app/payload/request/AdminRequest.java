@@ -49,6 +49,7 @@ public class AdminRequest {
 	private MultipartFile profilePicture;
 
 	@NotBlank(message = ValidationConstants.EMPLOYEE_ID_REQUIRED)
+	@Pattern(regexp = ValidationConstants.EMPLOYEE_ID_PATTERN, message = ValidationConstants.EMPLOYEE_ID_PATTERN_MESSAGE)
 	private String employeeId;
 
 	@Size(min = 10, max = 300, message = ValidationConstants.BIO_LENGTH)

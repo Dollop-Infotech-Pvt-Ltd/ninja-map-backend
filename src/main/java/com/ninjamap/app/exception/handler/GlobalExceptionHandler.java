@@ -1,6 +1,7 @@
 package com.ninjamap.app.exception.handler;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,6 +20,7 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.ninjamap.app.exception.BadRequestException;
 import com.ninjamap.app.exception.FileValidationException;
 import com.ninjamap.app.exception.ForbiddenException;
@@ -92,6 +94,7 @@ public class GlobalExceptionHandler {
         String message = ex.getConstraintViolations().stream()
                 .map(v -> v.getPropertyPath() + ": " + v.getMessage())
                 .collect(Collectors.joining("; "));
+        System.out.println(message);
         return buildErrorResponse(HttpStatus.BAD_REQUEST, message);
     }
 
@@ -121,9 +124,42 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(response);
     }
 
+//    @ExceptionHandler(HttpMessageNotReadableException.class)
+//    public ResponseEntity<Map<String, String>> handleMessageNotReadable(HttpMessageNotReadableException ex) {
+//        return buildMapResponse(HttpStatus.BAD_REQUEST, AppConstants.ERROR, ex.getMessage());
+//    }
+    
+    
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, String>> handleMessageNotReadable(HttpMessageNotReadableException ex) {
-        return buildMapResponse(HttpStatus.BAD_REQUEST, AppConstants.ERROR, AppConstants.REQUEST_BODY_MISSING);
+
+        Throwable cause = ex.getCause();
+        String userMessage;
+
+        if (cause instanceof InvalidFormatException invalidFormatEx &&
+            invalidFormatEx.getTargetType().isEnum()) {
+
+            // Handle invalid enum values (like your PermissionType)
+            String fieldName = invalidFormatEx.getPath().isEmpty()
+                    ? "unknown"
+                    : invalidFormatEx.getPath().get(0).getFieldName();
+
+            userMessage = String.format(
+                    "Invalid value '%s' for field '%s'. Allowed values are: %s.",
+                    invalidFormatEx.getValue(),
+                    fieldName,
+                    Arrays.toString(invalidFormatEx.getTargetType().getEnumConstants())
+            );
+
+        } else {
+            // Generic JSON error (syntax, missing body, etc.)
+            userMessage = "Invalid or missing request body. Please provide a valid JSON payload.";
+        }
+
+        Map<String, String> response = new HashMap<>();
+        response.put("error", userMessage);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     // ====================== DATABASE EXCEPTIONS ======================

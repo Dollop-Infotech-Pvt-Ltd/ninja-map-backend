@@ -35,7 +35,7 @@ public class AppConstants {
 	public static final String SUB_PERMISSION_NOT_ADDED = "Sub Permission could not be added";
 	public static final String ROLE_DELETE_SUCCESS = "Role deleted successfully";
 	public static final String ROLE_DELETE_FAILED = "Failed to delete Role";
-	public static final String PERMISSION_ALREADY_EXISTS = "Permission already exists for this role";
+	public static final String PERMISSION_ALREADY_EXISTS = "Permission already exists";
 
 	// ================== COMMON KEYS ==================
 	public static final String ERROR = "error";
@@ -248,6 +248,8 @@ public class AppConstants {
 	public static final String BLOG_POST_UNSAVED = "Blog post unsaved successfully.";
 	public static final String BLOG_POST_SHARED = "Blog post shared successfully.";
 	public static final String BLOG_POST_VIEWED = "Blog post view registered.";
+	public static final String BLOG_POST_UNAUTHORIZED_UPDATE = "You are not authorized to update this blog post.";
+	public static final String BLOG_POST_UNAUTHORIZED_DELETE = "You are not authorized to delete this blog post.";
 
 	// ================== COMMENT ==================
 	public static final String COMMENT_ADDED = "Comment added successfully.";

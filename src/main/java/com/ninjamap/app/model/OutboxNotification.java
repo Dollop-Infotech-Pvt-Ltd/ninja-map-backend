@@ -32,7 +32,7 @@ public class OutboxNotification {
 	@Column(nullable = false, unique = true)
 	private String id;
 
-	@Column(columnDefinition = "MEDIUMTEXT", nullable = false)
+	@Column(columnDefinition = "TEXT", nullable = false)
 	private String payload; // JSON string of NotificationRequest
 
 	@Enumerated(EnumType.STRING)

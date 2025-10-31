@@ -40,7 +40,7 @@ public class Permission extends AuditData {
 	@Column(nullable = false)
 	private PermissionType type; // READ, WRITE, DELETE, UPDATE
 
-	@Column(nullable = false, unique = true)
+	@Column(nullable = false)
 	private String action; // Specific action, e.g., VIEW_USERS, CREATE_USERS
 
 	// Helper factory method for convenience
