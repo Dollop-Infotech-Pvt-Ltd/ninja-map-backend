@@ -3,7 +3,6 @@ package com.ninjamap.app.payload.request;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.ninjamap.app.utils.annotations.TrimValidator;
-import com.ninjamap.app.utils.annotations.UUIDValidator;
 import com.ninjamap.app.utils.constants.ValidationConstants;
 
 import jakarta.validation.constraints.Email;
@@ -16,34 +15,30 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 @TrimValidator
-public class UpdateUserRequest {
+public class AppRegisterRequest {
 
-	@NotBlank(message = ValidationConstants.ID_REQUIRED)
-	@UUIDValidator(message = ValidationConstants.INVALID_UUID)
-	private String id;
-
+	@NotBlank(message = ValidationConstants.FIRST_NAME_REQUIRED)
 	@Size(max = 50, message = ValidationConstants.FIRST_NAME_LENGTH)
 	private String firstName;
 
+	@NotBlank(message = ValidationConstants.LAST_NAME_REQUIRED)
 	@Size(max = 50, message = ValidationConstants.LAST_NAME_LENGTH)
 	private String lastName;
-
-	@NotBlank(message = ValidationConstants.MOBILE_NUMBER_REQUIRED)
-	@Pattern(regexp = ValidationConstants.MOBILE_NUMBER_PATTERN, message = ValidationConstants.MOBILE_NUMBER_PATTERN_MESSAGE)
-	private String mobileNumber;
 
 	@NotBlank(message = ValidationConstants.EMAIL_REQUIRED)
 	@Email(regexp = ValidationConstants.EMAIL_PATTERN, message = ValidationConstants.EMAIL_PATTERN_MESSAGE)
 	private String email;
 
-	private MultipartFile profilePicture;
+	@NotBlank(message = ValidationConstants.MOBILE_NUMBER_REQUIRED)
+	@Pattern(regexp = ValidationConstants.MOBILE_NUMBER_PATTERN, message = ValidationConstants.MOBILE_NUMBER_PATTERN_MESSAGE)
+	private String mobileNumber;
 
-	@Size(min = 10, max = 300, message = ValidationConstants.BIO_LENGTH)
-	private String bio;
-
+	@NotBlank(message = ValidationConstants.GENDER_REQUIRED)
 	private String gender;
+	
+	private MultipartFile profilePicture;
 }

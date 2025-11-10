@@ -29,8 +29,8 @@ public interface IPermissionRepository extends JpaRepository<Permission, String>
 			JOIN r.permissions p
 			WHERE r.roleId = :roleId
 			  AND p.isDeleted = false
-			  AND (:resource IS NULL OR LOWER(p.resource) = LOWER(:resource))
-			  AND (:types IS NULL OR p.type IN :types)
+			  AND (COALESCE(:resource, '') = '' OR LOWER(p.resource) = LOWER(:resource))
+			  AND (COALESCE(:types, NULL) IS NULL OR p.type IN :types)
 			""")
 	List<Permission> findAllByRoleIdAndOptionalFilters(@Param("roleId") String roleId,
 			@Param("resource") String resource, @Param("types") List<PermissionType> types);
@@ -46,11 +46,17 @@ public interface IPermissionRepository extends JpaRepository<Permission, String>
 	List<Permission> findByResourceAndActionInAndIsDeletedFalse(@Param("resource") String resource,
 			@Param("actions") List<String> actions);
 
-	@Query("SELECT p FROM Permission p " + "WHERE p.isDeleted = false "
-			+ "AND (:resource IS NULL OR LOWER(p.resource) = LOWER(:resource)) "
-			+ "AND (:types IS NULL OR p.type IN :types) "
-			+ "AND (:searchKeyword IS NULL OR LOWER(p.action) LIKE LOWER(CONCAT('%', :searchKeyword, '%')) "
-			+ "                     OR LOWER(p.resource) LIKE LOWER(CONCAT('%', :searchKeyword, '%')))")
+	@Query("""
+			SELECT p FROM Permission p
+			WHERE p.isDeleted = false
+			  AND (COALESCE(:resource, '') = '' OR LOWER(p.resource) = LOWER(:resource))
+			  AND (COALESCE(:types, NULL) IS NULL OR p.type IN :types)
+			  AND (
+			    COALESCE(:searchKeyword, '') = ''
+			    OR LOWER(p.action) LIKE LOWER(CONCAT('%', :searchKeyword, '%'))
+			    OR LOWER(p.resource) LIKE LOWER(CONCAT('%', :searchKeyword, '%'))
+			  )
+			""")
 	List<Permission> findAllWithOptionalFilters(@Param("resource") String resource,
 			@Param("types") List<PermissionType> types, @Param("searchKeyword") String searchKeyword);
 

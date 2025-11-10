@@ -1,7 +1,7 @@
 package com.ninjamap.app.enums;
 
 public enum OtpType {
-	LOGIN, REGISTER, FORGET_PASSWORD, RESET_PASSWORD, DELETE_ACCOUNT;
+	LOGIN, REGISTER, FORGET_PASSWORD, RESET_PASSWORD, DELETE_ACCOUNT, MOBILE_VERIFICATION;
 
 	/**
 	 * Returns a user-friendly string: - lowercase - underscores replaced by spaces

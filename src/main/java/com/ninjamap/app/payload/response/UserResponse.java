@@ -29,6 +29,8 @@ public class UserResponse {
 	private Boolean isActive;
 
 	private String bio;
+	
+	private String gender;
 
 	// Joining date field
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")

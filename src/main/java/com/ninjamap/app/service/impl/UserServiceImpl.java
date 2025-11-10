@@ -82,11 +82,8 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
 		List<SimpleGrantedAuthority> authorities = user.getRole().getPermissions().stream()
 				.map(p -> new SimpleGrantedAuthority(p.getResource() + "." + p.getAction()))
 				.collect(Collectors.toList());
-		return new org.springframework.security.core.userdetails.User(
-				user.getPersonalInfo().getEmail(),
-				user.getPersonalInfo().getPassword(),
-				authorities
-		);
+		return new org.springframework.security.core.userdetails.User(user.getPersonalInfo().getEmail(),
+				user.getPersonalInfo().getPassword(), authorities);
 	}
 
 	@Override
@@ -95,33 +92,35 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
 				mapToUserResponse(getUserByIdAndIsActive(id, isActive))));
 	}
 
-	private UserResponse mapToUserResponse(User user) {
+	@Override
+	public UserResponse mapToUserResponse(User user) {
 		if (user == null) {
 			return null;
 		}
 
 		PersonalInfo pi = user.getPersonalInfo();
-		return UserResponse.builder()
-				.id(user.getUserId())
-				.email(pi.getEmail())
-				.fullName(pi.getFirstName() + " " + pi.getLastName())
-				.mobileNumber(pi.getMobileNumber())
-				.profilePicture(pi.getProfilePicture())
-				.isActive(user.getIsActive())
-				.bio(pi.getBio())
-				.joiningDate(user.getCreatedDate())
-				.role(user.getRole().getRoleName())
-				.build();
+		return UserResponse.builder().id(user.getUserId()).email(pi.getEmail()).fullName(pi.getFullName())
+				.mobileNumber(pi.getMobileNumber()).profilePicture(pi.getProfilePicture()).isActive(user.getIsActive())
+				.bio(pi.getBio()).joiningDate(user.getCreatedDate()).role(user.getRole().getRoleName())
+				.gender(pi.getGender()).build();
 	}
 
 	@Override
 	public ResponseEntity<PaginatedResponse<UserResponse>> getAllUsers(PaginationRequest paginationRequest) {
 		Pageable pageable = AppUtils.buildPageableRequest(paginationRequest, User.class);
-		Page<User> adminPage = userRepository.findAllByFilters(paginationRequest.getSearchValue(), pageable);
 
-		List<UserResponse> responses = adminPage.stream().map(this::mapToUserResponse).toList();
+		String searchValue = paginationRequest.getSearchValue();
+		if (searchValue != null && !searchValue.isBlank()) {
+			searchValue = searchValue.trim();
+		} else {
+			searchValue = null; // forces the IS NULL branch
+		}
+
+		Page<User> userPage = userRepository.findAllByFilters(searchValue, pageable);
+		List<UserResponse> responses = userPage.stream().map(this::mapToUserResponse).toList();
+
 		return ResponseEntity
-				.ok(new PaginatedResponse<>(new PageImpl<>(responses, pageable, adminPage.getTotalElements())));
+				.ok(new PaginatedResponse<>(new PageImpl<>(responses, pageable, userPage.getTotalElements())));
 	}
 
 	@Override
@@ -149,6 +148,7 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
 
 		pi.setFirstName(userRequest.getFirstName() != null ? userRequest.getFirstName() : pi.getFirstName());
 		pi.setLastName(userRequest.getLastName() != null ? userRequest.getLastName() : pi.getLastName());
+		pi.setGender(userRequest.getGender() != null ? userRequest.getGender() : pi.getGender());
 
 		existsUser.setPersonalInfo(pi);
 
@@ -279,20 +279,14 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
 
 		// Build User entity
 		User user = User.builder()
-				.personalInfo(PersonalInfo.builder()
-						.firstName(request.getFirstName())
-						.lastName(request.getLastName())
-						.email(request.getEmail())
-						.mobileNumber(request.getMobileNumber())
-						.password(passwordEncoder.encode(request.getPassword()))
-						.bio(request.getBio())
-						.build())
-				.role(userRole)
-				.build();
+				.personalInfo(PersonalInfo.builder().firstName(request.getFirstName()).lastName(request.getLastName())
+						.email(request.getEmail()).mobileNumber(request.getMobileNumber())
+						.password(passwordEncoder.encode(request.getPassword())).bio(request.getBio()).build())
+				.role(userRole).build();
 
 		// Upload profile picture if provided
-		Optional.ofNullable(request.getProfilePicture()).filter(file -> !file.isEmpty()).ifPresent(
-				file -> user.getPersonalInfo().setProfilePicture(cloudinaryService.uploadFile(file, AppConstants.PROFILE_PICTURE)));
+		Optional.ofNullable(request.getProfilePicture()).filter(file -> !file.isEmpty()).ifPresent(file -> user
+				.getPersonalInfo().setProfilePicture(cloudinaryService.uploadFile(file, AppConstants.PROFILE_PICTURE)));
 
 		// Save user
 		User saved = userRepository.save(user);

@@ -105,6 +105,7 @@ public class AppConstants {
 	public static final String INVALID_OR_EXPIRED_OTP = "Invalid or expired OTP.";
 	public static final String RESEND_OTP_NOT_ALLOWED_FOR_THIS_TYPE = "OTP resend not allowed for this OTP type.";
 	public static final String OTP_VERIFIED_SUCCESSFULLY = "OTP verified successfully.";
+	public static final String MOBILE_NOT_REGISTERED = "Mobile number verified. Please complete your registration.";
 
 	// ================== ADMIN ==================
 	public static final String ADMIN_NOT_FOUND = "Admin not found.";
@@ -230,6 +231,9 @@ public class AppConstants {
 	public static final String USER_ACCOUNT_DELETED_SUCCESSFULLY = "Your account deleted successfully";
 	public static final String USER_ACCOUNT_INACTIVE = "Your account is inactive. Please contact admin.";
 	public static final String USER_ACCOUNT_DELETED = "User account not found or deleted.";
+	public static final String USER_NOT_VERIFIED_OR_MISMATCH =
+		    "Mobile number not verified or does not match the verification record.";
+
 
 	// ================== BLOG_POST ==================
 	public static final String BLOG_POST_NOT_FOUND = "Blog post not found";

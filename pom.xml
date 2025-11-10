@@ -63,6 +63,14 @@
 			<scope>runtime</scope>
 		</dependency>-->
 		<dependency>
+		
+		 <!-- Hibernate Spatial -->
+    <dependency>
+        <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-spatial</artifactId>
+        <version>6.6.29.Final</version>
+    </dependency>
+    
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
@@ -149,6 +157,23 @@
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+		
+		 <!-- Hibernate Spatial -->
+    <dependency>
+        <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-spatial</artifactId>
+        <version>6.6.29.Final</version>
+    </dependency>
+    
+    
+    <!-- https://mvnrepository.com/artifact/org.locationtech.jts/jts-core -->
+<dependency>
+    <groupId>org.locationtech.jts</groupId>
+    <artifactId>jts-core</artifactId>
+    <version>1.20.0</version>
+</dependency>
+    
+    
 	</dependencies>
 
 	<build>

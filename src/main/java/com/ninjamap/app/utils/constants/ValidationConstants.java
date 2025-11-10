@@ -10,6 +10,7 @@ public class ValidationConstants {
 	public static final String FIRST_NAME_LENGTH = "First name must be at most 50 characters";
 	public static final String LAST_NAME_LENGTH = "Last name must be at most 50 characters";
 	public static final String BIO_LENGTH = "Bio must be between 10 and 300 characters";
+	public static final String GENDER_REQUIRED = "Gender is required.";
 
 	// ================== EMAIL VALIDATION ==================
 	public static final String EMAIL_REQUIRED = "Email is required";
