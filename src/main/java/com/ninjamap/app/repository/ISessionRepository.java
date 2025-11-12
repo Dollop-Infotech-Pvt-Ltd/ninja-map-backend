@@ -26,12 +26,13 @@ public interface ISessionRepository extends JpaRepository<Session, String> {
 	/**
 	 * Retrieve all sessions associated with a specific user.
 	 */
-	List<Session> findAllByUser(User user);
+	List<Session> findAllByUserOrderByLoginTimeDesc(User user);
+
 
 	/**
 	 * Retrieve all sessions associated with a specific admin.
 	 */
-	List<Session> findAllByAdmin(Admin admin);
+	List<Session> findAllByAdminOrderByLoginTimeDesc(Admin admin);
 
 	/**
 	 * Delete a session by its access token.

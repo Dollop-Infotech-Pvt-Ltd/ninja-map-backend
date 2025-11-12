@@ -229,11 +229,9 @@ public class AppConstants {
 	public static final String USER_STATUS_NOT_UPDATED = "User status could not be updated";
 	public static final String UNAUTHORIZED_DELETE = "You are not authorized to delete this account";
 	public static final String USER_ACCOUNT_DELETED_SUCCESSFULLY = "Your account deleted successfully";
-	public static final String USER_ACCOUNT_INACTIVE = "Your account is inactive. Please contact admin.";
+	public static final String USER_ACCOUNT_INACTIVE = "Your account is inactive. Please contact the administrator.";
 	public static final String USER_ACCOUNT_DELETED = "User account not found or deleted.";
-	public static final String USER_NOT_VERIFIED_OR_MISMATCH =
-		    "Mobile number not verified or does not match the verification record.";
-
+	public static final String USER_NOT_VERIFIED_OR_MISMATCH = "Mobile number not verified or does not match the verification record.";
 
 	// ================== BLOG_POST ==================
 	public static final String BLOG_POST_NOT_FOUND = "Blog post not found";

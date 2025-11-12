@@ -131,20 +131,20 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
 		PersonalInfo pi = existsUser.getPersonalInfo();
 
 		// Duplicate email check
-		if (userRequest.getEmail() != null && !userRequest.getEmail().equals(pi.getEmail())) {
-			if (userRepository.existsByEmailAndIsDeletedFalse(userRequest.getEmail())) {
-				throw new ResourceAlreadyExistException(AppConstants.EMAIL_ALREADY_REGISTERED);
-			}
-			pi.setEmail(userRequest.getEmail());
-		}
+//		if (userRequest.getEmail() != null && !userRequest.getEmail().equals(pi.getEmail())) {
+//			if (userRepository.existsByEmailAndIsDeletedFalse(userRequest.getEmail())) {
+//				throw new ResourceAlreadyExistException(AppConstants.EMAIL_ALREADY_REGISTERED);
+//			}
+//			pi.setEmail(userRequest.getEmail());
+//		}
 
 		// Duplicate mobile number check
-		if (userRequest.getMobileNumber() != null && !userRequest.getMobileNumber().equals(pi.getMobileNumber())) {
-			if (userRepository.existsByMobileNumberAndIsDeletedFalse(userRequest.getMobileNumber())) {
-				throw new ResourceAlreadyExistException(AppConstants.MOBILE_ALREADY_REGISTERED);
-			}
-			pi.setMobileNumber(userRequest.getMobileNumber());
-		}
+//		if (userRequest.getMobileNumber() != null && !userRequest.getMobileNumber().equals(pi.getMobileNumber())) {
+//			if (userRepository.existsByMobileNumberAndIsDeletedFalse(userRequest.getMobileNumber())) {
+//				throw new ResourceAlreadyExistException(AppConstants.MOBILE_ALREADY_REGISTERED);
+//			}
+//			pi.setMobileNumber(userRequest.getMobileNumber());
+//		}
 
 		pi.setFirstName(userRequest.getFirstName() != null ? userRequest.getFirstName() : pi.getFirstName());
 		pi.setLastName(userRequest.getLastName() != null ? userRequest.getLastName() : pi.getLastName());

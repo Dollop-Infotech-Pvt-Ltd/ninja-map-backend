@@ -54,11 +54,4 @@ public class PasswordGenerator {
 	private static char randomChar(String source) {
 		return source.charAt(RANDOM.nextInt(source.length()));
 	}
-
-	// Example usage
-	public static void main(String[] args) {
-		for (int i = 0; i < 5; i++) {
-			System.out.println(generatePassword());
-		}
-	}
 }

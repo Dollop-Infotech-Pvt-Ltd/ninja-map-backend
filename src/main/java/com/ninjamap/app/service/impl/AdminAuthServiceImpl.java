@@ -1,6 +1,5 @@
 package com.ninjamap.app.service.impl;
 
-import java.util.Map;
 import java.util.Set;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,8 +12,6 @@ import com.ninjamap.app.exception.BadRequestException;
 import com.ninjamap.app.exception.ForbiddenException;
 import com.ninjamap.app.exception.ResourceNotFoundException;
 import com.ninjamap.app.exception.UnauthorizedException;
-import com.ninjamap.app.kafka.KafkaTopics;
-import com.ninjamap.app.kafka.NotificationProducer;
 import com.ninjamap.app.model.Admin;
 import com.ninjamap.app.model.Session;
 import com.ninjamap.app.payload.request.ForgetPasswordRequest;
@@ -25,11 +22,9 @@ import com.ninjamap.app.payload.response.ApiResponse;
 import com.ninjamap.app.repository.ISessionRepository;
 import com.ninjamap.app.service.IAdminAuthService;
 import com.ninjamap.app.service.IAdminService;
-import com.ninjamap.app.service.IOtpService;
 import com.ninjamap.app.service.ISessionService;
 import com.ninjamap.app.utils.AppUtils;
 import com.ninjamap.app.utils.AuthServiceHelper;
-import com.ninjamap.app.utils.DeviceMetadataUtil;
 import com.ninjamap.app.utils.JwtUtils;
 import com.ninjamap.app.utils.constants.AppConstants;
 
@@ -43,59 +38,49 @@ public class AdminAuthServiceImpl implements IAdminAuthService {
 	private final IAdminService adminService;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtUtils jwtUtils;
-	private final IOtpService otpService;
 	private final ISessionService sessionService;
 	private final ISessionRepository sessionRepository;
 	private final HttpServletRequest httpRequest;
 	private final AuthServiceHelper authHelper;
-	private final DeviceMetadataUtil deviceMetadataUtil;
-	private final NotificationProducer notificationProducer;
-	private final KafkaTopics kafkaTopics;
 
 	// -------------------- LOGIN -----------------------
 	@Override
 	public ApiResponse login(LoginRequest request) {
-		Admin admin = adminService.getAdminByEmailAndIsActive(request.getUsername(), true);
+		Admin admin = adminService.getAdminByEmailAndIsActive(request.getUsername(), null);
+		if (Boolean.FALSE.equals(admin.getIsActive())) {
+			throw new ResourceNotFoundException(AppConstants.USER_ACCOUNT_INACTIVE);
+		}
 
 		if (admin == null || !passwordEncoder.matches(request.getPassword(), admin.getPersonalInfo().getPassword())) {
 			throw new UnauthorizedException(AppConstants.INVALID_CREDENTIALS);
 		}
 
-		return generateAuthTokenWithOtp(admin, OtpType.LOGIN, EmailTemplateType.OTP_VERIFICATION);
+		return authHelper.generateOtpAndAuthToken(admin.getPersonalInfo().getEmail(), admin.getRole().getRoleName(),
+				OtpType.LOGIN, EmailTemplateType.OTP_VERIFICATION);
 	}
 
 	// -------------------- VERIFY OTP -----------------------
 	@Override
 	public ApiResponse verifyOtp(OtpRequest otpRequest) {
-		String token = jwtUtils.getToken(httpRequest);
-		validateAuthToken(token, Set.of(OtpType.LOGIN, OtpType.FORGET_PASSWORD));
-
-		String email = jwtUtils.extractEmail(token);
-		OtpType otpType = jwtUtils.extractOtpType(token);
-
-		if (!otpService.validateOtp(email, otpRequest.getOtp(), otpType)) {
-			throw new BadRequestException(AppConstants.INVALID_OR_EXPIRED_OTP);
-		}
+		var context = authHelper.validateAndExtractOtp(otpRequest, Set.of(OtpType.LOGIN, OtpType.FORGET_PASSWORD));
+		String email = context.email();
+		OtpType otpType = context.otpType();
 
 		Admin admin = adminService.getAdminByEmailAndIsActive(email, true);
 
 		if (authHelper.isAuthTokenRequired(otpType)) {
-			String authToken = jwtUtils.generateToken(email, admin.getRole().getRoleName(), TokenType.AUTH_TOKEN,
-					otpType, true);
-			return AppUtils.buildSuccessResponse(AppConstants.OTP_VERIFIED_SUCCESSFULLY,
-					Map.of(AppConstants.AUTH_TOKEN, authToken));
+			return authHelper.buildAuthTokenResponse(email, admin.getRole().getRoleName(), otpType);
 		} else {
-			ApiResponse response = generateAccessAndRefreshTokens(admin, otpType);
-
 			// Send notification email on successful login
-//			if (otpType == OtpType.LOGIN) {
-//				SendEmailRequest emailRequest = mapToSendEmailRequest(admin.getPersonalInfo().getEmail(), admin.getRole().getRoleName(),
-//						null, OtpType.LOGIN, EmailTemplateType.LOGIN_SUCCESS_NOTIFICATION);
-//				notificationProducer.sendMessage(kafkaTopics.getEmailNotificationTopic(), emailRequest,
-//						OutboxType.EMAIL);
-//			}
+//				if (otpType == OtpType.LOGIN) {
+//					SendEmailRequest emailRequest = mapToSendEmailRequest(admin.getPersonalInfo().getEmail(), admin.getRole().getRoleName(),
+//							null, OtpType.LOGIN, EmailTemplateType.LOGIN_SUCCESS_NOTIFICATION);
+//					notificationProducer.sendMessage(kafkaTopics.getEmailNotificationTopic(), emailRequest,
+//							OutboxType.EMAIL);
+//				}
 
-			return response;
+			return authHelper.generateAccessAndRefreshTokensAndSession(admin.getPersonalInfo().getEmail(),
+					admin.getRole().getRoleName(), otpType, admin);
 		}
 	}
 
@@ -113,21 +98,23 @@ public class AdminAuthServiceImpl implements IAdminAuthService {
 			throw new BadRequestException(AppConstants.RESEND_OTP_NOT_ALLOWED_FOR_THIS_TYPE);
 
 		Admin admin = adminService.getAdminByEmailAndIsActive(email, true);
-		return generateAuthTokenWithOtp(admin, otpType, EmailTemplateType.OTP_VERIFICATION);
+		return authHelper.generateOtpAndAuthToken(email, admin.getRole().getRoleName(), otpType,
+				EmailTemplateType.OTP_VERIFICATION);
 	}
 
 	// -------------------- FORGOT PASSWORD -----------------------
 	@Override
 	public ApiResponse forgotPassword(ForgetPasswordRequest request) {
 		Admin admin = adminService.getAdminByEmailAndIsActive(request.getUsername(), true);
-		return generateAuthTokenWithOtp(admin, OtpType.FORGET_PASSWORD, EmailTemplateType.OTP_VERIFICATION);
+		return authHelper.generateOtpAndAuthToken(admin.getPersonalInfo().getEmail(), admin.getRole().getRoleName(),
+				OtpType.FORGET_PASSWORD, EmailTemplateType.OTP_VERIFICATION);
 	}
 
 	// -------------------- RESET PASSWORD -----------------------
 	@Override
 	public ApiResponse resetPassword(ResetPasswordRequest request) {
 		String token = jwtUtils.getToken(httpRequest);
-		validateAuthToken(token, Set.of(OtpType.FORGET_PASSWORD));
+		authHelper.validateAuthToken(token, Set.of(OtpType.FORGET_PASSWORD));
 
 		if (!Boolean.TRUE.equals(jwtUtils.extractIsOtpVerified(token))) {
 			throw new UnauthorizedException(AppConstants.OTP_NOT_VERIFIED);
@@ -192,49 +179,6 @@ public class AdminAuthServiceImpl implements IAdminAuthService {
 	}
 
 	// -------------------- HELPER METHODS -----------------------
-	private void validateAuthToken(String token, Set<OtpType> allowedOtpTypes) {
-		if (token == null)
-			throw new UnauthorizedException(AppConstants.MISSING_TOKEN);
-		if (jwtUtils.isTokenExpired(token))
-			throw new UnauthorizedException(AppConstants.TOKEN_EXPIRED);
-
-		TokenType tokenType = jwtUtils.extractTokenType(token);
-		OtpType otpType = jwtUtils.extractOtpType(token);
-
-		if (tokenType != TokenType.AUTH_TOKEN || !allowedOtpTypes.contains(otpType))
-			throw new UnauthorizedException(AppConstants.INVALID_TOKEN_TYPE_FOR_VERIFICATION);
-	}
-
-	private ApiResponse generateAuthTokenWithOtp(Admin admin, OtpType otpType, EmailTemplateType templateType) {
-		String token = jwtUtils.generateToken(admin.getPersonalInfo().getEmail(), admin.getRole().getRoleName(), TokenType.AUTH_TOKEN,
-				otpType, false);
-		String otp = otpService.generateOtp(admin.getPersonalInfo().getEmail(), otpType);
-
-		// Send OTP email
-//		SendEmailRequest emailRequest = mapToSendEmailRequest(admin.getPersonalInfo().getEmail(), admin.getRole().getRoleName(), otp,
-//				otpType, templateType);
-//		notificationProducer.sendMessage(kafkaTopics.getEmailNotificationTopic(), emailRequest, OutboxType.EMAIL);
-
-		Map<String, Object> res = Map.of(AppConstants.AUTH_TOKEN, token, AppConstants.OTP, otp);
-		return AppUtils
-				.buildSuccessResponse(otpType == OtpType.FORGET_PASSWORD ? AppConstants.OTP_SENT_FOR_RESET_PASSWORD
-						: AppConstants.OTP_SENT_FOR_LOGIN, res);
-	}
-
-	private ApiResponse generateAccessAndRefreshTokens(Admin admin, OtpType otpType) {
-		Map<String, Object> tokens = authHelper.generateAccessAndRefreshTokens(admin.getPersonalInfo().getEmail(),
-				admin.getRole().getRoleName(), otpType);
-
-		String accessToken = (String) tokens.get(AppConstants.ACCESS_TOKEN);
-		String refreshToken = (String) tokens.get(AppConstants.REFRESH_TOKEN);
-
-		String userAgent = httpRequest.getHeader(AppConstants.USER_AGENT);
-		String ipAddress = deviceMetadataUtil.getClientIp(httpRequest);
-		sessionService.createSession(admin, accessToken, refreshToken, userAgent, ipAddress);
-
-		return AppUtils.buildSuccessResponse(AppConstants.OTP_VERIFIED_SUCCESSFULLY, tokens);
-	}
-
 //	private SendEmailRequest mapToSendEmailRequest(String email, String username, String otp, OtpType otpType,
 //			EmailTemplateType templateType) {
 //		return SendEmailRequest.builder().to(email).username(username).otp(otp).otpType(otpType)
