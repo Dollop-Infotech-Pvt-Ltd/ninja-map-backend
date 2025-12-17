@@ -37,4 +37,6 @@ public interface IUserService {
 	public ResponseEntity<ApiResponse> verifyOtpAndDelete(String otp);
 
 	public ResponseEntity<ApiResponse> createUser(UserRequest request);
+
+	public UserResponse mapToUserResponse(User user);
 }

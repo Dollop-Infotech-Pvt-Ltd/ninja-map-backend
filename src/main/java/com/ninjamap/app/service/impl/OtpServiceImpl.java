@@ -23,16 +23,17 @@ public class OtpServiceImpl implements IOtpService {
 	private final Random random = new Random();
 
 	@Override
-	public String generateOtp(String email, OtpType otpType) {
+	public String generateOtp(String identifier, OtpType otpType) {
 		String otp = String.format("%06d", random.nextInt(1_000_000));
 		LocalDateTime now = LocalDateTime.now();
 		LocalDateTime expiryTime = now.plusMinutes(5);
 
-		Otp otpEntry = otpRepo.findByEmailAndOtpType(email, otpType).orElse(null);
+		Otp otpEntry = otpRepo.findByIdentifierAndOtpType(identifier, otpType).orElse(null);
 
 		if (otpEntry == null || otpEntry.getExpirationTime().isBefore(now)) {
 			// Fresh OTP (or expired), reset everything
-			otpEntry = Otp.builder().email(email).otp(otp).expirationTime(expiryTime).otpType(otpType).build();
+			otpEntry = Otp.builder().identifier(identifier).otp(otp).expirationTime(expiryTime).otpType(otpType)
+					.build();
 		} else {
 			otpEntry.setOtp(otp);
 			otpEntry.setExpirationTime(expiryTime);
@@ -43,8 +44,8 @@ public class OtpServiceImpl implements IOtpService {
 	}
 
 	@Override
-	public boolean validateOtp(String email, String otp, OtpType otpType) {
-		Optional<Otp> optionalOtp = otpRepo.findByEmailAndOtpType(email, otpType);
+	public boolean validateOtp(String identifier, String otp, OtpType otpType) {
+		Optional<Otp> optionalOtp = otpRepo.findByIdentifierAndOtpType(identifier, otpType);
 		LocalDateTime now = LocalDateTime.now();
 		if (optionalOtp.isEmpty())
 			return false;

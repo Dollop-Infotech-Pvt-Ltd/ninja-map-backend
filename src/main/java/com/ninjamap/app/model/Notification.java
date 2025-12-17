@@ -29,7 +29,7 @@ public class Notification extends AuditData {
 	@NotBlank(message = ValidationConstants.TITLE_REQUIRED)
 	private String title;
 
-	@Column(nullable = false, columnDefinition = "MEDIUMTEXT")
+	@Column(nullable = false, columnDefinition = "TEXT")
 	@NotBlank(message = ValidationConstants.DESCRIPTION_REQUIRED)
 	private String description;
 

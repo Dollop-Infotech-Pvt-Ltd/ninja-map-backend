@@ -36,7 +36,7 @@ public class TempUser {
 	@JoinColumn(name = "role_id")
 	private Roles role;
 
-	@Column(name = "created_at")
+	@Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
 	@Builder.Default
 	private LocalDateTime createdAt = LocalDateTime.now();
 }

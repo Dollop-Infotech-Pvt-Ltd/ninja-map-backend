@@ -141,7 +141,14 @@ public class AdminServiceImpl implements IAdminService, UserDetailsService {
 	@Override
 	public ResponseEntity<PaginatedResponse<AdminResponse>> getAllAdmins(PaginationRequest paginationRequest) {
 		Pageable pageable = AppUtils.buildPageableRequest(paginationRequest, Admin.class);
-		Page<Admin> adminPage = adminRepository.findAllByFilters(paginationRequest.getSearchValue(), pageable);
+//		Page<Admin> adminPage = adminRepository.findAllByFilters(paginationRequest.getSearchValue(), pageable);
+		String searchValue = paginationRequest.getSearchValue();
+		if (searchValue != null && !searchValue.isBlank()) {
+			searchValue = searchValue.trim();
+		} else {
+			searchValue = null;
+		}
+		Page<Admin> adminPage = adminRepository.findAllByFilters(searchValue, pageable);
 
 		List<AdminResponse> responses = adminPage.stream().map(this::mapToResponse).toList();
 

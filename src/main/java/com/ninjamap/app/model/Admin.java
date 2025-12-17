@@ -22,20 +22,21 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class Admin extends AuditData {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String adminId;
+	@Id
+	@GeneratedValue(strategy = GenerationType.UUID)
+	@EqualsAndHashCode.Include
+	private String adminId;
 
-    @Embedded
-    private PersonalInfo personalInfo;
+	@Embedded
+	private PersonalInfo personalInfo;
 
-    @Column(nullable = false)
-    private String employeeId;
+	@Column(nullable = false)
+	private String employeeId;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "role_id")
-    private Roles role;
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "role_id")
+	private Roles role;
 }

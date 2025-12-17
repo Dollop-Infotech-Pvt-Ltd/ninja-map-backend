@@ -11,7 +11,6 @@ import org.springframework.stereotype.Repository;
 
 import com.ninjamap.app.model.User;
 
-
 @Repository
 public interface IUserRepository extends JpaRepository<User, String> {
 
@@ -35,11 +34,13 @@ public interface IUserRepository extends JpaRepository<User, String> {
 			SELECT u FROM User u
 			WHERE u.isDeleted = false
 			AND (
-			    :searchValue IS NULL
+			    COALESCE(:searchValue, '') = ''
 			    OR LOWER(u.personalInfo.firstName) LIKE LOWER(CONCAT('%', :searchValue, '%'))
 			    OR LOWER(u.personalInfo.lastName) LIKE LOWER(CONCAT('%', :searchValue, '%'))
 			    OR LOWER(u.personalInfo.email) LIKE LOWER(CONCAT('%', :searchValue, '%'))
+			    OR u.personalInfo.mobileNumber LIKE CONCAT('%', :searchValue, '%')
 			)
+			ORDER BY u.createdDate DESC
 			""")
 	Page<User> findAllByFilters(@Param("searchValue") String searchValue, Pageable pageable);
 
@@ -61,5 +62,17 @@ public interface IUserRepository extends JpaRepository<User, String> {
 
 	@Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM User u WHERE u.personalInfo.mobileNumber = :mobileNumber AND u.isDeleted = false")
 	boolean existsByMobileNumberAndIsDeletedFalse(@Param("mobileNumber") String mobileNumber);
+
+	@Query("""
+			    SELECT u FROM User u
+			    WHERE u.isDeleted = false
+			      AND (
+			          u.personalInfo.email = :identifier
+			          OR u.personalInfo.mobileNumber = :identifier
+			      )
+			      AND (:isActive IS NULL OR u.isActive = :isActive)
+			""")
+	Optional<User> findByEmailOrMobileAndOptionalIsActive(@Param("identifier") String identifier,
+			@Param("isActive") Boolean isActive);
 
 }

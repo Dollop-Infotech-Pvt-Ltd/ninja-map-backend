@@ -26,6 +26,7 @@ public class User extends AuditData {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @EqualsAndHashCode.Include
     private String userId;
 
     @Embedded

@@ -28,6 +28,9 @@ public class PermissionServiceImpl implements IPermissionService {
 
 	@Override
 	public ResponseEntity<ApiResponse> createPermission(PermissionRequest request) {
+		System.err.println("====> "+permissionRepository.existsByResourceAndActionAndIsDeletedFalse(request.getResource(),
+				request.getAction()));
+		
 		if (permissionRepository.existsByResourceAndActionAndIsDeletedFalse(request.getResource(),
 				request.getAction())) {
 			throw new ResourceAlreadyExistException(AppConstants.PERMISSION_ALREADY_EXISTS);

@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
 public class Otp {
 
 	@Id
-	private String email;
+	private String identifier;
 
 	private String otp;
 

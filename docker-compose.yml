@@ -1,0 +1,78 @@
+version: "3.8"
+
+services:
+  # -------------------------------------------------
+  # PostgreSQL + PostGIS (latest)
+  # -------------------------------------------------
+  #postgres:
+    #image: postgis/postgis:latest        # <-- PostGIS enabled
+    #container_name: postgres
+    #restart: always
+    #environment:
+      #POSTGRES_USER: postgres
+      #POSTGRES_PASSWORD: Java@2021
+      #POSTGRES_DB: ninjamapdb
+      #TZ: Asia/Kolkata
+    #ports:
+      #- "5432:5432"
+    #volumes:
+      #- pgdata:/var/lib/postgresql          # parent → PG 18+ creates /18/data
+    #healthcheck:
+      #test: ["CMD-SHELL", "pg_isready -U postgres"]
+      #interval: 10s
+      #timeout: 5s
+      #retries: 5
+    #networks:
+      #- appnet
+    #labels:
+      #com.description: "PostgreSQL + PostGIS for Ninja_Map"
+
+  # -------------------------------------------------
+  # Kafka
+  # -------------------------------------------------
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    restart: always
+    ports:
+      - "9092:9092"   # client
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_COORDINATOR_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      CLUSTER_ID: 'MkZvaW5qYS1tYXAtYXBw'   # base64 of "ninja-map-app"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    networks:
+      - appnet
+    labels:
+      com.description: "Kafka (KRaft) for Ninja_Map"
+
+# -------------------------------------------------
+# Named volumes
+# -------------------------------------------------
+volumes:
+  pgdata:
+  kafka_data:
+
+# -------------------------------------------------
+# Bridge network
+# -------------------------------------------------
+networks:
+  appnet:
+    driver: bridge

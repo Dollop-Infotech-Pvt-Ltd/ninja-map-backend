@@ -10,5 +10,5 @@ import com.ninjamap.app.model.Otp;
 
 @Repository
 public interface IOtpRepository extends JpaRepository<Otp, String> {
-	Optional<Otp> findByEmailAndOtpType(String email, OtpType otpType);
+	Optional<Otp> findByIdentifierAndOtpType(String identifier, OtpType otpType);
 }

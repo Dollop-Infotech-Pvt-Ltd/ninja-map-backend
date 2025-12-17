@@ -3,7 +3,6 @@ package com.ninjamap.app.payload.request;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.ninjamap.app.utils.annotations.TrimValidator;
-import com.ninjamap.app.utils.annotations.UUIDValidator;
 import com.ninjamap.app.utils.constants.ValidationConstants;
 
 import jakarta.validation.constraints.Email;
@@ -16,11 +15,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 @TrimValidator
-public class AdminRequest {
+public class AppRegisterRequest {
 
 	@NotBlank(message = ValidationConstants.FIRST_NAME_REQUIRED)
 	@Size(max = 50, message = ValidationConstants.FIRST_NAME_LENGTH)
@@ -34,24 +33,12 @@ public class AdminRequest {
 	@Email(regexp = ValidationConstants.EMAIL_PATTERN, message = ValidationConstants.EMAIL_PATTERN_MESSAGE)
 	private String email;
 
-	@NotBlank(message = ValidationConstants.PASSWORD_REQUIRED)
-	@Pattern(regexp = ValidationConstants.PASSWORD_PATTERN, message = ValidationConstants.PASSWORD_PATTERN_MESSAGE)
-	private String password;
-
 	@NotBlank(message = ValidationConstants.MOBILE_NUMBER_REQUIRED)
 	@Pattern(regexp = ValidationConstants.MOBILE_NUMBER_PATTERN, message = ValidationConstants.MOBILE_NUMBER_PATTERN_MESSAGE)
 	private String mobileNumber;
 
-	@NotBlank(message = ValidationConstants.ROLE_ID_REQUIRED)
-	@UUIDValidator(message = ValidationConstants.INVALID_UUID)
-	private String roleId;
-
+	@NotBlank(message = ValidationConstants.GENDER_REQUIRED)
+	private String gender;
+	
 	private MultipartFile profilePicture;
-
-	@NotBlank(message = ValidationConstants.EMPLOYEE_ID_REQUIRED)
-	@Pattern(regexp = ValidationConstants.EMPLOYEE_ID_PATTERN, message = ValidationConstants.EMPLOYEE_ID_PATTERN_MESSAGE)
-	private String employeeId;
-
-	@Size(min = 10, max = 300, message = ValidationConstants.BIO_LENGTH)
-	private String bio;
 }

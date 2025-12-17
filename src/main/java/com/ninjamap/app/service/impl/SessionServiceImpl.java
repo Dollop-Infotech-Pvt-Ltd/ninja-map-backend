@@ -73,10 +73,10 @@ public class SessionServiceImpl implements ISessionService {
 
 		if ("USER".equals(role)) {
 			User user = userService.getUserByEmailAndIsActive(email, true);
-			sessions = sessionRepository.findAllByUser(user);
+			sessions = sessionRepository.findAllByUserOrderByLoginTimeDesc(user);
 		} else {
 			Admin admin = adminService.getAdminByEmailAndIsActive(email, true);
-			sessions = sessionRepository.findAllByAdmin(admin);
+			sessions = sessionRepository.findAllByAdminOrderByLoginTimeDesc(admin);
 		}
 
 		return sessions.stream()

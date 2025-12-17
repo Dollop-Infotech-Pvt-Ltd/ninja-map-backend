@@ -23,6 +23,6 @@ public class EmailTemplate {
 	@Column(unique = true)
 	private String templateName;
 
-	@Column(columnDefinition = "LONGTEXT")
+	@Column(columnDefinition = "TEXT")
 	private String body;
 }

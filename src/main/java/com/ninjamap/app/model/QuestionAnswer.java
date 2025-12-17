@@ -13,7 +13,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class QuestionAnswer {
+
+    @Column(name = "question", nullable = false)
     private String question;
-    @Column(columnDefinition = "TEXT")
+
+    @Column(name = "answer", nullable = false)
     private String answer;
 }
