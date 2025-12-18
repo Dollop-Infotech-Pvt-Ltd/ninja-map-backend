@@ -290,4 +290,12 @@ public class AppConstants {
 	public static final String PASSWORD_UPDATE_NOTIFICATION_SUBJECT = "Your Password Has Been Updated Successfully";
 
 	public static final String LOGIN_SUCCESS_NOTIFICATION_SUBJECT = "Login Successful - Ninja-Map";
+	
+	
+	
+  // ======================== CATEGORY ====================================
+	
+  public static final String CATEGORY_PICTURE = "Category_Picture";
+  public static final String ADD_CATEGORY = "Category created successfully";
+  public static final String CATEGORY_DELETED = "Category deleted successfully";
 }
