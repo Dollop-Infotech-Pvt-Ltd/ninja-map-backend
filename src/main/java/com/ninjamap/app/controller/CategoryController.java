@@ -47,7 +47,7 @@ public class CategoryController {
 
 	@PutMapping("/update-category")
 	public ResponseEntity<ApiResponse> updateCategory(@RequestParam String id,
-			@Valid @RequestBody CategoryRequest categoryRequest) {
+			@Valid CategoryRequest categoryRequest) {
 		return new ResponseEntity<>(this.categoryService.updateCategory(id, categoryRequest), HttpStatus.OK);
 	}
 
@@ -60,4 +60,5 @@ public class CategoryController {
 	public ResponseEntity<ApiResponse> getAllCategoriesAdmin() {
 		return new ResponseEntity<>(this.categoryService.getAllCategoriesAdmin(), HttpStatus.OK);
 	}
+	
 }

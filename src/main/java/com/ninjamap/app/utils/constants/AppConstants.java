@@ -302,4 +302,12 @@ public class AppConstants {
   public static final String CATEGORY_FTECH = "Categories fetched successfully";
   public static final String CATEGORY_NOT_FOUND = "Category not found";
   public static final String CATEGORY_UPDATE_SUCCESSFULLY = "Category updated successfully";
+  
+  // ======================== PLACES ====================================
+  public static final String PLACE_ADDED = "Place added successfully";
+  public static final String PLACE_DELETED = "Place deleted successfully";
+  public static final String PLACE_FTECH = "Places fetched successfully";
+  public static final String PLACE_NOT_FOUND = "Place not found";
+  public static final String PLACE_UPDATE_SUCCESSFULLY = "Place updated successfully";
+  
 }

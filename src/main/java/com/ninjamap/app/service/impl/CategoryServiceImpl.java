@@ -110,12 +110,11 @@ public class CategoryServiceImpl implements ICategoryService {
 		Category category = existingCategory.get();
 		category.setCategoryName(categoryRequest.getCategoryName());
 		category.setCategoryPicture(categoryPictureUrl);
-		Category updatedCategory = categoryRepository.save(category);
+		categoryRepository.save(category);
 
 		return ApiResponse.builder()
 				.statusCode(HttpStatus.OK.value())
 				.message(AppConstants.CATEGORY_UPDATE_SUCCESSFULLY)
-				.data(convertCategoryToResponse(updatedCategory))
 				.build();
 	}
 
@@ -178,4 +177,6 @@ public class CategoryServiceImpl implements ICategoryService {
 				.categoryPicture(categoryPictureUrl)
 				.build();
 	}
+	
+	
 }
