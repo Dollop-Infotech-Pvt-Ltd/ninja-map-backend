@@ -63,14 +63,11 @@
 			<scope>runtime</scope>
 		</dependency>-->
 		<dependency>
-		
-		 <!-- Hibernate Spatial -->
-    <dependency>
         <groupId>org.hibernate</groupId>
         <artifactId>hibernate-spatial</artifactId>
         <version>6.6.29.Final</version>
     </dependency>
-    
+    <dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
