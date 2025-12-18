@@ -13,9 +13,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.request.PlaceRequest;
+import com.ninjamap.app.payload.request.UpdatePlaceRequest;
 import com.ninjamap.app.payload.response.ApiResponse;
 import com.ninjamap.app.service.IPlaceService;
+import com.ninjamap.app.utils.constants.AppConstants;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -42,8 +45,18 @@ public class PlaceController {
 	 * Get my places
 	 */
 	@GetMapping("/get-places")
-	public ResponseEntity<ApiResponse> getPlaces() {
-		return new ResponseEntity<>(placeService.getPlacesByUserId(), HttpStatus.OK);
+	public ResponseEntity<ApiResponse> getPlaces(
+			@RequestParam(name = AppConstants.PAGE_SIZE,defaultValue = "10") Integer pageSize,
+			@RequestParam(name = AppConstants.PAGE_NUMBER,defaultValue = "0") Integer pageNumber,
+			@RequestParam(name = AppConstants.SORT_DIRECTION, defaultValue = AppConstants.DESC, required = false) String sortDirection,
+			@RequestParam(name = AppConstants.SORT_KEY, required = false) String sortKey,
+			@RequestParam(name = AppConstants.SEARCH_VALUE, required = false) String searchValue
+			) {
+		
+		PaginationRequest paginationRequest = PaginationRequest.builder().pageSize(pageSize).pageNumber(pageNumber)
+				.sortDirection(sortDirection).sortKey(sortKey).searchValue(searchValue).build();
+		
+		return new ResponseEntity<>(placeService.getPlacesByUserId(paginationRequest), HttpStatus.OK);
 	}
 
 	/**
@@ -63,12 +76,12 @@ public class PlaceController {
 	}
 
 	/**
-	 * Update an existing place
+	 * Update an existing place (only address, latitude, longitude can be updated)
 	 */
 	@PutMapping("/update-place")
 	public ResponseEntity<ApiResponse> updatePlace(@RequestParam String id,
-			@Valid PlaceRequest placeRequest) {
-		return new ResponseEntity<>(placeService.updatePlace(id, placeRequest), HttpStatus.OK);
+			@Valid UpdatePlaceRequest updatePlaceRequest) {
+		return new ResponseEntity<>(placeService.updatePlace(id, updatePlaceRequest), HttpStatus.OK);
 	}
 
 	/**

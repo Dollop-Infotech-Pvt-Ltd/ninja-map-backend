@@ -1,7 +1,9 @@
 package com.ninjamap.app.service;
 
+import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.request.PlaceRequest;
 import com.ninjamap.app.payload.response.ApiResponse;
+import com.ninjamap.app.payload.response.PaginatedResponse;
 
 public interface IPlaceService {
 
@@ -13,7 +15,7 @@ public interface IPlaceService {
 	/**
 	 * Get all places for the authenticated user
 	 */
-	ApiResponse getPlacesByUserId();
+	ApiResponse getPlacesByUserId(PaginationRequest paginationRequest);
 
 	/**
 	 * Get a specific place by ID
@@ -26,9 +28,9 @@ public interface IPlaceService {
 	ApiResponse getPlacesByCategory(String categoryId);
 
 	/**
-	 * Update an existing place
+	 * Update an existing place (only address, latitude, longitude can be updated)
 	 */
-	ApiResponse updatePlace(String placeId, PlaceRequest placeRequest);
+	ApiResponse updatePlace(String placeId, com.ninjamap.app.payload.request.UpdatePlaceRequest updatePlaceRequest);
 
 	/**
 	 * Delete a place

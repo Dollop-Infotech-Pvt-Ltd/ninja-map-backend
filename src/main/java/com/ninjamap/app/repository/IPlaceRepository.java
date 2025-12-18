@@ -3,6 +3,8 @@ package com.ninjamap.app.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,7 +18,7 @@ public interface IPlaceRepository extends JpaRepository<Place, String> {
 	/**
 	 * Find all places belonging to a user
 	 */
-	List<Place> findByUserIdAndIsDeletedFalse(String userId);
+	Page<Place> findByUserIdAndIsDeletedFalse(String userId,Pageable pageable);
 
 	/**
 	 * Find places by user and category

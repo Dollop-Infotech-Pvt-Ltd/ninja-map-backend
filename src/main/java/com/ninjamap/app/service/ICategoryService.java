@@ -1,13 +1,14 @@
 package com.ninjamap.app.service;
 
 import com.ninjamap.app.payload.request.CategoryRequest;
+import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.response.ApiResponse;
 
 public interface ICategoryService {
 
 	ApiResponse addCategory(CategoryRequest categoryRequest);
 
-	ApiResponse getCategories();
+	ApiResponse getCategories(PaginationRequest paginationRequest);
 
 	ApiResponse getCategoryById(String id);
 

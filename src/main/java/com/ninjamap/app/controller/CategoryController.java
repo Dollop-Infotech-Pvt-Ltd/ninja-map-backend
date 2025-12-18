@@ -15,8 +15,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ninjamap.app.payload.request.CategoryRequest;
+import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.response.ApiResponse;
 import com.ninjamap.app.service.ICategoryService;
+import com.ninjamap.app.utils.constants.AppConstants;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +33,17 @@ public class CategoryController {
 	private ICategoryService categoryService;
 
 	@GetMapping("/get-categories")
-	public ResponseEntity<ApiResponse> getCategories() {
-		return new ResponseEntity<>(this.categoryService.getCategories(), HttpStatus.OK);
+	public ResponseEntity<ApiResponse> getCategories(
+			@RequestParam(name = AppConstants.PAGE_SIZE,defaultValue = "10") Integer pageSize,
+			@RequestParam(name = AppConstants.PAGE_NUMBER,defaultValue = "0") Integer pageNumber,
+			@RequestParam(name = AppConstants.SORT_DIRECTION, defaultValue = AppConstants.DESC, required = false) String sortDirection,
+			@RequestParam(name = AppConstants.SORT_KEY, required = false) String sortKey,
+			@RequestParam(name = AppConstants.SEARCH_VALUE, required = false) String searchValue
+			) {
+		PaginationRequest paginationRequest = PaginationRequest.builder().pageSize(pageSize).pageNumber(pageNumber)
+				.sortDirection(sortDirection).sortKey(sortKey).searchValue(searchValue).build();
+		
+		return new ResponseEntity<>(this.categoryService.getCategories(paginationRequest), HttpStatus.OK);
 	}
 
 	@GetMapping("/get-category")

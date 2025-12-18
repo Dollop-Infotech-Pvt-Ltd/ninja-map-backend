@@ -4,16 +4,21 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.ninjamap.app.model.Category;
 import com.ninjamap.app.payload.request.CategoryRequest;
+import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.response.ApiResponse;
 import com.ninjamap.app.payload.response.CategoryResponse;
+import com.ninjamap.app.payload.response.PaginatedResponse;
 import com.ninjamap.app.repository.ICategoryRepository;
 import com.ninjamap.app.service.ICategoryService;
 import com.ninjamap.app.service.ICloudinaryService;
+import com.ninjamap.app.utils.AppUtils;
 import com.ninjamap.app.utils.constants.AppConstants;
 
 @Service
@@ -48,16 +53,16 @@ public class CategoryServiceImpl implements ICategoryService {
 	}
 
 	@Override
-	public ApiResponse getCategories() {
-		List<Category> activeCategories = categoryRepository.findByIsActiveTrue();
-		List<CategoryResponse> responses = activeCategories.stream()
-				.map(this::convertCategoryToResponse)
-				.toList();
+	public ApiResponse getCategories(PaginationRequest paginationRequest) {
+		
+		Pageable pageable = AppUtils.buildPageableRequest(paginationRequest, Category.class);
+		
+		Page<Category> activeCategories = categoryRepository.findByIsActiveTrue(pageable);
 
 		return ApiResponse.builder()
 				.statusCode(HttpStatus.OK.value())
 				.message(AppConstants.CATEGORY_FTECH)
-				.data(responses)
+				.data(new PaginatedResponse<>(activeCategories.map(this::convertCategoryToResponse)))
 				.build();
 	}
 

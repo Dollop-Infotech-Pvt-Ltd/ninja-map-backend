@@ -6,20 +6,25 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.ninjamap.app.model.Category;
 import com.ninjamap.app.model.Place;
+import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.request.PlaceRequest;
 import com.ninjamap.app.payload.response.ApiResponse;
 import com.ninjamap.app.payload.response.CategoryResponse;
+import com.ninjamap.app.payload.response.PaginatedResponse;
 import com.ninjamap.app.payload.response.PlaceListResponse;
 import com.ninjamap.app.payload.response.PlaceResponse;
 import com.ninjamap.app.repository.ICategoryRepository;
 import com.ninjamap.app.repository.IPlaceRepository;
 import com.ninjamap.app.service.IPlaceService;
 import com.ninjamap.app.service.IUserService;
+import com.ninjamap.app.utils.AppUtils;
 import com.ninjamap.app.utils.constants.AppConstants;
 
 @Service
@@ -122,27 +127,29 @@ public class PlaceServiceImpl implements IPlaceService {
 	}
 
 	@Override
-	public ApiResponse getPlacesByUserId() {
+	public ApiResponse getPlacesByUserId(PaginationRequest paginationRequest) {
+		
+		
+		Pageable pageable = AppUtils.buildPageableRequest(paginationRequest, Place.class);
+		
 		// Get current user ID
 		String userId = userService.getCurrectUserFromToken().getId();
 
 		// Get all places for user
-		List<Place> places = placeRepository.findByUserIdAndIsDeletedFalse(userId);
+		Page<Place> places = placeRepository.findByUserIdAndIsDeletedFalse(userId,pageable);
 
-		// Convert to response DTOs
-		List<PlaceResponse> placeResponses = places.stream()
-				.map(this::convertPlaceToResponse)
-				.toList();
-
-		// Calculate category counts
+		// Calculate category counts (only for category-based places)
 		Map<String, Integer> categoryCounts = new HashMap<>();
 		for (Place place : places) {
-			String categoryName = place.getCategory().getCategoryName();
-			categoryCounts.put(categoryName, categoryCounts.getOrDefault(categoryName, 0) + 1);
+			// Only count category-based places (custom places have null category)
+			if (place.getCategory() != null) {
+				String categoryName = place.getCategory().getCategoryName();
+				categoryCounts.put(categoryName, categoryCounts.getOrDefault(categoryName, 0) + 1);
+			}
 		}
 
 		PlaceListResponse response = PlaceListResponse.builder()
-				.places(placeResponses)
+				.places(new PaginatedResponse(places.map(this::convertPlaceToResponse)))
 				.categoriesCount(categoryCounts)
 				.build();
 
@@ -205,7 +212,7 @@ public class PlaceServiceImpl implements IPlaceService {
 	}
 
 	@Override
-	public ApiResponse updatePlace(String placeId, PlaceRequest placeRequest) {
+	public ApiResponse updatePlace(String placeId, com.ninjamap.app.payload.request.UpdatePlaceRequest updatePlaceRequest) {
 		// Get current user ID
 		String userId = userService.getCurrectUserFromToken().getId();
 
@@ -228,23 +235,11 @@ public class PlaceServiceImpl implements IPlaceService {
 					.build();
 		}
 
-		// Validate category exists
-		Optional<Category> category = categoryRepository.findById(placeRequest.getCategoryId());
-		if (category.isEmpty()) {
-			return ApiResponse.builder()
-					.statusCode(HttpStatus.BAD_REQUEST.value())
-					.message(AppConstants.CATEGORY_NOT_FOUND)
-					.data(null)
-					.build();
-		}
-
-		// Update place
+		// Update only address, latitude, and longitude
 		Place existingPlace = place.get();
-		existingPlace.setName(placeRequest.getName());
-		existingPlace.setAddress(placeRequest.getAddress());
-		existingPlace.setLatitude(placeRequest.getLatitude());
-		existingPlace.setLongitude(placeRequest.getLongitude());
-		existingPlace.setCategory(category.get());
+		existingPlace.setAddress(updatePlaceRequest.getAddress());
+		existingPlace.setLatitude(updatePlaceRequest.getLatitude());
+		existingPlace.setLongitude(updatePlaceRequest.getLongitude());
 
 		Place updatedPlace = placeRepository.save(existingPlace);
 
