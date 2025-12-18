@@ -13,9 +13,11 @@ jobs:
     env:
       SSH_USERNAME: ${{ secrets.LOCAL_SSH_USERNAME }}
       REMOTE_PATH: ${{ secrets.LOCAL_REMOTE_PATH }}
+      SSH_HOST: ${{ secrets.CF_HOST_URL }}
+
       CF_TUNNEL_NAME: ${{ secrets.CF_TUNNEL_NAME }}
       CF_CERT_PEM: ${{ secrets.CF_CERT_PEM }}
-      SSH_HOST: ${{ secrets.CF_HOST_URL }}
+
       APP_NAME: ninja-map
 
     steps:
@@ -40,11 +42,14 @@ jobs:
         mkdir -p deployment
         cp target/*.jar deployment/${APP_NAME}.jar
 
-    # 5️⃣ Install cloudflared
+    # 5️⃣ Install cloudflared (OFFICIAL & STABLE)
     - name: 🌉 Install cloudflared
       run: |
-        curl -fsSL https://github.com/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o cloudflared.deb
-        sudo dpkg -i cloudflared.deb
+        curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloudflare-main.gpg
+        echo "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared jammy main" | sudo tee /etc/apt/sources.list.d/cloudflared.list
+        sudo apt-get update
+        sudo apt-get install -y cloudflared
+        cloudflared --version
 
     # 6️⃣ Setup SSH key
     - name: 🔑 Setup SSH
@@ -70,25 +75,25 @@ jobs:
       run: |
         ssh cf-server "echo 'Connected via Cloudflare Tunnel'"
 
-    # ✅ 8.5️⃣ Ensure remote directory exists (FIX)
+    # 9️⃣ Ensure remote directory exists
     - name: 🗂️ Ensure remote directory exists
       run: |
         ssh cf-server "mkdir -p '$REMOTE_PATH'"
 
-    # 9️⃣ Upload JAR safely
+    # 🔟 Upload JAR safely
     - name: 🚀 Upload new JAR
       run: |
         scp deployment/${APP_NAME}.jar \
           cf-server:$REMOTE_PATH/${APP_NAME}.jar.new
 
-    # 🔟 Replace JAR atomically
+    # 1️⃣1️⃣ Replace JAR atomically
     - name: 🔁 Replace JAR
       run: |
         ssh cf-server "
           mv $REMOTE_PATH/${APP_NAME}.jar.new $REMOTE_PATH/${APP_NAME}.jar
         "
 
-    # 1️⃣1️⃣ Restart service
+    # 1️⃣2️⃣ Restart Spring Boot service
     - name: 🔄 Restart Spring Boot service
       run: |
         ssh cf-server "
