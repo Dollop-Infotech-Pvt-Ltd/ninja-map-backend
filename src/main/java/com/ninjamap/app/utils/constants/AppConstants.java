@@ -298,4 +298,8 @@ public class AppConstants {
   public static final String CATEGORY_PICTURE = "Category_Picture";
   public static final String ADD_CATEGORY = "Category created successfully";
   public static final String CATEGORY_DELETED = "Category deleted successfully";
+  public static final String CATEGORY_ALREADY_EXIST = "Category name already exists";
+  public static final String CATEGORY_FTECH = "Categories fetched successfully";
+  public static final String CATEGORY_NOT_FOUND = "Category not found";
+  public static final String CATEGORY_UPDATE_SUCCESSFULLY = "Category updated successfully";
 }

@@ -33,7 +33,7 @@ public class CategoryServiceImpl implements ICategoryService {
 		if (existingCategory.isPresent()) {
 			return ApiResponse.builder()
 					.statusCode(HttpStatus.CONFLICT.value())
-					.message("Category name already exists")
+					.message(AppConstants.CATEGORY_ALREADY_EXIST)
 					.data(null)
 					.build();
 		}
@@ -56,7 +56,7 @@ public class CategoryServiceImpl implements ICategoryService {
 
 		return ApiResponse.builder()
 				.statusCode(HttpStatus.OK.value())
-				.message("Categories fetched successfully")
+				.message(AppConstants.CATEGORY_FTECH)
 				.data(responses)
 				.build();
 	}
@@ -67,14 +67,14 @@ public class CategoryServiceImpl implements ICategoryService {
 		if (category.isEmpty()) {
 			return ApiResponse.builder()
 					.statusCode(HttpStatus.NOT_FOUND.value())
-					.message("Category not found")
+					.message(AppConstants.CATEGORY_NOT_FOUND)
 					.data(null)
 					.build();
 		}
 
 		return ApiResponse.builder()
 				.statusCode(HttpStatus.OK.value())
-				.message("Category fetched successfully")
+				.message(AppConstants.CATEGORY_FTECH)
 				.data(convertCategoryToResponse(category.get()))
 				.build();
 	}
@@ -85,7 +85,7 @@ public class CategoryServiceImpl implements ICategoryService {
 		if (existingCategory.isEmpty()) {
 			return ApiResponse.builder()
 					.statusCode(HttpStatus.NOT_FOUND.value())
-					.message("Category not found")
+					.message(AppConstants.CATEGORY_NOT_FOUND)
 					.data(null)
 					.build();
 		}
@@ -96,7 +96,7 @@ public class CategoryServiceImpl implements ICategoryService {
 		if (duplicateCategory.isPresent() && !duplicateCategory.get().getId().equals(id)) {
 			return ApiResponse.builder()
 					.statusCode(HttpStatus.CONFLICT.value())
-					.message("Category name already exists")
+					.message(AppConstants.CATEGORY_ALREADY_EXIST)
 					.data(null)
 					.build();
 		}
@@ -114,7 +114,7 @@ public class CategoryServiceImpl implements ICategoryService {
 
 		return ApiResponse.builder()
 				.statusCode(HttpStatus.OK.value())
-				.message("Category updated successfully")
+				.message(AppConstants.CATEGORY_UPDATE_SUCCESSFULLY)
 				.data(convertCategoryToResponse(updatedCategory))
 				.build();
 	}
@@ -125,7 +125,7 @@ public class CategoryServiceImpl implements ICategoryService {
 		if (existingCategory.isEmpty()) {
 			return ApiResponse.builder()
 					.statusCode(HttpStatus.NOT_FOUND.value())
-					.message("Category not found")
+					.message(AppConstants.CATEGORY_NOT_FOUND)
 					.data(null)
 					.build();
 		}
@@ -150,7 +150,7 @@ public class CategoryServiceImpl implements ICategoryService {
 
 		return ApiResponse.builder()
 				.statusCode(HttpStatus.OK.value())
-				.message("All categories fetched successfully")
+				.message(AppConstants.CATEGORY_FTECH)
 				.data(responses)
 				.build();
 	}
