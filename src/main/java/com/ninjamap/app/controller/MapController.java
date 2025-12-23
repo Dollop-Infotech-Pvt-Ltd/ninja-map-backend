@@ -32,8 +32,9 @@ public class MapController {
 	@GetMapping("/reverse-geocoding")
 	public ResponseEntity<ApiResponse> reverse(
 			@RequestParam(required = true) double lat ,
-			@RequestParam(required = true) double lon
+			@RequestParam(required = true) double lon ,
+			@RequestParam(required = true) String searchTerm
 			){
-		return ResponseEntity.ok(this.mapService.reverse(lat,lon));
+		return ResponseEntity.ok(this.mapService.reverse(lat,lon,searchTerm));
 	}
 }

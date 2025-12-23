@@ -5,7 +5,6 @@ import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import com.ninjamap.app.model.SearchHistory.SearchType;
 import com.ninjamap.app.payload.request.SearchHistoryRequest;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,7 +30,6 @@ public class SearchHistoryAspect {
 					if (searchTerm != null && !searchTerm.isEmpty()) {
 						SearchHistoryRequest request = SearchHistoryRequest.builder()
 								.searchTerm(searchTerm)
-								.searchType(SearchType.PLACE_SEARCH.toString())
 								.build();
 						searchHistoryService.recordSearch(request);
 					}
@@ -54,7 +52,6 @@ public class SearchHistoryAspect {
 					String categoryId = (String) args[0];
 					SearchHistoryRequest request = SearchHistoryRequest.builder()
 							.searchTerm(categoryId)
-							.searchType(SearchType.CATEGORY_SEARCH.toString())
 							.build();
 					searchHistoryService.recordSearch(request);
 				}

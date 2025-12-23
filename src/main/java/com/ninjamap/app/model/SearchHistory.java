@@ -37,12 +37,7 @@ public class SearchHistory extends AuditData {
 
 	@Column(nullable = false, length = 255)
 	private String searchTerm;
+	
+	
 
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false)
-	private SearchType searchType;
-
-	public enum SearchType {
-		PLACE_SEARCH, CATEGORY_SEARCH, LOCATION_SEARCH
-	}
 }

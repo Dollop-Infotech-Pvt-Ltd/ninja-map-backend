@@ -18,6 +18,4 @@ public class SearchHistoryRequest {
 	@Size(min = 1, max = 255, message = "Search term must be between 1 and 255 characters")
 	private String searchTerm;
 
-	@NotNull(message = "Search type is required")
-	private String searchType;
 }

@@ -13,9 +13,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.ninjamap.app.payload.request.SearchHistoryRequest;
 import com.ninjamap.app.payload.response.ApiResponse;
 import com.ninjamap.app.payload.response.MapServiceResponse;
 import com.ninjamap.app.service.IMapService;
+import com.ninjamap.app.service.ISearchHistoryService;
 
 @Service
 public class MapServiceImpl implements IMapService {
@@ -26,6 +28,9 @@ public class MapServiceImpl implements IMapService {
     
     @Autowired
     private RestTemplate restTemplate;
+    
+    @Autowired
+    private ISearchHistoryService searchHistoryService;
 
 	@Override
 	public ApiResponse search() {
@@ -41,8 +46,8 @@ public class MapServiceImpl implements IMapService {
 
 	
 
-@Override
-	public ApiResponse reverse(double lat, double lon) {
+	@Override
+	public ApiResponse reverse(double lat, double lon,String searchTerm) {
 
 	    try {
 	        String url = String.format(
@@ -67,6 +72,18 @@ public class MapServiceImpl implements IMapService {
 	                        entity,
 	                        MapServiceResponse.class
 	                );
+
+	        // Record the reverse geocoding search in history
+	        try {
+//	            String searchTerm = response.getBody().getDisplayName();
+	            SearchHistoryRequest historyRequest = SearchHistoryRequest.builder()
+	                    .searchTerm(searchTerm)
+	                    .build();
+	            searchHistoryService.recordSearch(historyRequest);
+	        } catch (Exception e) {
+	            // Log error but don't fail the reverse geocoding operation
+	            System.err.println("Failed to record reverse geocoding search in history: " + e.getMessage());
+	        }
 
 	        return ApiResponse.builder()
 	                .success(true)

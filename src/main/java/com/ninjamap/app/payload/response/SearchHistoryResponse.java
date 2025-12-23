@@ -14,6 +14,5 @@ public class SearchHistoryResponse {
 
 	private String id;
 	private String searchTerm;
-	private String searchType;
 	private LocalDateTime createdDate;
 }
