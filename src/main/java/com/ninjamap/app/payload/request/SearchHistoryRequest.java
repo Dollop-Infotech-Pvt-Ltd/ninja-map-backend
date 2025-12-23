@@ -1,7 +1,5 @@
 package com.ninjamap.app.payload.request;
 
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -14,12 +12,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UpdatePlaceRequest {
-	
-	@NotBlank(message = "Name is required")
-	@Size(min = 1, max = 500, message = "Name must be between 1 and 500 characters")
-	private String name;
+public class SearchHistoryRequest {
 
-	
-	private String placePic;
+	@NotBlank(message = "Search term is required")
+	@Size(min = 1, max = 255, message = "Search term must be between 1 and 255 characters")
+	private String searchTerm;
+
+	@NotNull(message = "Search type is required")
+	private String searchType;
 }

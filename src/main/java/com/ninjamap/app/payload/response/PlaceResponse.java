@@ -24,10 +24,8 @@ public class PlaceResponse {
 	private Double latitude;
 
 	private Double longitude;
-
-	private CategoryResponse category;
-
-	private String placeType;
+	
+	private String emojiPic;
 
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime createdDate;

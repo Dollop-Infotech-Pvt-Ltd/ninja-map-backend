@@ -20,10 +20,6 @@ public interface IPlaceRepository extends JpaRepository<Place, String> {
 	 */
 	Page<Place> findByUserIdAndIsDeletedFalse(String userId,Pageable pageable);
 
-	/**
-	 * Find places by user and category
-	 */
-	List<Place> findByUserIdAndCategoryIdAndIsDeletedFalse(String userId, String categoryId);
 
 	/**
 	 * Find a specific place by ID with deletion check
@@ -31,37 +27,20 @@ public interface IPlaceRepository extends JpaRepository<Place, String> {
 	Optional<Place> findByIdAndIsDeletedFalse(String id);
 
 	/**
-	 * Find places by category ID
-	 */
-	List<Place> findByCategoryIdAndIsDeletedFalse(String categoryId);
-
-	/**
-	 * Count places by category ID
-	 */
-	@Query("SELECT COUNT(p) FROM Place p WHERE p.category.id = :categoryId AND p.isDeleted = false")
-	Long countByCategoryId(@Param("categoryId") String categoryId);
-
-	/**
 	 * Check if a place belongs to a user
 	 */
 	@Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Place p WHERE p.id = :placeId AND p.userId = :userId AND p.isDeleted = false")
 	boolean existsByIdAndUserId(@Param("placeId") String placeId, @Param("userId") String userId);
-
-	/**
-	 * Check if user already has a place with the same category
-	 */
-	@Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Place p WHERE p.userId = :userId AND p.category.id = :categoryId AND p.isDeleted = false")
-	boolean existsByUserIdAndCategoryId(@Param("userId") String userId, @Param("categoryId") String categoryId);
+ 
 
 	/**
 	 * Check if user already has a custom place with the same name
 	 */
-	@Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Place p WHERE p.userId = :userId AND p.name = :name AND p.placeType = 'CUSTOM' AND p.isDeleted = false")
+	@Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Place p WHERE p.userId = :userId AND p.name = :name  AND p.isDeleted = false")
 	boolean existsByUserIdAndNameCustom(@Param("userId") String userId, @Param("name") String name);
+	
+	
+	@Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Place p WHERE p.userId = :userId AND p.name = :name  AND p.isDeleted = false  ANd p.id !=:placeId")
+	boolean existsByUserIdAndNameCustom(@Param("userId") String userId, @Param("name") String name,String placeId);
 
-	/**
-	 * Get all category IDs that a user has added category-based places for
-	 */
-	@Query("SELECT DISTINCT p.category.id FROM Place p WHERE p.userId = :userId AND p.placeType = 'CATEGORY' AND p.isDeleted = false")
-	List<String> findUsedCategoryIdsByUserId(@Param("userId") String userId);
 }

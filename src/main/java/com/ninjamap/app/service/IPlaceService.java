@@ -23,11 +23,6 @@ public interface IPlaceService {
 	ApiResponse getPlaceById(String placeId);
 
 	/**
-	 * Get places filtered by category
-	 */
-	ApiResponse getPlacesByCategory(String categoryId);
-
-	/**
 	 * Update an existing place (only address, latitude, longitude can be updated)
 	 */
 	ApiResponse updatePlace(String placeId, com.ninjamap.app.payload.request.UpdatePlaceRequest updatePlaceRequest);
@@ -37,8 +32,4 @@ public interface IPlaceService {
 	 */
 	ApiResponse deletePlace(String placeId);
 
-	/**
-	 * Get categories that user has not added places for
-	 */
-	ApiResponse getUnusedCategories();
 }

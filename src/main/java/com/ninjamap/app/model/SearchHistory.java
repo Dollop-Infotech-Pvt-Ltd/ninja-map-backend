@@ -4,12 +4,10 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,8 +21,12 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @Data
 @EqualsAndHashCode(callSuper = false)
-@Table(name = "place")
-public class Place extends AuditData {
+@Table(name = "search_history", indexes = {
+	@Index(name = "idx_user_id", columnList = "user_id"),
+	@Index(name = "idx_user_created_date", columnList = "user_id, created_date"),
+	@Index(name = "idx_created_date", columnList = "created_date")
+})
+public class SearchHistory extends AuditData {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
@@ -33,30 +35,14 @@ public class Place extends AuditData {
 	@Column(nullable = false)
 	private String userId;
 
+	@Column(nullable = false, length = 255)
+	private String searchTerm;
+
+	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private String name;
+	private SearchType searchType;
 
-	@Column(nullable = false, columnDefinition = "TEXT")
-	private String address;
-
-	@Column(nullable = false)
-	private Double latitude;
-
-	@Column(nullable = false)
-	private Double longitude;
-	
-	@Column
-	private String emojiPic;
-
-//	@ManyToOne(fetch = FetchType.EAGER)
-//	@JoinColumn(name = "category_id")
-//	private Category category;
-//
-//	@Enumerated(EnumType.STRING)
-//	@Column(nullable = false)
-//	private PlaceType placeType;
-//
-//	public enum PlaceType {
-//		CATEGORY, CUSTOM
-//	}
+	public enum SearchType {
+		PLACE_SEARCH, CATEGORY_SEARCH, LOCATION_SEARCH
+	}
 }

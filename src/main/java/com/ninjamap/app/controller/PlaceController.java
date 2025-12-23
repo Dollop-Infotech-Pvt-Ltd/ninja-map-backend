@@ -1,5 +1,4 @@
 package com.ninjamap.app.controller;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,14 +11,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.request.PlaceRequest;
 import com.ninjamap.app.payload.request.UpdatePlaceRequest;
 import com.ninjamap.app.payload.response.ApiResponse;
 import com.ninjamap.app.service.IPlaceService;
 import com.ninjamap.app.utils.constants.AppConstants;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -68,14 +65,6 @@ public class PlaceController {
 	}
 
 	/**
-	 * Get places filtered by category
-	 */
-	@GetMapping("/get-places-category")
-	public ResponseEntity<ApiResponse> getPlacesByCategory(@RequestParam String categoryId) {
-		return new ResponseEntity<>(placeService.getPlacesByCategory(categoryId), HttpStatus.OK);
-	}
-
-	/**
 	 * Update an existing place (only address, latitude, longitude can be updated)
 	 */
 	@PutMapping("/update-place")
@@ -92,11 +81,4 @@ public class PlaceController {
 		return new ResponseEntity<>(placeService.deletePlace(id), HttpStatus.OK);
 	}
 
-	/**
-	 * Get categories that user has not added places for
-	 */
-	@GetMapping("/unused-categories")
-	public ResponseEntity<ApiResponse> getUnusedCategories() {
-		return new ResponseEntity<>(placeService.getUnusedCategories(), HttpStatus.OK);
-	}
 }
