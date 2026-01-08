@@ -290,4 +290,39 @@ public class AppConstants {
 	public static final String PASSWORD_UPDATE_NOTIFICATION_SUBJECT = "Your Password Has Been Updated Successfully";
 
 	public static final String LOGIN_SUCCESS_NOTIFICATION_SUBJECT = "Login Successful - Ninja-Map";
+	
+	
+	
+  // ======================== CATEGORY ====================================
+	
+  public static final String CATEGORY_PICTURE = "Category_Picture";
+  public static final String ADD_CATEGORY = "Category created successfully";
+  public static final String CATEGORY_DELETED = "Category deleted successfully";
+  public static final String CATEGORY_ALREADY_EXIST = "Category name already exists";
+  public static final String CATEGORY_FTECH = "Categories fetched successfully";
+  public static final String CATEGORY_NOT_FOUND = "Category not found";
+  public static final String CATEGORY_UPDATE_SUCCESSFULLY = "Category updated successfully";
+  
+  // ======================== PLACES ====================================
+  public static final String PLACE_ADDED = "Place added successfully";
+  public static final String PLACE_DELETED = "Place deleted successfully";
+  public static final String PLACE_FTECH = "Places fetched successfully";
+  public static final String PLACE_NOT_FOUND = "Place not found";
+  public static final String PLACE_ALREADY_EXIST = "You already have place with this name.";
+  public static final String PLACE_UPDATE_SUCCESSFULLY = "Place updated successfully";
+  
+  
+ // ======================== REPORT ============================
+  public static final String REPORT_SUBMITTED_SUCCESSFULLY = "Report submitted successfully";
+  public static final String REPORT_FETCHED_SUCCESSFULLY = "Report fetched successfully";
+  public static final String REPORT_NOT_FOUND = "Report not found";
+  
+ //  ============================== SEARCH HISTORY =========================
+  public static final String SEARCH_RECORDED_SUCCESSFULLY = "Search recorded successfully";
+  public static final String SEARCH_FETCHED_SUCCESSFULLY = "Search fetched successfully";
+  public static final String SEARCH_NOT_FOUND = "Search history not found";
+  public static final String SEARCH_DELETED_SUCCESSFULLY = "Search deleted successfully";
+
+
+  
 }

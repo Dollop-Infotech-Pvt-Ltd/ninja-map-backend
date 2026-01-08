@@ -92,5 +92,31 @@ public class ValidationConstants {
 	public static final String ALLOWED_REQUIRED = "Allowed field is required";
 	public static final String EMPLOYEE_ID_PATTERN = "^EMP\\d+$";
 	public static final String EMPLOYEE_ID_PATTERN_MESSAGE = "Employee ID must start with 'EMP' followed by digits (e.g., EMP001)";
+	
+	
+    // =========================== REPORT ===================
+	    public static final String REPORT_TYPE_REQUIRED = "Report type is required";
+	    public static final String REPORT_COMMENT_REQUIRED = "Description is required";
+	    public static final String REPORT_COMMENT_SIZE ="Comment must be between 10 and 5000 characters";
+	    public static final String REPORT_LATITUDE_REQUIRED ="Latitude is required";
+	    public static final String REPORT_LATITUDE_RANGE ="Latitude must be between -90 and 90";
+	    public static final String REPORT_LONGITUDE_REQUIRED ="Longitude is required";
+	    public static final String REPORT_LONGITUDE_RANGE ="Longitude must be between -180 and 180";
+	    public static final String REPORT_LOCATION_REQUIRED ="Location is required";
+	    public static final String REPORT_PICTURE_REQUIRED ="Report picture is required";
 
+   //=========================== SEARCH_HISTORY ================	    
+	    public static final String SEARCH_TERM_REQUIRED ="Search term is required";
+	    public static final String SEARCH_TERM_SIZE ="Search term must be between 1 and 255 characters";
+	    
+  //============================SAVED PLACE =======================
+	    public static final String PLACE_NAME_REQUIRED = "Place name is required";
+	    public static final String PLACE_NAME_SIZE = "Place name must be between 1 and 255 characters";
+	    public static final String PLACE_ADDRESS_REQUIRED = "Address is required";
+	    public static final String PLACE_ADDRESS_SIZE ="Address must be between 1 and 500 characters";
+	    public static final String PLACE_LATITUDE_REQUIRED ="Latitude is required";
+	    public static final String PLACE_LATITUDE_RANGE ="Latitude must be between -90 and 90";
+	    public static final String PLACE_LONGITUDE_REQUIRED ="Longitude is required";
+	    public static final String PLACE_LONGITUDE_RANGE ="Longitude must be between -180 and 180";
+	    public static final String PLACE_EMOJI_REQUIRED ="Emoji is required";
 }
