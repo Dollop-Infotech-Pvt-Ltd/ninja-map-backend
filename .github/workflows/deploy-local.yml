@@ -1,0 +1,103 @@
+name: Deploy Spring Boot to Cloudways (via Cloudflare Tunnel)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      SSH_USERNAME: ${{ secrets.LOCAL_SSH_USERNAME }}
+      REMOTE_PATH: ${{ secrets.LOCAL_REMOTE_PATH }}
+      SSH_HOST: ${{ secrets.CF_HOST_URL }}
+
+      CF_TUNNEL_NAME: ${{ secrets.CF_TUNNEL_NAME }}
+      CF_CERT_PEM: ${{ secrets.CF_CERT_PEM }}
+
+      APP_NAME: ninja-map
+
+    steps:
+    # 1️⃣ Checkout code
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    # 2️⃣ Setup Java
+    - name: ☕ Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    # 3️⃣ Build Spring Boot app
+    - name: 🛠️ Build Spring Boot app
+      run: mvn clean package -DskipTests
+
+    # 4️⃣ Prepare JAR
+    - name: 📦 Prepare JAR
+      run: |
+        mkdir -p deployment
+        cp target/*.jar deployment/${APP_NAME}.jar
+
+    # 5️⃣ Install cloudflared (OFFICIAL & STABLE)
+    - name: 🌉 Install cloudflared
+      run: |
+        curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloudflare-main.gpg
+        echo "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared jammy main" | sudo tee /etc/apt/sources.list.d/cloudflared.list
+        sudo apt-get update
+        sudo apt-get install -y cloudflared
+        cloudflared --version
+
+    # 6️⃣ Setup SSH key
+    - name: 🔑 Setup SSH
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.LOCAL_SSH_PRIVATE_KEY }}
+
+    # 7️⃣ Configure SSH via Cloudflare Tunnel
+    - name: 🔐 Configure SSH (Cloudflare Tunnel)
+      run: |
+        mkdir -p ~/.ssh
+        cat <<EOF > ~/.ssh/config
+        Host cf-server
+          HostName $SSH_HOST
+          User $SSH_USERNAME
+          ProxyCommand cloudflared access ssh --hostname %h
+          StrictHostKeyChecking no
+        EOF
+        chmod 600 ~/.ssh/config
+
+    # 8️⃣ Verify SSH connectivity
+    - name: 🔍 Verify SSH connection
+      run: |
+        ssh cf-server "echo 'Connected via Cloudflare Tunnel'"
+
+    # 9️⃣ Ensure remote directory exists
+    - name: 🗂️ Ensure remote directory exists
+      run: |
+        ssh cf-server "mkdir -p '$REMOTE_PATH'"
+
+    # 🔟 Upload JAR safely
+    - name: 🚀 Upload new JAR
+      run: |
+        scp deployment/${APP_NAME}.jar \
+          cf-server:$REMOTE_PATH/${APP_NAME}.jar.new
+
+    # 1️⃣1️⃣ Replace JAR atomically
+    - name: 🔁 Replace JAR
+      run: |
+        ssh cf-server "
+          mv $REMOTE_PATH/${APP_NAME}.jar.new $REMOTE_PATH/${APP_NAME}.jar
+        "
+
+    # 1️⃣2️⃣ Restart Spring Boot service
+    - name: 🔄 Restart Spring Boot service
+      run: |
+        ssh cf-server "
+          sudo systemctl daemon-reload && \
+          sudo systemctl restart ${APP_NAME}.service && \
+          sudo systemctl status ${APP_NAME}.service --no-pager
+        "
