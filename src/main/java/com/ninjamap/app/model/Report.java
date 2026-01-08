@@ -45,11 +45,8 @@ public class Report extends AuditData {
 	@Column(nullable = false)
 	private ReportSeverity severity;
 
-	@Column(nullable = false)
-	private String title;
-
 	@Column(columnDefinition = "TEXT", nullable = false)
-	private String description;
+	private String comment;
 
 	@Column(nullable = false)
 	private Double latitude;
@@ -65,12 +62,6 @@ public class Report extends AuditData {
 	@Column(nullable = false)
 	private String userId;
 
-	@Column(length = 500)
-	private String deviceInfo;
-
-	@Column(length = 45)
-	private String ipAddress;
-
 	@Column(nullable = false)
 	private Integer viewCount;
 
@@ -79,6 +70,10 @@ public class Report extends AuditData {
 
 	@Column(nullable = false)
 	private Integer notHelpfulCount;
+
+	private Boolean hideName;
+	
+	private String reportPicture;
 
 	@Column
 	private java.time.LocalDateTime resolvedAt;

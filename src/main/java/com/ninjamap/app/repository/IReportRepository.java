@@ -70,10 +70,10 @@ public interface IReportRepository extends JpaRepository<Report, String> {
 	Page<Report> findActiveReports(Pageable pageable);
 
 	/**
-	 * Find reports by title or description containing search term
+	 * Find reports by comment containing search term
 	 */
-	@Query("SELECT r FROM Report r WHERE LOWER(r.title) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR LOWER(r.description) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
-	Page<Report> searchByTitleOrDescription(@Param("searchTerm") String searchTerm, Pageable pageable);
+	@Query("SELECT r FROM Report r WHERE  LOWER(r.comment) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
+	Page<Report> searchByComment(@Param("searchTerm") String searchTerm, Pageable pageable);
 
 	/**
 	 * Find reports by address containing search term

@@ -9,5 +9,5 @@ public interface IMapService {
 	public ApiResponse route();
 	
 	
-	public ApiResponse reverse(double lat,double lon,String searchTerm);
+	public ApiResponse reverse(double lat,double lon,String searchTerm,String token);
 }

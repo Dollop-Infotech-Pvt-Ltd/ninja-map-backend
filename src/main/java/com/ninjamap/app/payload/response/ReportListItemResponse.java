@@ -19,17 +19,12 @@ public class ReportListItemResponse {
     private ReportType reportType;
     private ReportStatus status;
     private ReportSeverity severity;
-    private String title;
-    private String description;
+    private String comment;
     private Double latitude;
     private Double longitude;
     private String address;
     private String userId;
+    private String reportPicture;
     private LocalDateTime createdDate;
     private LocalDateTime updatedDate;
-    private Integer viewCount;
-    private Integer helpfulCount;
-    private Integer notHelpfulCount;
-    private Integer commentCount;
-    private Integer attachmentCount;
 }

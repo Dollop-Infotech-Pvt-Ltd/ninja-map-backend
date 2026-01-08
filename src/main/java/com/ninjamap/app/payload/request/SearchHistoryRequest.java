@@ -1,5 +1,7 @@
 package com.ninjamap.app.payload.request;
 
+import com.ninjamap.app.utils.constants.ValidationConstants;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -14,8 +16,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class SearchHistoryRequest {
 
-	@NotBlank(message = "Search term is required")
-	@Size(min = 1, max = 255, message = "Search term must be between 1 and 255 characters")
+	@NotBlank(message = ValidationConstants.SEARCH_TERM_REQUIRED)
+	@Size(min = 1, max = 255, message = ValidationConstants.SEARCH_TERM_SIZE)
 	private String searchTerm;
 
 }

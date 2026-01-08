@@ -3,6 +3,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,10 +32,12 @@ public class MapController {
 	
 	@GetMapping("/reverse-geocoding")
 	public ResponseEntity<ApiResponse> reverse(
+			@RequestHeader(required = false) String token,
 			@RequestParam(required = true) double lat ,
 			@RequestParam(required = true) double lon ,
-			@RequestParam(required = true) String searchTerm
+			@RequestParam(required = false) String searchTerm
+			
 			){
-		return ResponseEntity.ok(this.mapService.reverse(lat,lon,searchTerm));
+		return ResponseEntity.ok(this.mapService.reverse(lat,lon,searchTerm,token));
 	}
 }

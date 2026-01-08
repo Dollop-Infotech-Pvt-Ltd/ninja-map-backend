@@ -80,5 +80,14 @@ public class PlaceController {
 	public ResponseEntity<ApiResponse> deletePlace(@RequestParam String id) {
 		return new ResponseEntity<>(placeService.deletePlace(id), HttpStatus.OK);
 	}
+	
+	/**
+	 * Get places
+	 */
+	@GetMapping("/get-places-filter")
+	public ResponseEntity<ApiResponse> getPlaceFilter() {
+		return new ResponseEntity<>(placeService.getPlacesFilter(), HttpStatus.OK);
+	}
+	
 
 }

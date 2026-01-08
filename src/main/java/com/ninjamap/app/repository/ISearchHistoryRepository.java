@@ -15,6 +15,8 @@ import com.ninjamap.app.model.SearchHistory;
 @Repository
 public interface ISearchHistoryRepository extends JpaRepository<SearchHistory, String> {
 
+	Page<SearchHistory> findByUserIdOrderByUpdatedDateDesc(String userId, Pageable pageable);
+	
 	Page<SearchHistory> findByUserIdOrderByCreatedDateDesc(String userId, Pageable pageable);
 
 

@@ -21,7 +21,7 @@ public class ReportResponse {
     private ReportStatus status;
     private ReportSeverity severity;
     private String title;
-    private String description;
+    private String comment;
     private Double latitude;
     private Double longitude;
     private String address;

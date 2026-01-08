@@ -1,5 +1,4 @@
 package com.ninjamap.app.service.impl;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -10,7 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.ninjamap.app.exception.ResourceNotFoundException;
+import com.ninjamap.app.exception.BadRequestException;
 import com.ninjamap.app.model.SearchHistory;
 import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.request.SearchHistoryRequest;
@@ -19,6 +18,7 @@ import com.ninjamap.app.payload.response.SearchHistoryListResponse;
 import com.ninjamap.app.payload.response.SearchHistoryResponse;
 import com.ninjamap.app.repository.ISearchHistoryRepository;
 import com.ninjamap.app.service.ISearchHistoryService;
+import com.ninjamap.app.utils.constants.AppConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,7 +32,6 @@ public class SearchHistoryServiceImpl implements ISearchHistoryService {
 	@Override
 	@Transactional
 	public ApiResponse recordSearch(SearchHistoryRequest searchHistoryRequest) {
-		try {
 			String userId = getCurrentUserId();
 			String searchTerm = searchHistoryRequest.getSearchTerm().trim();
 			
@@ -47,7 +46,7 @@ public class SearchHistoryServiceImpl implements ISearchHistoryService {
 				searchHistoryRepository.save(existingSearch);
 				return ApiResponse.builder()
 						.success(true)
-						.message("Search recorded successfully")
+						.message(AppConstants.SEARCH_RECORDED_SUCCESSFULLY)
 						.data(mapToSearchHistoryResponse(existingSearch))
 						.build();
 			}
@@ -62,22 +61,13 @@ public class SearchHistoryServiceImpl implements ISearchHistoryService {
 
 			return ApiResponse.builder()
 					.success(true)
-					.message("Search recorded successfully")
+					.message(AppConstants.SEARCH_RECORDED_SUCCESSFULLY)
 					.build();
-
-		} catch (Exception e) {
-			return ApiResponse.builder()
-					.success(false)
-					.message("Error recording search")
-					.data(null)
-					.build();
-		}
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public ApiResponse getSearchHistory(PaginationRequest paginationRequest) {
-		try {
 			String userId = getCurrentUserId();
 			Pageable pageable = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getPageSize());
 
@@ -96,49 +86,28 @@ public class SearchHistoryServiceImpl implements ISearchHistoryService {
 					.build();
 
 			return ApiResponse.builder()
-					.success(true)
-					.message("Search history retrieved successfully")
+					.message(AppConstants.SEARCH_FETCHED_SUCCESSFULLY)
 					.data(listResponse)
 					.build();
-
-		} catch (Exception e) {
-			log.error("Error retrieving search history", e);
-			return ApiResponse.builder()
-					.success(false)
-					.message("Error retrieving search history")
-					.data(null)
-					.build();
-		}
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public ApiResponse getRecentSearches(Integer limit) {
-		try {
 			String userId = getCurrentUserId();
 			int searchLimit = limit != null && limit > 0 ? limit : 10;
 
 			Pageable pageable = PageRequest.of(0, searchLimit);
-			Page<SearchHistory> recentSearchesPage = searchHistoryRepository.findByUserIdOrderByCreatedDateDesc(userId, pageable);
+			Page<SearchHistory> recentSearchesPage = searchHistoryRepository.findByUserIdOrderByUpdatedDateDesc(userId, pageable);
 
 			List<SearchHistoryResponse> responses = recentSearchesPage.getContent().stream()
 					.map(this::mapToSearchHistoryResponse)
 					.collect(Collectors.toList());
 
 			return ApiResponse.builder()
-					.success(true)
-					.message("Recent searches retrieved successfully")
+					.message(AppConstants.SEARCH_FETCHED_SUCCESSFULLY)
 					.data(responses)
 					.build();
-
-		} catch (Exception e) {
-			log.error("Error retrieving recent searches", e);
-			return ApiResponse.builder()
-					.success(false)
-					.message("Error retrieving recent searches")
-					.data(null)
-					.build();
-		}
 	}
 
 	@Override
@@ -200,68 +169,23 @@ public class SearchHistoryServiceImpl implements ISearchHistoryService {
 	@Override
 	@Transactional
 	public ApiResponse deleteSearchEntry(String searchId) {
-		try {
-			String userId = getCurrentUserId();
-
 			SearchHistory searchHistory = searchHistoryRepository.findById(searchId)
-					.orElseThrow(() -> new ResourceNotFoundException("Search entry not found"));
-
-			// Verify ownership
-			if (!searchHistory.getUserId().equals(userId)) {
-				return ApiResponse.builder()
-						.success(false)
-						.message("Unauthorized to delete this search entry")
-						.data(null)
-						.build();
-			}
+					.orElseThrow(() -> new BadRequestException(AppConstants.SEARCH_NOT_FOUND));
 
 			searchHistoryRepository.delete(searchHistory);
-			log.info("Deleted search entry: {} for user: {}", searchId, userId);
-
 			return ApiResponse.builder()
-					.success(true)
-					.message("Search entry deleted successfully")
-					.data(null)
+					.message(AppConstants.SEARCH_DELETED_SUCCESSFULLY)
 					.build();
-
-		} catch (ResourceNotFoundException e) {
-			return ApiResponse.builder()
-					.success(false)
-					.message("Search entry not found")
-					.data(null)
-					.build();
-		} catch (Exception e) {
-			log.error("Error deleting search entry", e);
-			return ApiResponse.builder()
-					.success(false)
-					.message("Error deleting search entry")
-					.data(null)
-					.build();
-		}
 	}
 
 	@Override
 	@Transactional
 	public ApiResponse clearAllSearchHistory() {
-		try {
 			String userId = getCurrentUserId();
 			searchHistoryRepository.deleteByUserId(userId);
-			log.info("Cleared all search history for user: {}", userId);
-
 			return ApiResponse.builder()
-					.success(true)
-					.message("All search history cleared successfully")
-					.data(null)
+					.message(AppConstants.SEARCH_DELETED_SUCCESSFULLY)
 					.build();
-
-		} catch (Exception e) {
-			log.error("Error clearing search history", e);
-			return ApiResponse.builder()
-					.success(false)
-					.message("Error clearing search history")
-					.data(null)
-					.build();
-		}
 	}
 
 	/**

@@ -47,7 +47,7 @@ public class MapServiceImpl implements IMapService {
 	
 
 	@Override
-	public ApiResponse reverse(double lat, double lon,String searchTerm) {
+	public ApiResponse reverse(double lat, double lon,String searchTerm,String token) {
 
 	    try {
 	        String url = String.format(
@@ -75,13 +75,15 @@ public class MapServiceImpl implements IMapService {
 
 	        // Record the reverse geocoding search in history
 	        try {
-//	            String searchTerm = response.getBody().getDisplayName();
-	            SearchHistoryRequest historyRequest = SearchHistoryRequest.builder()
-	                    .searchTerm(searchTerm)
-	                    .build();
-	            searchHistoryService.recordSearch(historyRequest);
+	        	   if (token != null && !token.isBlank()
+	                       && searchTerm != null && !searchTerm.isBlank()) {
+	        		   
+	   	            SearchHistoryRequest historyRequest = SearchHistoryRequest.builder()
+		                    .searchTerm(searchTerm)
+		                    .build();
+		            searchHistoryService.recordSearch(historyRequest);
+	        	   }
 	        } catch (Exception e) {
-	            // Log error but don't fail the reverse geocoding operation
 	            System.err.println("Failed to record reverse geocoding search in history: " + e.getMessage());
 	        }
 

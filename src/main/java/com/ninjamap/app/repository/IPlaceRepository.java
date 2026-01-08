@@ -19,6 +19,11 @@ public interface IPlaceRepository extends JpaRepository<Place, String> {
 	 * Find all places belonging to a user
 	 */
 	Page<Place> findByUserIdAndIsDeletedFalse(String userId,Pageable pageable);
+	
+	/**
+	 * Find all places belonging to a user
+	 */
+	List<Place> findByUserIdAndIsDeletedFalse(String userId);
 
 
 	/**
@@ -32,12 +37,10 @@ public interface IPlaceRepository extends JpaRepository<Place, String> {
 	@Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Place p WHERE p.id = :placeId AND p.userId = :userId AND p.isDeleted = false")
 	boolean existsByIdAndUserId(@Param("placeId") String placeId, @Param("userId") String userId);
  
-
 	/**
 	 * Check if user already has a custom place with the same name
 	 */
-	@Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Place p WHERE p.userId = :userId AND p.name = :name  AND p.isDeleted = false")
-	boolean existsByUserIdAndNameCustom(@Param("userId") String userId, @Param("name") String name);
+	boolean existsByUserIdAndNameIgnoreCase(@Param("userId") String userId, @Param("name") String name);
 	
 	
 	@Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Place p WHERE p.userId = :userId AND p.name = :name  AND p.isDeleted = false  ANd p.id !=:placeId")

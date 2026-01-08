@@ -31,5 +31,8 @@ public interface IPlaceService {
 	 * Delete a place
 	 */
 	ApiResponse deletePlace(String placeId);
+	
+	
+	ApiResponse getPlacesFilter();
 
 }

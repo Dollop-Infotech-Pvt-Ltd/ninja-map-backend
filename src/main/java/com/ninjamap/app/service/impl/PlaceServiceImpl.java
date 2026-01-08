@@ -1,11 +1,17 @@
 package com.ninjamap.app.service.impl;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import com.ninjamap.app.config.CorsConfig;
+import com.ninjamap.app.exception.BadRequestException;
 import com.ninjamap.app.model.Category;
 import com.ninjamap.app.model.Place;
 import com.ninjamap.app.payload.request.PaginationRequest;
@@ -44,24 +50,10 @@ public class PlaceServiceImpl implements IPlaceService {
 		// Get current user ID
 		String userId = userService.getCurrectUserFromToken().getId();
 
-		// Validate: Either name or categoryId must be provided, not both
-		boolean hasName = placeRequest.getName() != null && !placeRequest.getName().trim().isEmpty();
-
-		if (!hasName) {
-			return ApiResponse.builder()
-					.statusCode(HttpStatus.BAD_REQUEST.value())
-					.message("Either place name must be provided")
-					.data(null)
-					.build();
-		}
 		Place place;
 			// Check for duplicate custom place
-			if (placeRepository.existsByUserIdAndNameCustom(userId, placeRequest.getName())) {
-				return ApiResponse.builder()
-						.statusCode(HttpStatus.CONFLICT.value())
-						.message("You already have place with this name")
-						.data(null)
-						.build();
+			if (placeRepository.existsByUserIdAndNameIgnoreCase(userId, placeRequest.getName())) {
+				throw new BadRequestException(AppConstants.PLACE_ALREADY_EXIST);
 			}
 
 			place = Place.builder()
@@ -107,25 +99,18 @@ public class PlaceServiceImpl implements IPlaceService {
 		// Get place
 		Optional<Place> place = placeRepository.findByIdAndIsDeletedFalse(placeId);
 		if (place.isEmpty()) {
-			return ApiResponse.builder()
-					.statusCode(HttpStatus.NOT_FOUND.value())
-					.message(AppConstants.PLACE_NOT_FOUND)
-					.data(null)
-					.build();
+			throw new BadRequestException(AppConstants.PLACE_NOT_FOUND);
 		}
 
 		// Verify ownership
 		if (!place.get().getUserId().equals(userId)) {
-			return ApiResponse.builder()
-					.statusCode(HttpStatus.FORBIDDEN.value())
-					.message("You do not have permission to access this place")
-					.data(null)
-					.build();
+			throw new BadRequestException("You do not have permission to access this place");
+		
 		}
 
 		return ApiResponse.builder()
 				.statusCode(HttpStatus.OK.value())
-				.message("Place retrieved successfully")
+				.message(AppConstants.PLACE_FTECH)
 				.data(convertPlaceToResponse(place.get()))
 				.build();
 	}
@@ -139,45 +124,28 @@ public class PlaceServiceImpl implements IPlaceService {
 		// Get place
 		Optional<Place> place = placeRepository.findByIdAndIsDeletedFalse(placeId);
 		if (place.isEmpty()) {
-			return ApiResponse.builder()
-					.statusCode(HttpStatus.NOT_FOUND.value())
-					.message(AppConstants.PLACE_NOT_FOUND)
-					.data(null)
-					.build();
+			throw new BadRequestException(AppConstants.PLACE_NOT_FOUND);
 		}
 		
 		// Check for duplicate custom place
 		if (placeRepository.existsByUserIdAndNameCustom(userId, updatePlaceRequest.getName(),placeId)) {
-			return ApiResponse.builder()
-					.statusCode(HttpStatus.CONFLICT.value())
-					.message("You already have place with this name")
-					.data(null)
-					.build();
+			throw new BadRequestException(AppConstants.PLACE_ALREADY_EXIST);
+
 		}
 
 		// Verify ownership
 		if (!place.get().getUserId().equals(userId)) {
-			return ApiResponse.builder()
-					.statusCode(HttpStatus.FORBIDDEN.value())
-					.message("You do not have permission to update this place")
-					.data(null)
-					.build();
+			throw new BadRequestException("You do not have permission to update this place");
 		}
-		
-		
-		
-		System.err.println(updatePlaceRequest.getPlacePic());
 
 		// Update only address, latitude, and longitude
 		Place existingPlace = place.get();
 		existingPlace.setName(updatePlaceRequest.getName());
 		existingPlace.setEmojiPic(updatePlaceRequest.getPlacePic());
-		Place updatedPlace = placeRepository.save(existingPlace);
+		placeRepository.save(existingPlace);
 
 		return ApiResponse.builder()
-				.statusCode(HttpStatus.OK.value())
-				.message("Place updated successfully")
-				.data(convertPlaceToResponse(updatedPlace))
+				.message(AppConstants.PLACE_UPDATE_SUCCESSFULLY)
 				.build();
 	}
 
@@ -198,11 +166,7 @@ public class PlaceServiceImpl implements IPlaceService {
 
 		// Verify ownership
 		if (!place.get().getUserId().equals(userId)) {
-			return ApiResponse.builder()
-					.statusCode(HttpStatus.FORBIDDEN.value())
-					.message("You do not have permission to delete this place")
-					.data(null)
-					.build();
+			throw new BadRequestException("You do not have permission to delete this place");
 		}
 
 		// Soft delete place
@@ -215,6 +179,28 @@ public class PlaceServiceImpl implements IPlaceService {
 				.message(AppConstants.PLACE_DELETED)
 				.data(null)
 				.build();
+	}
+	
+	@Override
+	public ApiResponse  getPlacesFilter() {
+		// Get current user ID
+		String userId = userService.getCurrectUserFromToken().getId();
+
+		// Get all places for user
+		List<Place> places = placeRepository.findByUserIdAndIsDeletedFalse(userId);
+		
+		List<PlaceResponse> placeResponse =  places.stream().filter( p ->
+				  "Home".equalsIgnoreCase(p.getName()) ||
+	                "Work".equalsIgnoreCase(p.getName()))
+		.map(this::convertPlaceToResponse)
+		.collect(Collectors.toList());
+		
+		Map<String,Object> response = new HashMap<>();
+		response.put("placeData", placeResponse);
+		response.put("placeCount", places.size());
+		
+		return  ApiResponse.builder().message(AppConstants.PLACE_FTECH)
+				.data(response).build();
 	}
 
 

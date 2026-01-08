@@ -40,6 +40,7 @@ public class CategoryController {
 			@RequestParam(name = AppConstants.SORT_KEY, required = false) String sortKey,
 			@RequestParam(name = AppConstants.SEARCH_VALUE, required = false) String searchValue
 			) {
+		System.err.println("Category ------------------------------------------");
 		PaginationRequest paginationRequest = PaginationRequest.builder().pageSize(pageSize).pageNumber(pageNumber)
 				.sortDirection(sortDirection).sortKey(sortKey).searchValue(searchValue).build();
 		
