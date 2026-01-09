@@ -17,4 +17,9 @@ public interface ICategoryService {
 	ApiResponse deleteCategory(String id);
 
 	ApiResponse getAllCategoriesAdmin();
+
+	ApiResponse getCategoriesWithSubCategories(PaginationRequest paginationRequest);
+
+	// ApiResponse searchCategoriesBySubCategoryName(String searchValue, PaginationRequest paginationRequest);
+
 }
