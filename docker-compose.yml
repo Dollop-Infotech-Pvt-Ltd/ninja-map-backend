@@ -4,28 +4,28 @@ services:
   # -------------------------------------------------
   # PostgreSQL + PostGIS (latest)
   # -------------------------------------------------
-  #postgres:
-    #image: postgis/postgis:latest        # <-- PostGIS enabled
-    #container_name: postgres
-    #restart: always
-    #environment:
-      #POSTGRES_USER: postgres
-      #POSTGRES_PASSWORD: Java@2021
-      #POSTGRES_DB: ninjamapdb
-      #TZ: Asia/Kolkata
-    #ports:
-      #- "5432:5432"
-    #volumes:
-      #- pgdata:/var/lib/postgresql          # parent → PG 18+ creates /18/data
-    #healthcheck:
-      #test: ["CMD-SHELL", "pg_isready -U postgres"]
-      #interval: 10s
-      #timeout: 5s
-      #retries: 5
-    #networks:
-      #- appnet
-    #labels:
-      #com.description: "PostgreSQL + PostGIS for Ninja_Map"
+  postgres:
+    image: postgres:15-alpine        # <-- ARM64 compatible
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Java@2023
+      POSTGRES_DB: ninjamapdb
+      TZ: Asia/Kolkata
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - appnet
+    labels:
+      com.description: "PostgreSQL for Ninja_Map"
 
   # -------------------------------------------------
   # Kafka

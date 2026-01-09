@@ -1,7 +1,8 @@
 package com.ninjamap.app.payload.response;
 
 import java.time.LocalDateTime;
-import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,23 +13,20 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CategoryResponse {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class SubCategoryResponse {
 
 	private String id;
 
-	private String categoryName;
+	private String subCategoryName;
 
-	private String categoryPicture;
+	private String categoryId;
+
+	private String categoryName;
 
 	private Boolean isActive;
 
 	private LocalDateTime createdDate;
 
 	private LocalDateTime updatedDate;
-
-	private List<SubCategoryResponse> subCategories;
-
-	private Boolean hasSubCategories;
-
-	private Integer subCategoryCount;
 }

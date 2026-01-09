@@ -1,7 +1,6 @@
 package com.ninjamap.app.payload.response;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,23 +11,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CategoryResponse {
+public class SimpleSubCategoryResponse {
 
 	private String id;
 
-	private String categoryName;
-
-	private String categoryPicture;
+	private String subCategoryName;
 
 	private Boolean isActive;
 
 	private LocalDateTime createdDate;
 
 	private LocalDateTime updatedDate;
-
-	private List<SubCategoryResponse> subCategories;
-
-	private Boolean hasSubCategories;
-
-	private Integer subCategoryCount;
 }

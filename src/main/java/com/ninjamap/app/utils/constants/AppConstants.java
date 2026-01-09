@@ -303,6 +303,16 @@ public class AppConstants {
   public static final String CATEGORY_NOT_FOUND = "Category not found";
   public static final String CATEGORY_UPDATE_SUCCESSFULLY = "Category updated successfully";
   
+  // ======================== SUBCATEGORY ====================================
+  
+  public static final String ADD_SUBCATEGORY = "Subcategory created successfully";
+  public static final String SUBCATEGORY_DELETED = "Subcategory deleted successfully";
+  public static final String SUBCATEGORY_ALREADY_EXIST = "Subcategory name already exists in this category";
+  public static final String SUBCATEGORY_FTECH = "Subcategories fetched successfully";
+  public static final String SUBCATEGORY_NOT_FOUND = "Subcategory not found";
+  public static final String SUBCATEGORY_UPDATE_SUCCESSFULLY = "Subcategory updated successfully";
+  public static final String SUBCATEGORY_MOVED_SUCCESSFULLY = "Subcategory moved to new category successfully";
+  
   // ======================== PLACES ====================================
   public static final String PLACE_ADDED = "Place added successfully";
   public static final String PLACE_DELETED = "Place deleted successfully";
