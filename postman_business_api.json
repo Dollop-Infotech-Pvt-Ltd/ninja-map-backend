@@ -1,0 +1,174 @@
+{
+  "info": {
+    "name": "Business Creation API",
+    "description": "Postman collection for testing Business Creation API endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Business",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "multipart/form-data",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "business",
+              "value": "{\n  \"businessName\": \"Tech Hub Nigeria\",\n  \"subCategoryId\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"address\": \"123 Lekki Phase 1, Lagos, Nigeria\",\n  \"latitude\": 6.4969,\n  \"longitude\": 3.5753,\n  \"phoneNumber\": \"08012345678\",\n  \"website\": \"https://techhub.com.ng\",\n  \"businessHours\": [\n    {\n      \"weekday\": \"SUNDAY\",\n      \"isOpen24Hours\": false,\n      \"isClosed\": true,\n      \"openingTime\": null,\n      \"closingTime\": null\n    },\n    {\n      \"weekday\": \"MONDAY\",\n      \"isOpen24Hours\": false,\n      \"isClosed\": false,\n      \"openingTime\": \"09:00\",\n      \"closingTime\": \"18:00\"\n    },\n    {\n      \"weekday\": \"TUESDAY\",\n      \"isOpen24Hours\": false,\n      \"isClosed\": false,\n      \"openingTime\": \"09:00\",\n      \"closingTime\": \"18:00\"\n    },\n    {\n      \"weekday\": \"WEDNESDAY\",\n      \"isOpen24Hours\": false,\n      \"isClosed\": false,\n      \"openingTime\": \"09:00\",\n      \"closingTime\": \"18:00\"\n    },\n    {\n      \"weekday\": \"THURSDAY\",\n      \"isOpen24Hours\": false,\n      \"isClosed\": false,\n      \"openingTime\": \"09:00\",\n      \"closingTime\": \"18:00\"\n    },\n    {\n      \"weekday\": \"FRIDAY\",\n      \"isOpen24Hours\": false,\n      \"isClosed\": false,\n      \"openingTime\": \"09:00\",\n      \"closingTime\": \"20:00\"\n    },\n    {\n      \"weekday\": \"SATURDAY\",\n      \"isOpen24Hours\": true,\n      \"isClosed\": false,\n      \"openingTime\": null,\n      \"closingTime\": null\n    }\n  ]\n}",
+              "type": "text"
+            },
+            {
+              "key": "images",
+              "type": "file",
+              "src": []
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/v1/businesses",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "businesses"
+          ]
+        },
+        "description": "Create a new business with details, hours, and optional images"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Business by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/v1/businesses/550e8400-e29b-41d4-a716-446655440001",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "businesses",
+            "550e8400-e29b-41d4-a716-446655440001"
+          ]
+        },
+        "description": "Retrieve a business by its ID"
+      },
+      "response": []
+    },
+    {
+      "name": "Update Business",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "multipart/form-data",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "business",
+              "value": "{\n  \"businessName\": \"Tech Hub Nigeria Updated\",\n  \"subCategoryId\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"address\": \"456 Ikoyi, Lagos, Nigeria\",\n  \"latitude\": 6.4625,\n  \"longitude\": 3.6313,\n  \"phoneNumber\": \"08012345678\",\n  \"website\": \"https://techhub-updated.com.ng\",\n  \"businessHours\": [\n    {\n      \"weekday\": \"SUNDAY\",\n      \"isOpen24Hours\": false,\n      \"isClosed\": true,\n      \"openingTime\": null,\n      \"closingTime\": null\n    },\n    {\n      \"weekday\": \"MONDAY\",\n      \"isOpen24Hours\": false,\n      \"isClosed\": false,\n      \"openingTime\": \"08:00\",\n      \"closingTime\": \"19:00\"\n    },\n    {\n      \"weekday\": \"TUESDAY\",\n      \"isOpen24Hours\": false,\n      \"isClosed\": false,\n      \"openingTime\": \"08:00\",\n      \"closingTime\": \"19:00\"\n    },\n    {\n      \"weekday\": \"WEDNESDAY\",\n      \"isOpen24Hours\": false,\n      \"isClosed\": false,\n      \"openingTime\": \"08:00\",\n      \"closingTime\": \"19:00\"\n    },\n    {\n      \"weekday\": \"THURSDAY\",\n      \"isOpen24Hours\": false,\n      \"isClosed\": false,\n      \"openingTime\": \"08:00\",\n      \"closingTime\": \"19:00\"\n    },\n    {\n      \"weekday\": \"FRIDAY\",\n      \"isOpen24Hours\": false,\n      \"isClosed\": false,\n      \"openingTime\": \"08:00\",\n      \"closingTime\": \"21:00\"\n    },\n    {\n      \"weekday\": \"SATURDAY\",\n      \"isOpen24Hours\": true,\n      \"isClosed\": false,\n      \"openingTime\": null,\n      \"closingTime\": null\n    }\n  ]\n}",
+              "type": "text"
+            },
+            {
+              "key": "images",
+              "type": "file",
+              "src": []
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/v1/businesses/550e8400-e29b-41d4-a716-446655440001",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "businesses",
+            "550e8400-e29b-41d4-a716-446655440001"
+          ]
+        },
+        "description": "Update an existing business"
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Business",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/v1/businesses/550e8400-e29b-41d4-a716-446655440001",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "businesses",
+            "550e8400-e29b-41d4-a716-446655440001"
+          ]
+        },
+        "description": "Delete a business (soft delete)"
+      },
+      "response": []
+    },
+    {
+      "name": "Get All Businesses",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/v1/businesses?pageIndex=0&pageSize=10",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "businesses"
+          ],
+          "query": [
+            {
+              "key": "pageIndex",
+              "value": "0"
+            },
+            {
+              "key": "pageSize",
+              "value": "10"
+            }
+          ]
+        },
+        "description": "Get all businesses with pagination"
+      },
+      "response": []
+    }
+  ]
+}
