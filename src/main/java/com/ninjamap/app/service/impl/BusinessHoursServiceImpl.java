@@ -42,8 +42,16 @@ public class BusinessHoursServiceImpl implements IBusinessHoursService {
 					LocalTime openingTime = LocalTime.parse(request.getOpeningTime(), TIME_FORMATTER);
 					LocalTime closingTime = LocalTime.parse(request.getClosingTime(), TIME_FORMATTER);
 
-					if (openingTime.isAfter(closingTime) || openingTime.equals(closingTime)) {
-						throw new BadRequestException(ValidationConstants.BUSINESS_HOURS_INVALID);
+					if (openingTime.equals(closingTime)) {
+					    throw new BadRequestException(
+					        ValidationConstants.BUSINESS_HOURS_TIME_EQUAL
+					    );
+					}
+
+					if (openingTime.isAfter(closingTime)) {
+					    throw new BadRequestException(
+					        ValidationConstants.BUSINESS_HOURS_TIME_INVALID
+					    );
 					}
 
 					businessHours.setOpeningTime(openingTime);
@@ -70,19 +78,19 @@ public class BusinessHoursServiceImpl implements IBusinessHoursService {
 
 	private void validateBusinessHoursRequest(BusinessHoursRequest request) {
 		if (request.getWeekday() == null) {
-			throw new BadRequestException("Weekday is required for business hours");
+			throw new BadRequestException(ValidationConstants.BUSINESS_WEEKDAY_REQUIRED);
 		}
 
 		boolean isOpen24Hours = request.getIsOpen24Hours() != null && request.getIsOpen24Hours();
 		boolean isClosed = request.getIsClosed() != null && request.getIsClosed();
 
 		if (isOpen24Hours && isClosed) {
-			throw new BadRequestException(ValidationConstants.BUSINESS_HOURS_INVALID);
+			throw new BadRequestException(ValidationConstants.BUSINESS_HOURS_CONFLICT);
 		}
 
 		if (!isOpen24Hours && !isClosed) {
 			if (request.getOpeningTime() == null || request.getClosingTime() == null) {
-				throw new BadRequestException(ValidationConstants.BUSINESS_HOURS_INVALID);
+				throw new BadRequestException(ValidationConstants.BUSINESS_HOURS_TIME_REQUIRED);
 			}
 		}
 	}
