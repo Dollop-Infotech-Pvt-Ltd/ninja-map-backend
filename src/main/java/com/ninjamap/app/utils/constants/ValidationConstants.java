@@ -136,6 +136,12 @@ public class ValidationConstants {
 	    public static final String BUSINESS_WEBSITE_PATTERN = "^(https?://)?([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([/\\w \\.-]*)*/?$";
 	    public static final String BUSINESS_WEBSITE_PATTERN_MESSAGE = "Invalid website URL format";
 	    public static final String BUSINESS_HOURS_REQUIRED = "Business hours are required";
-	    public static final String BUSINESS_HOURS_INVALID = "Invalid business hours configuration";
+	    
+	    public static final String BUSINESS_WEEKDAY_REQUIRED ="Weekday is required for business hours";
+        public static final String BUSINESS_HOURS_CONFLICT = "Business cannot be marked as both closed and open 24 hours";
+        public static final String BUSINESS_HOURS_TIME_REQUIRED ="Opening time and closing time are required when business is not closed or open 24 hours";
+        public static final String BUSINESS_HOURS_TIME_INVALID ="Closing time must be after opening time";
+        public static final String BUSINESS_HOURS_TIME_EQUAL ="Opening time and closing time cannot be the same";
+	    
 	    public static final String BUSINESS_IMAGES_MAX = "Maximum 10 images allowed";
 }
