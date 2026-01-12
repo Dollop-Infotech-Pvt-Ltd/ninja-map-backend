@@ -119,4 +119,23 @@ public class ValidationConstants {
 	    public static final String PLACE_LONGITUDE_REQUIRED ="Longitude is required";
 	    public static final String PLACE_LONGITUDE_RANGE ="Longitude must be between -180 and 180";
 	    public static final String PLACE_EMOJI_REQUIRED ="Emoji is required";
+
+  //============================BUSINESS =======================
+	    public static final String BUSINESS_NAME_REQUIRED = "Business name is required";
+	    public static final String BUSINESS_NAME_SIZE = "Business name must be between 1 and 255 characters";
+	    public static final String BUSINESS_SUB_CATEGORY_REQUIRED = "Business SubCategory is required";
+	    public static final String BUSINESS_ADDRESS_REQUIRED = "Business address is required";
+	    public static final String BUSINESS_ADDRESS_SIZE = "Business address must be between 1 and 500 characters";
+	    public static final String BUSINESS_LATITUDE_REQUIRED = "Business latitude is required";
+	    public static final String BUSINESS_LATITUDE_RANGE = "Business latitude must be between -90 and 90";
+	    public static final String BUSINESS_LONGITUDE_REQUIRED = "Business longitude is required";
+	    public static final String BUSINESS_LONGITUDE_RANGE = "Business longitude must be between -180 and 180";
+	    public static final String BUSINESS_PHONE_REQUIRED = "Business phone number is required";
+	    public static final String BUSINESS_PHONE_PATTERN = "^(?:\\+234|234|0)?[789][01]\\d{8}$";
+	    public static final String BUSINESS_PHONE_PATTERN_MESSAGE = "Invalid Nigeria phone number format";
+	    public static final String BUSINESS_WEBSITE_PATTERN = "^(https?://)?([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([/\\w \\.-]*)*/?$";
+	    public static final String BUSINESS_WEBSITE_PATTERN_MESSAGE = "Invalid website URL format";
+	    public static final String BUSINESS_HOURS_REQUIRED = "Business hours are required";
+	    public static final String BUSINESS_HOURS_INVALID = "Invalid business hours configuration";
+	    public static final String BUSINESS_IMAGES_MAX = "Maximum 10 images allowed";
 }
