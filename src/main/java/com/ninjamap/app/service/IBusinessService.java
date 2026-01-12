@@ -11,7 +11,7 @@ import com.ninjamap.app.payload.response.PaginatedResponse;
 
 public interface IBusinessService {
 
-	BusinessResponse createBusiness(CreateBusinessRequest request );
+	ApiResponse createBusiness(CreateBusinessRequest request );
 
 	BusinessResponse getBusinessById(String businessId);
 

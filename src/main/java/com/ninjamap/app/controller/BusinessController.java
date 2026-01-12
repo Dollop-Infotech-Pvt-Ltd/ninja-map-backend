@@ -36,16 +36,8 @@ public class BusinessController {
 	@PostMapping("create-business")
 	public ResponseEntity<ApiResponse> createBusiness(
 			CreateBusinessRequest request) {
-		BusinessResponse businessResponse = businessService.createBusiness(request);
 
-		return ResponseEntity.status(HttpStatus.CREATED)
-				.body(ApiResponse.builder()
-						.success(true)
-						.message("Business created successfully")
-						.http(HttpStatus.CREATED)
-						.statusCode(HttpStatus.CREATED.value())
-						.data(businessResponse)
-						.build());
+		return new ResponseEntity<>(this.businessService.createBusiness(request), HttpStatus.OK);
 	}
 
 	@GetMapping("/{id}")
