@@ -6,10 +6,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.kafka.shaded.com.google.protobuf.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -52,14 +54,9 @@ public class BusinessServiceImpl implements IBusinessService {
 	private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
 	@Override
-	public BusinessResponse createBusiness(CreateBusinessRequest request ) {
+	public ApiResponse createBusiness(CreateBusinessRequest request ) {
 		
 		System.err.println(request);
-		
-		// Check if phone number already exists
-		if (businessRepository.findByPhoneNumber(request.getPhoneNumber()).isPresent()) {
-			throw new ResourceAlreadyExistException("Business with this phone number already exists");
-		}
 
 		// Validate and fetch SubCategory
 		SubCategory subCategory = subCategoryRepository.findById(request.getSubCategoryId())
@@ -94,7 +91,7 @@ public class BusinessServiceImpl implements IBusinessService {
 		}
 		
 		businessRepository.save(savedBusiness);
-		return mapToBusinessResponse(savedBusiness);
+		return ApiResponse.builder().message("Business added successfully").statusCode(HttpStatus.OK.value()).build();
 	}
 
 	@Override
@@ -102,7 +99,7 @@ public class BusinessServiceImpl implements IBusinessService {
 		Business business = businessRepository.findById(businessId)
 				.orElseThrow(() -> new ResourceNotFoundException("Business not found"));
 
-		return mapToBusinessResponse(business);
+		return null;
 	}
 
 	@Override
@@ -149,7 +146,8 @@ public class BusinessServiceImpl implements IBusinessService {
 			updatedBusiness.setBusinessImages(businessImages);
 		}
 
-		return mapToBusinessResponse(updatedBusiness);
+		// return mapToBusinessResponse(updatedBusiness);
+		return null;
 	}
 
 	@Override
@@ -166,9 +164,9 @@ public class BusinessServiceImpl implements IBusinessService {
 		Pageable pageable = PageRequest.of(pageIndex, pageSize);
 		Page<Business> page = businessRepository.findAll(pageable);
 
-		List<BusinessResponse> responses = page.getContent().stream()
-				.map(this::mapToBusinessResponse)
-				.collect(Collectors.toList());
+		// List<BusinessResponse> responses = page.getContent().stream()
+		// 		.map(this::mapToBusinessResponse)
+		// 		.collect(Collectors.toList());
 		
 		
 		return null;
@@ -193,45 +191,45 @@ public class BusinessServiceImpl implements IBusinessService {
 		return businessImages;
 	}
 
-	private BusinessResponse mapToBusinessResponse(Business business) {
-		List<BusinessHoursResponse> hoursResponses = business.getBusinessHours().stream()
-				.map(bh -> BusinessHoursResponse.builder()
-						.id(bh.getId())
-						.weekday(bh.getWeekday())
-						.isOpen24Hours(bh.getIsOpen24Hours())
-						.isClosed(bh.getIsClosed())
-						.openingTime(bh.getOpeningTime() != null ? bh.getOpeningTime().format(TIME_FORMATTER) : null)
-						.closingTime(bh.getClosingTime() != null ? bh.getClosingTime().format(TIME_FORMATTER) : null)
-						.build())
-				.collect(Collectors.toList());
+	// private ApiResponse mapToBusinessResponse(Business business) {
+	// 	List<BusinessHoursResponse> hoursResponses = business.getBusinessHours().stream()
+	// 			.map(bh -> BusinessHoursResponse.builder()
+	// 					.id(bh.getId())
+	// 					.weekday(bh.getWeekday())
+	// 					.isOpen24Hours(bh.getIsOpen24Hours())
+	// 					.isClosed(bh.getIsClosed())
+	// 					.openingTime(bh.getOpeningTime() != null ? bh.getOpeningTime().format(TIME_FORMATTER) : null)
+	// 					.closingTime(bh.getClosingTime() != null ? bh.getClosingTime().format(TIME_FORMATTER) : null)
+	// 					.build())
+	// 			.collect(Collectors.toList());
 
-		List<BusinessImageResponse> imageResponses = business.getBusinessImages().stream()
-				.map(bi -> BusinessImageResponse.builder()
-						.id(bi.getId())
-						.imageUrl(bi.getImageUrl())
-						.displayOrder(bi.getDisplayOrder())
-						.build())
-				.collect(Collectors.toList());
+	// 	List<BusinessImageResponse> imageResponses = business.getBusinessImages().stream()
+	// 			.map(bi -> BusinessImageResponse.builder()
+	// 					.id(bi.getId())
+	// 					.imageUrl(bi.getImageUrl())
+	// 					.displayOrder(bi.getDisplayOrder())
+	// 					.build())
+	// 			.collect(Collectors.toList());
 
-		SimpleSubCategoryResponse subCategoryResponse = SimpleSubCategoryResponse.builder()
-				.id(business.getSubCategory().getId())
-				.subCategoryName(business.getSubCategory().getSubCategoryName())
-				.build();
+	// 	SimpleSubCategoryResponse subCategoryResponse = SimpleSubCategoryResponse.builder()
+	// 			.id(business.getSubCategory().getId())
+	// 			.subCategoryName(business.getSubCategory().getSubCategoryName())
+	// 			.build();
 
-		return BusinessResponse.builder()
-				.id(business.getId())
-				.businessName(business.getBusinessName())
-				.subCategory(subCategoryResponse)
-				.address(business.getAddress())
-				.latitude(business.getLatitude())
-				.longitude(business.getLongitude())
-				.phoneNumber(business.getPhoneNumber())
-				.website(business.getWebsite())
-				.businessHours(hoursResponses)
-				.businessImages(imageResponses)
-				.createdDate(business.getCreatedDate())
-				.updatedDate(business.getUpdatedDate())
-				.isActive(business.getIsActive())
-				.build();
-	}
+	// 	return BusinessResponse.builder()
+	// 			.id(business.getId())
+	// 			.businessName(business.getBusinessName())
+	// 			.subCategory(subCategoryResponse)
+	// 			.address(business.getAddress())
+	// 			.latitude(business.getLatitude())
+	// 			.longitude(business.getLongitude())
+	// 			.phoneNumber(business.getPhoneNumber())
+	// 			.website(business.getWebsite())
+	// 			.businessHours(hoursResponses)
+	// 			.businessImages(imageResponses)
+	// 			.createdDate(business.getCreatedDate())
+	// 			.updatedDate(business.getUpdatedDate())
+	// 			.isActive(business.getIsActive())
+	// 			.build();
+	// }
 }
