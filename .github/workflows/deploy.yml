@@ -3,7 +3,7 @@ name: Deploy Spring Boot to Cloudways
 on:
   push:
     branches:
-      - main  # change as needed
+      - main
 
 jobs:
   deploy:
@@ -29,7 +29,7 @@ jobs:
 
     - name: 📦 Rename JAR to ninja-map.jar
       run: |
-        mkdir deployment
+        mkdir -p deployment
         cp target/*.jar deployment/ninja-map.jar
 
     - name: 🔑 Setup SSH
@@ -37,14 +37,22 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+    - name: 📁 Ensure remote directory exists
+      run: |
+        ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST \
+        "mkdir -p $REMOTE_PATH"
+
     - name: 🧹 Remove existing JAR
       run: |
-        ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST "rm -f $REMOTE_PATH/ninja-map.jar"
+        ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST \
+        "rm -f $REMOTE_PATH/ninja-map.jar"
 
     - name: 🚀 Upload new JAR
       run: |
-        scp -o StrictHostKeyChecking=no deployment/ninja-map.jar $SSH_USERNAME@$SSH_HOST:$REMOTE_PATH/
+        scp -o StrictHostKeyChecking=no deployment/ninja-map.jar \
+        $SSH_USERNAME@$SSH_HOST:$REMOTE_PATH/
 
     - name: 🔁 Restart ninja-map.service
       run: |
-        ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST "sudo systemctl restart ninja-map.service"
+        ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST \
+        "sudo systemctl restart ninja-map.service"
