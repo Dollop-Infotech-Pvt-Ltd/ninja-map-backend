@@ -1,4 +1,4 @@
-name: Deploy Spring Boot to Cloudways
+name: Deploy Spring Boot App
 
 on:
   push:
@@ -13,7 +13,8 @@ jobs:
       SSH_HOST: ${{ secrets.SSH_HOST }}
       SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
       REMOTE_PATH: ${{ secrets.REMOTE_PATH }}
-
+      APP_NAME: ninja-map
+      
     steps:
     - name: 📥 Checkout code
       uses: actions/checkout@v3
@@ -27,10 +28,10 @@ jobs:
     - name: 🛠️ Build Spring Boot app
       run: mvn clean package -DskipTests
 
-    - name: 📦 Rename JAR to ninja-map.jar
+    - name: 📦 Prepare deployment artifact
       run: |
         mkdir -p deployment
-        cp target/*.jar deployment/ninja-map.jar
+        cp target/*.jar deployment/${APP_NAME}.jar
 
     - name: 🔑 Setup SSH
       uses: webfactory/ssh-agent@v0.7.0
@@ -45,14 +46,14 @@ jobs:
     - name: 🧹 Remove existing JAR
       run: |
         ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST \
-        "rm -f $REMOTE_PATH/ninja-map.jar"
+        "rm -f $REMOTE_PATH/${APP_NAME}.jar"
 
     - name: 🚀 Upload new JAR
       run: |
-        scp -o StrictHostKeyChecking=no deployment/ninja-map.jar \
+        scp -o StrictHostKeyChecking=no deployment/${APP_NAME}.jar \
         $SSH_USERNAME@$SSH_HOST:$REMOTE_PATH/
 
-    - name: 🔁 Restart ninja-map.service
+    - name: 🔁 Restart application service
       run: |
         ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST \
-        "sudo systemctl restart ninja-map.service"
+        "sudo systemctl restart ${APP_NAME}.service"
