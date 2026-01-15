@@ -3,7 +3,7 @@ name: Deploy Spring Boot to Cloudways (via Cloudflare Tunnel)
 on:
   push:
     branches:
-      - main
+      - prod
   workflow_dispatch:
 
 jobs:
