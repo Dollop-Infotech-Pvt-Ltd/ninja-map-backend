@@ -334,5 +334,26 @@ public class AppConstants {
   public static final String SEARCH_DELETED_SUCCESSFULLY = "Search deleted successfully";
 
 
-  
+ //  ==================================== BSUINESS  ===================================
+  public static final String BUSINESS_ADDED_SUCCESSFULLY = "Business added successfully";
+  public static final String BUSINESS_NOT_FOUND = "Business not found";
+  public static final String BUSINESS_WEEKDAY_REQUIRED ="Weekday is required for business hours";
+  public static final String BUSINESS_HOURS_CONFLICT = "Business cannot be marked as both closed and open 24 hours";
+  public static final String BUSINESS_HOURS_TIME_REQUIRED ="Opening time and closing time are required when business is not closed or open 24 hours";
+  public static final String BUSINESS_HOURS_TIME_INVALID ="Closing time must be after opening time";
+  public static final String BUSINESS_HOURS_TIME_EQUAL ="Opening time and closing time cannot be the same";
+
+  // ======================== CUSTOMER STORIES ============================
+  public static final String STORY_CREATED_SUCCESSFULLY = "Customer story created successfully";
+  public static final String STORY_UPDATED_SUCCESSFULLY = "Customer story updated successfully";
+  public static final String STORY_DELETED_SUCCESSFULLY = "Customer story deleted successfully";
+  public static final String STORY_NOT_FOUND = "Customer story not found";
+  public static final String STORY_FETCHED_SUCCESSFULLY = "Customer story fetched successfully";
+  public static final String STORY_LIKED = "Story liked successfully";
+  public static final String STORY_UNLIKED = "Story unliked successfully";
+  public static final String STORY_SAVED = "Story saved successfully";
+  public static final String STORY_UNSAVED = "Story unsaved successfully";
+  public static final String STORY_VIEWED = "Story view registered";
+  public static final String STATUS_UPDATED_SUCCESSFULLY = "Status updated successfully";
+
 }

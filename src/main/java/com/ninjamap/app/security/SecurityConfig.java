@@ -33,14 +33,12 @@ public class SecurityConfig {
 
 	private static final List<String> PUBLIC_URLS = List.of("/api/auth/**", "/api/admin/auth/**", "/actuator/**",
 			"/api/about-us/get", "/api/contact-us/submit", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
-			"/api/categories/get-categories","/api/map/reverse-geocoding","/api/map/search",
-			"/v2/api-docs/**", "/swagger-resources/**", "/webjars/**", "/api/faqs/get", "/api/faqs/get-all",
+			"/api/categories/get-categories","/api/map/reverse-geocoding","/api/map/search","/api/blogs/get","/api/customer-stories/create",
+			"/v2/api-docs/**", "/swagger-resources/**", "/webjars/**", "/api/faqs/get", "/api/blogs/get","/api/faqs/get-all","/api/customer-stories/get-all",
 			"/api/blogs/get-all", "/api/policies/get", "/api/policies/get-all", "/oauth2/authorization/google","/api/locations/**");
 
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		System.err.println("----------------------------------------");
-
 		return http.csrf(csrf -> csrf.disable()) // Disable CSRF
 		// CSRF with cookie repository; ignore public URLs
 //				.csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
@@ -51,7 +49,7 @@ public class SecurityConfig {
 				// CORS configuration
 				.cors(cors -> cors.configurationSource(corsConfig.corsConfigurer()))
 				// Exception handling
-				.exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint)
+				.exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint) 
 						.accessDeniedHandler(accessDeniedHandler))
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 

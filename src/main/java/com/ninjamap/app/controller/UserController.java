@@ -96,7 +96,7 @@ public class UserController {
 
 	// ========================= SEND OTP FOR ACCOUNT DELETION
 	// =========================
-	@PreAuthorize("hasAuthority('USER_MANAGEMENT.VIEW_USERS')")
+//	@PreAuthorize("hasAuthority('USER_MANAGEMENT.VIEW_USERS')")
 	@PostMapping("/delete/request-otp")
 	public ResponseEntity<ApiResponse> sendDeleteOtp(@RequestParam String mobileNumber) {
 		return userService.sendDeleteOtp(mobileNumber);
@@ -104,7 +104,7 @@ public class UserController {
 
 	// ========================= RESEND OTP FOR ACCOUNT DELETION
 	// =========================
-	@PreAuthorize("hasAuthority('USER_MANAGEMENT.VIEW_USERS')")
+//	@PreAuthorize("hasAuthority('USER_MANAGEMENT.VIEW_USERS')")
 	@PostMapping("/delete/resend-otp")
 	public ResponseEntity<ApiResponse> resendDeleteOtp() {
 		return userService.resendDeleteOtp();
@@ -112,7 +112,7 @@ public class UserController {
 
 	// ========================= VERIFY OTP AND DELETE ACCOUNT
 	// =========================
-	@PreAuthorize("hasAuthority('USER_MANAGEMENT.DELETE_USERS')")
+//	@PreAuthorize("hasAuthority('USER_MANAGEMENT.DELETE_USERS')")
 	@PostMapping("/delete/verify-otp")
 	public ResponseEntity<ApiResponse> verifyOtpAndDelete(@RequestParam(name = AppConstants.OTP) String otp) {
 		return userService.verifyOtpAndDelete(otp);
