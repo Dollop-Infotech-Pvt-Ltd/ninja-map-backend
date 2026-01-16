@@ -1,6 +1,8 @@
 package com.ninjamap.app.payload.response;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.ninjamap.app.enums.BlogCategory;
@@ -18,7 +20,11 @@ public class BlogListItemResponse {
 	private BlogCategory category;
 	private String title;
 	private String previewContent;
+	private String detailedContent;
 	private String thumbnailUrl;
+	private String featuredImgUrl;
+    private Set<String> tags;
+    private Boolean isFeaturedArticle;
 	private Integer readTimeMinutes;
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime postDate;

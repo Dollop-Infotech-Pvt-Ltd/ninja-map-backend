@@ -56,7 +56,6 @@ public class BlogPostController {
     }
 
     // ========================= GET BLOG BY ID =========================
-    @PreAuthorize("hasAuthority('BLOG_POST_MANAGEMENT.VIEW_BLOGS')")
     @GetMapping("/get")
     public ResponseEntity<ApiResponse> getBlogPostById(
             @RequestParam(name = AppConstants.ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String id) {
@@ -66,6 +65,25 @@ public class BlogPostController {
     // ========================= GET ALL BLOGS =========================
     @GetMapping("/get-all")
     public ResponseEntity<ApiResponse> getAllBlogPostsForHomepage(
+            @RequestParam(required = false) BlogCategory category,
+            @RequestParam(name = AppConstants.PAGE_SIZE) Integer pageSize,
+            @RequestParam(name = AppConstants.PAGE_NUMBER) Integer pageNumber,
+            @RequestParam(name = AppConstants.SORT_DIRECTION, defaultValue = AppConstants.DESC, required = false) String sortDirection,
+            @RequestParam(name = AppConstants.SORT_KEY, required = false) String sortKey) {
+
+        PaginationRequest paginationRequest = PaginationRequest.builder()
+                .pageSize(pageSize)
+                .pageNumber(pageNumber)
+                .sortDirection(sortDirection)
+                .sortKey(sortKey)
+                .build();
+
+        return blogPostService.getHomepagePosts(category, paginationRequest);
+    }
+    
+    // ========================= GET ALL BLOGS =========================
+    @GetMapping("/get-all-blogs")
+    public ResponseEntity<ApiResponse> getAllBlogPostsForAdmin(
             @RequestParam(required = false) BlogCategory category,
             @RequestParam(name = AppConstants.PAGE_SIZE) Integer pageSize,
             @RequestParam(name = AppConstants.PAGE_NUMBER) Integer pageNumber,

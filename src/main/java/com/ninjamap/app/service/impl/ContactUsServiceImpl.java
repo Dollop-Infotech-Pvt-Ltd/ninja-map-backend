@@ -43,7 +43,7 @@ public class ContactUsServiceImpl implements IContactUsService {
 		Pageable pageable = AppUtils.buildPageableRequest(paginationRequest, ContactUs.class);
 
 		// Fetch paginated results from repository
-		Page<ContactUs> page = contactUsRepository.findAll(pageable);
+		Page<ContactUs> page = contactUsRepository.findByIsDeletedFalseAndIsActiveTrue(pageable);
 
 		// Map entities to DTOs
 		Page<ContactUsResponse> mappedPage = page.map(this::mapToResponse);

@@ -39,8 +39,12 @@ public class Comment extends AuditData {
 	private String id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "blog_post_id", nullable = false)
+	@JoinColumn(name = "blog_post_id")
 	private BlogPost blogPost;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "customer_story_id")
+	private CustomerStory customerStory;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)

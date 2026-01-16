@@ -31,4 +31,5 @@ public interface IAdminService {
 	public AdminResponse getCurrectAdminFromToken();
 
 	public Admin getAdminByIdAndIsActive(String id, Boolean isActive);
+
 }

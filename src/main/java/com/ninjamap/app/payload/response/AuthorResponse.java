@@ -11,7 +11,9 @@ import lombok.NoArgsConstructor;
 @Builder
 public class AuthorResponse {
 	private String name;
+	private String email;
 	private String designation;
+	private String organisationName;
 	private String profilePicture;
 	private String bio;
 }

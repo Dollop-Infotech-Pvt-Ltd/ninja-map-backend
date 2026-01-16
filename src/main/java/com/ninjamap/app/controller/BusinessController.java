@@ -70,25 +70,4 @@ public class BusinessController {
 				.build());
 	}
 
-	@DeleteMapping("/{id}")
-	public ResponseEntity<ApiResponse> deleteBusiness(@PathVariable String id) {
-		businessService.deleteBusiness(id);
-
-		return ResponseEntity.ok(ApiResponse.builder()
-				.success(true)
-				.message("Business deleted successfully")
-				.http(HttpStatus.OK)
-				.statusCode(HttpStatus.OK.value())
-				.build());
-	}
-
-	@GetMapping
-	public ResponseEntity<ApiResponse> getAllBusinesses(
-			@RequestParam(defaultValue = "0") int pageIndex,
-			@RequestParam(defaultValue = "10") int pageSize) {
-
-//		PaginatedResponse<BusinessResponse> response = businessService.getAllBusinesses(pageIndex, pageSize);
-
-		return null;
-	}
 }

@@ -1,20 +1,17 @@
 package com.ninjamap.app.service.impl;
-
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import com.ninjamap.app.exception.BadRequestException;
 import com.ninjamap.app.model.Business;
 import com.ninjamap.app.model.BusinessHours;
 import com.ninjamap.app.payload.request.BusinessHoursRequest;
 import com.ninjamap.app.repository.IBusinessHoursRepository;
 import com.ninjamap.app.service.IBusinessHoursService;
-import com.ninjamap.app.utils.constants.ValidationConstants;
+import com.ninjamap.app.utils.constants.AppConstants;
 
 @Service
 public class BusinessHoursServiceImpl implements IBusinessHoursService {
@@ -44,13 +41,13 @@ public class BusinessHoursServiceImpl implements IBusinessHoursService {
 
 					if (openingTime.equals(closingTime)) {
 					    throw new BadRequestException(
-					        ValidationConstants.BUSINESS_HOURS_TIME_EQUAL
+					    		AppConstants.BUSINESS_HOURS_TIME_EQUAL
 					    );
 					}
 
 					if (openingTime.isAfter(closingTime)) {
 					    throw new BadRequestException(
-					        ValidationConstants.BUSINESS_HOURS_TIME_INVALID
+					    		AppConstants.BUSINESS_HOURS_TIME_INVALID
 					    );
 					}
 
@@ -78,19 +75,19 @@ public class BusinessHoursServiceImpl implements IBusinessHoursService {
 
 	private void validateBusinessHoursRequest(BusinessHoursRequest request) {
 		if (request.getWeekday() == null) {
-			throw new BadRequestException(ValidationConstants.BUSINESS_WEEKDAY_REQUIRED);
+			throw new BadRequestException(AppConstants.BUSINESS_WEEKDAY_REQUIRED);
 		}
 
 		boolean isOpen24Hours = request.getIsOpen24Hours() != null && request.getIsOpen24Hours();
 		boolean isClosed = request.getIsClosed() != null && request.getIsClosed();
 
 		if (isOpen24Hours && isClosed) {
-			throw new BadRequestException(ValidationConstants.BUSINESS_HOURS_CONFLICT);
+			throw new BadRequestException(AppConstants.BUSINESS_HOURS_CONFLICT);
 		}
 
 		if (!isOpen24Hours && !isClosed) {
 			if (request.getOpeningTime() == null || request.getClosingTime() == null) {
-				throw new BadRequestException(ValidationConstants.BUSINESS_HOURS_TIME_REQUIRED);
+				throw new BadRequestException(AppConstants.BUSINESS_HOURS_TIME_REQUIRED);
 			}
 		}
 	}

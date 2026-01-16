@@ -28,5 +28,6 @@ public class SubCategoryResponse {
 
 	private LocalDateTime createdDate;
 
+
 	private LocalDateTime updatedDate;
 }

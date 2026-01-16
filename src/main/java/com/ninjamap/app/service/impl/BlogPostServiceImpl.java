@@ -150,6 +150,7 @@ public class BlogPostServiceImpl implements IBlogPostService {
 
 		return ResponseEntity.ok(AppUtils.buildSuccessResponse(AppConstants.HOMEPAGE_POSTS_FETCHED, response));
 	}
+	
 
 	// ================= ENGAGEMENT =================
 	@Override
@@ -266,8 +267,11 @@ public class BlogPostServiceImpl implements IBlogPostService {
 
 	// ================= MAPPING =================
 	private BlogListItemResponse mapToListItem(BlogPost post) {
+		
 		return BlogListItemResponse.builder().id(post.getId()).title(post.getTitle())
 				.previewContent(post.getPreviewContent()).category(post.getCategory())
+				.detailedContent(post.getDetailedContent()).tags(post.getTags())
+				.isFeaturedArticle(post.getIsFeaturedArticle()).featuredImgUrl(post.getFeaturedImageUrl())
 				.readTimeMinutes(post.getReadTimeMinutes()).thumbnailUrl(post.getThumbnailUrl())
 				.postDate(post.getCreatedDate()).views(post.getStats() != null ? post.getStats().getViews() : 0)
 				.likes(post.getStats() != null ? post.getStats().getLikes() : 0).author(mapToAuthorResponse(post))
@@ -296,14 +300,14 @@ public class BlogPostServiceImpl implements IBlogPostService {
 
 		String role = jwtUtils.extractRole(jwtUtils.extractTokenFromHeader());
 		User currentUser = null;
-//		    Admin currentAdmin = null;
+		    Admin currentAdmin = null;
 
 		if ("USER".equalsIgnoreCase(role)) {
 			currentUser = getCurrentUser();
 		}
-//		    else if ("ADMIN".equalsIgnoreCase(role)) {
-//		        currentAdmin = getCurrentAdmin();
-//		    }
+		    else if ("ADMIN".equalsIgnoreCase(role)) {
+		        currentAdmin = getCurrentAdmin();
+		    }
 
 		// ===== Engagement Flags =====
 		Boolean isLike = false;
@@ -314,10 +318,10 @@ public class BlogPostServiceImpl implements IBlogPostService {
 			isSave = post.getSavedByUsers().contains(currentUser);
 		}
 
-//		    if (currentAdmin != null) {
-//		        isLike = post.getLikedByUsers().contains(currentAdmin);
-//		        isSave = post.getSavedByUsers().contains(currentAdmin);
-//		    }
+		    if (currentAdmin != null) {
+		        isLike = post.getLikedByUsers().contains(currentAdmin);
+		        isSave = post.getSavedByUsers().contains(currentAdmin);
+		    }
 
 		return BlogDetailResponse.builder().id(post.getId()).title(post.getTitle()).category(post.getCategory())
 				.previewContent(post.getPreviewContent()).detailedContent(post.getDetailedContent())
