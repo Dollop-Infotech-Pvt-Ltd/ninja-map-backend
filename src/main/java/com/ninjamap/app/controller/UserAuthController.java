@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ninjamap.app.payload.request.AppRegisterRequest;
+import com.ninjamap.app.payload.request.ChangePasswordRequest;
 import com.ninjamap.app.payload.request.ForgetPasswordRequest;
 import com.ninjamap.app.payload.request.LoginRequest;
 import com.ninjamap.app.payload.request.MobileLoginRequest;
@@ -84,6 +85,7 @@ public class UserAuthController {
 		return ResponseEntity.ok(userAuthService.refreshToken());
 	}
 	
+
 	
 	@PostMapping("/app/login")
 	public ResponseEntity<?> loginWithMobile(@Valid @RequestBody MobileLoginRequest loginRequest) {

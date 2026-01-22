@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,17 +16,22 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.ninjamap.app.exception.BadRequestException;
 import com.ninjamap.app.exception.ResourceAlreadyExistException;
 import com.ninjamap.app.exception.ResourceNotFoundException;
 import com.ninjamap.app.model.Admin;
 import com.ninjamap.app.model.PersonalInfo;
 import com.ninjamap.app.model.Roles;
+import com.ninjamap.app.model.User;
 import com.ninjamap.app.payload.request.AdminRequest;
+import com.ninjamap.app.payload.request.ChangePasswordRequest;
 import com.ninjamap.app.payload.request.PaginationRequest;
+import com.ninjamap.app.payload.request.UpdateAdminProfileRequest;
 import com.ninjamap.app.payload.request.UpdateAdminRequest;
 import com.ninjamap.app.payload.response.AdminResponse;
 import com.ninjamap.app.payload.response.ApiResponse;
 import com.ninjamap.app.payload.response.PaginatedResponse;
+import com.ninjamap.app.payload.response.UserResponse;
 import com.ninjamap.app.repository.IAdminRepository;
 import com.ninjamap.app.repository.IRolesRepository;
 import com.ninjamap.app.service.IAdminService;
@@ -248,8 +254,70 @@ public class AdminServiceImpl implements IAdminService, UserDetailsService {
 		PersonalInfo info = admin.getPersonalInfo();
 
 		return AdminResponse.builder().id(admin.getAdminId()).fullName(info.getFullName()).email(info.getEmail())
-				.mobileNumber(info.getMobileNumber()).employeeId(admin.getEmployeeId()).bio(info.getBio())
+				.firstName(info.getFirstName()).lastName(info.getLastName()).profilePicture(info.getProfilePicture())
+				.mobileNumber(info.getMobileNumber()).employeeId(admin.getEmployeeId()).bio(info.getBio()).gender(info.getGender())
 				.isActive(admin.getIsActive()).joiningDate(admin.getCreatedDate()).role(admin.getRole().getRoleName())
 				.build();
+	}
+	   
+	
+	
+	
+
+	public ResponseEntity<ApiResponse> updateProfile(UpdateAdminProfileRequest updateRequest) {
+		Admin admin = getAdminByIdAndIsActive(updateRequest.getId(), null);
+
+		// --- Update basic fields ---
+		admin.getPersonalInfo().setFirstName(updateRequest.getFirstName() != null ? updateRequest.getFirstName()
+				: admin.getPersonalInfo().getFirstName());
+		admin.getPersonalInfo().setLastName(updateRequest.getLastName() != null ? updateRequest.getLastName()
+				: admin.getPersonalInfo().getLastName());
+		admin.getPersonalInfo().setGender(updateRequest.getGender() != null ? updateRequest.getGender() 
+				: admin.getPersonalInfo().getGender());
+
+		if (updateRequest.getBio() != null) {
+			admin.getPersonalInfo().setBio(updateRequest.getBio());
+		}
+
+		// --- Upload profile picture if provided ---
+		Optional.ofNullable(updateRequest.getProfilePicture()).filter(file -> !file.isEmpty()).ifPresent(file -> admin
+				.getPersonalInfo().setProfilePicture(cloudinaryService.uploadFile(file, AppConstants.PROFILE_PICTURE)));
+
+		// Save directly using the same entity
+		Admin savedAdmin = adminRepository.save(admin);
+
+		ApiResponse response = (savedAdmin != null) ? AppUtils.buildSuccessResponse(AppConstants.ADMIN_PROFILE_UPDATED)
+				: AppUtils.buildFailureResponse(AppConstants.ADMIN_PROFILE_NOT_UPDATED);
+
+		return new ResponseEntity<>(response, response.getHttp());
+	}
+
+	
+	public ApiResponse changePassword(ChangePasswordRequest request) {
+
+	    AdminResponse currentUser = this.getCurrectAdminFromToken();
+	    Admin adminByIdAndIsActive = this.getAdminByIdAndIsActive(currentUser.getId(),Boolean.TRUE);
+
+	    if (!passwordEncoder.matches(
+	            request.getOldPassword(),
+	            adminByIdAndIsActive.getPersonalInfo().getPassword())) {
+	        throw new BadRequestException(AppConstants.INVALID_OLD_PASSWORD);
+	    }
+	    
+	    if (passwordEncoder.matches(request.getNewPassword(), adminByIdAndIsActive.getPersonalInfo().getPassword())) {
+	        throw new BadRequestException(AppConstants.OLD_AND_NEW_PASSWORD_CAN_NOT_BE_SAME);
+	    }
+
+	    PersonalInfo personalInfo = adminByIdAndIsActive.getPersonalInfo();
+	    personalInfo.setPassword(
+	            passwordEncoder.encode(request.getNewPassword())
+	    );
+
+	    this.adminRepository.save(adminByIdAndIsActive);
+
+	    return ApiResponse.builder()
+	            .message(AppConstants.PASSWORD_RESET_SUCCESS)
+	            .statusCode(HttpStatus.OK.value())
+	            .build();
 	}
 }

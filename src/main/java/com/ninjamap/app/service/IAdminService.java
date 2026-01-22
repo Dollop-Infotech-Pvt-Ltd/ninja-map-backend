@@ -4,7 +4,9 @@ import org.springframework.http.ResponseEntity;
 
 import com.ninjamap.app.model.Admin;
 import com.ninjamap.app.payload.request.AdminRequest;
+import com.ninjamap.app.payload.request.ChangePasswordRequest;
 import com.ninjamap.app.payload.request.PaginationRequest;
+import com.ninjamap.app.payload.request.UpdateAdminProfileRequest;
 import com.ninjamap.app.payload.request.UpdateAdminRequest;
 import com.ninjamap.app.payload.response.AdminResponse;
 import com.ninjamap.app.payload.response.ApiResponse;
@@ -31,5 +33,8 @@ public interface IAdminService {
 	public AdminResponse getCurrectAdminFromToken();
 
 	public Admin getAdminByIdAndIsActive(String id, Boolean isActive);
-
+	
+	public ResponseEntity<ApiResponse> updateProfile(UpdateAdminProfileRequest updateRequest);
+	
+	public ApiResponse changePassword(ChangePasswordRequest request);
 }

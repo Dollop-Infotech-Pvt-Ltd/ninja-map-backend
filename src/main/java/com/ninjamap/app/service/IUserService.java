@@ -3,6 +3,7 @@ package com.ninjamap.app.service;
 import org.springframework.http.ResponseEntity;
 
 import com.ninjamap.app.model.User;
+import com.ninjamap.app.payload.request.ChangePasswordRequest;
 import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.request.UpdateUserRequest;
 import com.ninjamap.app.payload.request.UserRequest;
@@ -39,4 +40,6 @@ public interface IUserService {
 	public ResponseEntity<ApiResponse> createUser(UserRequest request);
 
 	public UserResponse mapToUserResponse(User user);
+	
+	public ApiResponse changePassword(ChangePasswordRequest changePasswordRequest);
 }

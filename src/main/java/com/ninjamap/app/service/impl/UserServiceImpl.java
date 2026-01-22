@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,6 +24,7 @@ import com.ninjamap.app.exception.ResourceNotFoundException;
 import com.ninjamap.app.model.PersonalInfo;
 import com.ninjamap.app.model.Roles;
 import com.ninjamap.app.model.User;
+import com.ninjamap.app.payload.request.ChangePasswordRequest;
 import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.request.UpdateUserRequest;
 import com.ninjamap.app.payload.request.UserRequest;
@@ -100,6 +102,7 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
 
 		PersonalInfo pi = user.getPersonalInfo();
 		return UserResponse.builder().id(user.getUserId()).email(pi.getEmail()).fullName(pi.getFullName())
+				.lastName(user.getPersonalInfo().getLastName()).firstName(pi.getFirstName())
 				.mobileNumber(pi.getMobileNumber()).profilePicture(pi.getProfilePicture()).isActive(user.getIsActive())
 				.bio(pi.getBio()).joiningDate(user.getCreatedDate()).role(user.getRole().getRoleName())
 				.gender(pi.getGender()).build();
@@ -297,6 +300,35 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
 
 		// Return ResponseEntity with proper HTTP status
 		return new ResponseEntity<>(response, response.getHttp());
+	}
+
+
+	public ApiResponse changePassword(ChangePasswordRequest request) {
+
+	    UserResponse currentUser = this.getCurrectUserFromToken();
+	    User user = this.getUserByIdAndIsActive(currentUser.getId(), Boolean.TRUE);
+
+	    if (!passwordEncoder.matches(
+	            request.getOldPassword(),
+	            user.getPersonalInfo().getPassword())) {
+	        throw new BadRequestException(AppConstants.INVALID_OLD_PASSWORD);
+	    }
+	    
+	    if (passwordEncoder.matches(request.getNewPassword(), user.getPersonalInfo().getPassword())) {
+	        throw new BadRequestException(AppConstants.OLD_AND_NEW_PASSWORD_CAN_NOT_BE_SAME);
+	    }
+
+	    PersonalInfo personalInfo = user.getPersonalInfo();
+	    personalInfo.setPassword(
+	            passwordEncoder.encode(request.getNewPassword())
+	    );
+
+	    this.userRepository.save(user);
+
+	    return ApiResponse.builder()
+	            .message(AppConstants.PASSWORD_RESET_SUCCESS)
+	            .statusCode(HttpStatus.OK.value())
+	            .build();
 	}
 
 }

@@ -1,9 +1,6 @@
 package com.ninjamap.app.payload.request;
-
 import org.springframework.web.multipart.MultipartFile;
-
 import com.ninjamap.app.enums.StoryCategory;
-
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

@@ -226,6 +226,8 @@ public class AppConstants {
 	public static final String USER_ALREADY_EXISTS = "User already exists";
 	public static final String USER_PROFILE_NOT_UPDATED = "User profile could not be updated";
 	public static final String USER_STATUS_UPDATED_SUCCESSFULLY = "User status updated successfully";
+    public static final String INVALID_OLD_PASSWORD = "Invalid old password";
+    public static final String OLD_AND_NEW_PASSWORD_CAN_NOT_BE_SAME = "Old and new password can not be same";
 	public static final String USER_STATUS_NOT_UPDATED = "User status could not be updated";
 	public static final String UNAUTHORIZED_DELETE = "You are not authorized to delete this account";
 	public static final String USER_ACCOUNT_DELETED_SUCCESSFULLY = "Your account deleted successfully";
