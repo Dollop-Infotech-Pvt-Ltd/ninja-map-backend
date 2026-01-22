@@ -20,7 +20,11 @@ public class AdminResponse {
 	private String id;
 	private String fullName;
 	private String email;
+	private String profilePicture;
+	private String firstName;
+	private String lastName;
 	private String mobileNumber;
+	private String gender;
 	private String employeeId;
 	private String bio;
 	private Boolean isActive;

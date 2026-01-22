@@ -21,6 +21,7 @@ import com.ninjamap.app.model.Session;
 import com.ninjamap.app.model.TempUser;
 import com.ninjamap.app.model.User;
 import com.ninjamap.app.payload.request.AppRegisterRequest;
+import com.ninjamap.app.payload.request.ChangePasswordRequest;
 import com.ninjamap.app.payload.request.ForgetPasswordRequest;
 import com.ninjamap.app.payload.request.LoginRequest;
 import com.ninjamap.app.payload.request.MobileLoginRequest;
@@ -43,6 +44,7 @@ import com.ninjamap.app.utils.PasswordGenerator;
 import com.ninjamap.app.utils.constants.AppConstants;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -372,5 +374,6 @@ public class UserAuthServiceImpl implements IUserAuthService {
 				user.getRole().getRoleName());
 
 	}
+
 
 }

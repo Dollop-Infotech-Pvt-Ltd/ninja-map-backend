@@ -1,5 +1,6 @@
 package com.ninjamap.app.controller;
 
+import org.apache.kafka.clients.admin.internals.ApiRequestScope;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -8,14 +9,18 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ninjamap.app.payload.request.AdminRequest;
+import com.ninjamap.app.payload.request.ChangePasswordRequest;
 import com.ninjamap.app.payload.request.PaginationRequest;
+import com.ninjamap.app.payload.request.UpdateAdminProfileRequest;
 import com.ninjamap.app.payload.request.UpdateAdminRequest;
 import com.ninjamap.app.payload.response.AdminResponse;
+import com.ninjamap.app.payload.response.ApiResponse;
 import com.ninjamap.app.payload.response.PaginatedResponse;
 import com.ninjamap.app.service.IAdminService;
 import com.ninjamap.app.utils.annotations.UUIDValidator;
@@ -102,5 +107,15 @@ public class AdminController {
     @GetMapping("/get-loggedIn-user")
     public ResponseEntity<?> getLoggedInAdmin() {
         return ResponseEntity.ok(adminService.getCurrectAdminFromToken());
+    }
+    
+    @PutMapping("/update-admin-profile")
+    public ResponseEntity<?> updateProfile(@Valid UpdateAdminProfileRequest updateAdminProfileRequest){
+    	 return ResponseEntity.ok(adminService.updateProfile(updateAdminProfileRequest));
+    }
+    
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordRequest changePasswordRequest){
+    	 return ResponseEntity.ok(adminService.changePassword(changePasswordRequest));
     }
 }

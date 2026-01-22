@@ -31,6 +31,7 @@ public class ValidationConstants {
 	public static final String PASSWORD_PATTERN = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
 	public static final String PASSWORD_PATTERN_MESSAGE = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
 	public static final String NEW_PASSWORD_REQUIRED = "New password is required";
+	public static final String OLD_PASSWORD_REQUIRED = "Old password is required";
 
 	// ================== ROLE VALIDATION ==================
 	public static final String ROLE_REQUIRED = "Role is required";

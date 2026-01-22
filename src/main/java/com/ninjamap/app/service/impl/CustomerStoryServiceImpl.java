@@ -224,6 +224,7 @@ public class CustomerStoryServiceImpl implements com.ninjamap.app.service.ICusto
 				.description(story.getDescription())
 				.category(story.getCategory())
 				.rating(story.getRating())
+				.isApproved(story.getIsApproved())
 				.location(story.getLocation())
 				.author(mapToAuthorResponse(story))
 				.stats(mapToStatsResponse(story.getStats()))

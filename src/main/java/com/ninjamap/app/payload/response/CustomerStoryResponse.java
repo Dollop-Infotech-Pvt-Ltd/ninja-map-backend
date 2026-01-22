@@ -29,6 +29,8 @@ public class CustomerStoryResponse {
 	private String location;
 
 	private AuthorResponse author;
+	
+	private Boolean isApproved;
 
 	private ArticleStatsResponse stats;
 	

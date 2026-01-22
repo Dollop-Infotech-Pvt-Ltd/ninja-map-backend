@@ -8,10 +8,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ninjamap.app.payload.request.ChangePasswordRequest;
 import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.request.UpdateUserRequest;
 import com.ninjamap.app.payload.request.UserRequest;
@@ -64,7 +66,7 @@ public class UserController {
 	}
 
 	// ========================= UPDATE USER =========================
-	@PreAuthorize("hasAuthority('USER_MANAGEMENT.EDIT_USERS')")
+//	@PreAuthorize("hasAuthority('USER_MANAGEMENT.EDIT_USERS')")
 	@PutMapping("/update")
 	public ResponseEntity<?> updateUser(@Valid UpdateUserRequest request) {
 		return userService.upateUser(request);
@@ -88,7 +90,7 @@ public class UserController {
 	}
 
 	// ========================= GET LOGGED-IN USER =========================
-	@PreAuthorize("hasAuthority('USER_MANAGEMENT.VIEW_USERS')")
+//	@PreAuthorize("hasAuthority('USER_MANAGEMENT.VIEW_USERS')")
 	@GetMapping("/get-loggedIn-user")
 	public ResponseEntity<?> getUserById() {
 		return ResponseEntity.ok(userService.getCurrectUserFromToken());
@@ -116,5 +118,10 @@ public class UserController {
 	@PostMapping("/delete/verify-otp")
 	public ResponseEntity<ApiResponse> verifyOtpAndDelete(@RequestParam(name = AppConstants.OTP) String otp) {
 		return userService.verifyOtpAndDelete(otp);
+	}
+
+	@PostMapping("/change-password")
+	public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordRequest changePasswordRequest){
+		return ResponseEntity.ok(userService.changePassword(changePasswordRequest));
 	}
 }
