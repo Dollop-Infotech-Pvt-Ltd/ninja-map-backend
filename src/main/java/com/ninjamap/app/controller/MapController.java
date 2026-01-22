@@ -31,13 +31,13 @@ public class MapController {
 	
 	
 	@GetMapping("/reverse-geocoding")
-	public ResponseEntity<ApiResponse> reverse(
+	public ResponseEntity<?> reverse(
 			@RequestHeader(required = false) String token,
 			@RequestParam(required = true) double lat ,
 			@RequestParam(required = true) double lon ,
 			@RequestParam(required = false) String searchTerm
 			
 			){
-		return ResponseEntity.ok(this.mapService.reverse(lat,lon,searchTerm,token));
+		return this.mapService.reverse(lat,lon,searchTerm,token);
 	}
 }
