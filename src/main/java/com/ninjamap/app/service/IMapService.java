@@ -1,5 +1,7 @@
 package com.ninjamap.app.service;
 
+import org.springframework.http.ResponseEntity;
+
 import com.ninjamap.app.payload.response.ApiResponse;
 
 public interface IMapService {
@@ -9,5 +11,5 @@ public interface IMapService {
 	public ApiResponse route();
 	
 	
-	public ApiResponse reverse(double lat,double lon,String searchTerm,String token);
+	public ResponseEntity<?> reverse(double lat,double lon,String searchTerm,String token);
 }

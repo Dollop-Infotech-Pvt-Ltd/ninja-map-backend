@@ -46,12 +46,72 @@ public class MapServiceImpl implements IMapService {
 
 	
 
+//	@Override
+//	public ApiResponse reverse(double lat, double lon,String searchTerm,String token) {
+//
+//	    try {
+//	        String url = String.format(
+//	                "%s/reverse.php?lat=%s&lon=%s&format=json",
+//	                mapServiceUrl,
+//	                lat,
+//	                lon
+//	        );
+//
+//	        HttpHeaders headers = new HttpHeaders();
+//	        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+//
+//	        // REQUIRED by Nominatim
+//	        headers.set("User-Agent", "Open-Network-App/1.0 (contact: dev@yourdomain.com)");
+//
+//	        HttpEntity<Void> entity = new HttpEntity<>(headers);
+//
+//	        ResponseEntity<MapServiceResponse> response =
+//	                restTemplate.exchange(
+//	                        url,
+//	                        HttpMethod.GET,
+//	                        entity,
+//	                        MapServiceResponse.class
+//	                );
+//
+//	        // Record the reverse geocoding search in history
+//	        try {
+//	        	   if (token != null && !token.isBlank()
+//	                       && searchTerm != null && !searchTerm.isBlank()) {
+//	        		   
+//	   	            SearchHistoryRequest historyRequest = SearchHistoryRequest.builder()
+//		                    .searchTerm(searchTerm)
+//		                    .build();
+//		            searchHistoryService.recordSearch(historyRequest);
+//	        	   }
+//	        } catch (Exception e) {
+//	            System.err.println("Failed to record reverse geocoding search in history: " + e.getMessage());
+//	        }
+//
+//	        return ApiResponse.builder()
+//	                .success(true)
+//	                .message("Reverse geocoding completed successfully")
+//	                .http(HttpStatus.OK)
+//	                .statusCode(HttpStatus.OK.value())
+//	                .data(response.getBody())
+//	                .build();
+//
+//	    } catch (Exception e) {
+//	        return ApiResponse.builder()
+//	                .success(false)
+//	                .message(e.getMessage())
+//	                .http(HttpStatus.INTERNAL_SERVER_ERROR)
+//	                .statusCode(500)
+//	                .build();
+//	    }
+//	}
+	
+	
 	@Override
-	public ApiResponse reverse(double lat, double lon,String searchTerm,String token) {
+	public ResponseEntity<?> reverse(double lat, double lon, String searchTerm, String token) {
 
 	    try {
 	        String url = String.format(
-	                "%s/reverse.php?lat=%s&lon=%s&format=json",
+	        		"%s/reverse/%s/%s?size=1",
 	                mapServiceUrl,
 	                lat,
 	                lon
@@ -65,43 +125,37 @@ public class MapServiceImpl implements IMapService {
 
 	        HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-	        ResponseEntity<MapServiceResponse> response =
+	        ResponseEntity<String> response =
 	                restTemplate.exchange(
 	                        url,
 	                        HttpMethod.GET,
 	                        entity,
-	                        MapServiceResponse.class
+	                        String.class
 	                );
 
-	        // Record the reverse geocoding search in history
-	        try {
-	        	   if (token != null && !token.isBlank()
-	                       && searchTerm != null && !searchTerm.isBlank()) {
-	        		   
-	   	            SearchHistoryRequest historyRequest = SearchHistoryRequest.builder()
-		                    .searchTerm(searchTerm)
-		                    .build();
-		            searchHistoryService.recordSearch(historyRequest);
-	        	   }
-	        } catch (Exception e) {
-	            System.err.println("Failed to record reverse geocoding search in history: " + e.getMessage());
+	        // ✅ Record reverse geocoding search (unchanged)
+	        if (token != null && !token.isBlank()
+	                && searchTerm != null && !searchTerm.isBlank()) {
+	            try {
+	                SearchHistoryRequest historyRequest = SearchHistoryRequest.builder()
+	                        .searchTerm(searchTerm)
+	                        .build();
+	                searchHistoryService.recordSearch(historyRequest);
+	            } catch (Exception e) {
+	                System.err.println(
+	                        "Failed to record reverse geocoding search in history: " + e.getMessage()
+	                );
+	            }
 	        }
 
-	        return ApiResponse.builder()
-	                .success(true)
-	                .message("Reverse geocoding completed successfully")
-	                .http(HttpStatus.OK)
-	                .statusCode(HttpStatus.OK.value())
-	                .data(response.getBody())
-	                .build();
+	        // ✅ Return API response AS-IS (same as curl)
+	        return response;
 
 	    } catch (Exception e) {
-	        return ApiResponse.builder()
-	                .success(false)
-	                .message(e.getMessage())
-	                .http(HttpStatus.INTERNAL_SERVER_ERROR)
-	                .statusCode(500)
-	                .build();
+	        return ResponseEntity
+	                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(e.getMessage());
 	    }
 	}
+
 }
