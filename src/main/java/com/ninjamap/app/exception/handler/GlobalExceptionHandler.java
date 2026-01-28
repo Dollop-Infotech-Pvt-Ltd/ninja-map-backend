@@ -83,7 +83,7 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
 		String message = ex.getBindingResult().getFieldErrors().stream()
-				.map(error -> error.getField() + ": " + error.getDefaultMessage()).findFirst()
+				.map(error ->  error.getDefaultMessage()).findFirst()
 				.orElse(AppConstants.VALIDATION_FAILED);
 		return buildErrorResponse(HttpStatus.BAD_REQUEST, message);
 	}

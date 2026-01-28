@@ -3,6 +3,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,14 +23,17 @@ public class MapController {
 	private IMapService mapService;
 	
 	@GetMapping("/search")
-	public ResponseEntity<ApiResponse> search(
-			@RequestParam(required = false) String q ,
-			@RequestParam(required = true) String json
+	public ResponseEntity<?> search(
+			@RequestParam(required = false) String search ,
+			@RequestParam(required = true) Integer size
 			){
-		return ResponseEntity.ok(this.mapService.search());
+		return this.mapService.search(search,size);
 	}
 	
-	
+	@PostMapping("/route")
+	public ResponseEntity<?> routing(@RequestBody Object body){
+		return this.mapService.route(body);
+	}
 	
 	@GetMapping("/reverse-geocoding")
 	public ResponseEntity<?> reverse(

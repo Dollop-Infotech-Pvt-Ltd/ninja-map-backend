@@ -1,7 +1,5 @@
 package com.ninjamap.app.service.impl;
-
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -12,10 +10,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
 import com.ninjamap.app.payload.request.SearchHistoryRequest;
 import com.ninjamap.app.payload.response.ApiResponse;
-import com.ninjamap.app.payload.response.MapServiceResponse;
 import com.ninjamap.app.service.IMapService;
 import com.ninjamap.app.service.ISearchHistoryService;
 
@@ -23,8 +19,11 @@ import com.ninjamap.app.service.ISearchHistoryService;
 public class MapServiceImpl implements IMapService {
 	
 	
-    @Value("${map.service.url}")
-    private String mapServiceUrl;
+    @Value("${map.service.url.pelias}")
+    private String mapServiceUrlPelias;
+    
+    @Value("${map.service.url.route}")
+    private String mapServiceUrlRoute;
     
     @Autowired
     private RestTemplate restTemplate;
@@ -33,86 +32,78 @@ public class MapServiceImpl implements IMapService {
     private ISearchHistoryService searchHistoryService;
 
 	@Override
-	public ApiResponse search() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	public ResponseEntity<?> search(String searchTerm, Integer size) {
 
+	    try {
+	        String url = String.format(
+	                "%s/search-detailed/%s?size=%d",
+	                mapServiceUrlPelias,
+	                searchTerm,
+	                size != null ? size : 10
+	        );
+
+	        HttpHeaders headers = new HttpHeaders();
+	        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+	        // Required by Pelias / Nominatim
+	        headers.set("User-Agent", "Open-Network-App/1.0 (contact: dev@yourdomain.com)");
+
+	        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+	        ResponseEntity<String> response = restTemplate.exchange(
+	                url,
+	                HttpMethod.GET,
+	                entity,
+	                String.class
+	        );
+
+	        // ✅ Return Pelias response exactly like curl
+	        return response;
+
+	    } catch (Exception e) {
+	        return ResponseEntity
+	                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(e.getMessage());
+	    }
+	}
 	@Override
-	public ApiResponse route() {
-		// TODO Auto-generated method stub
-		return null;
+	public ResponseEntity<?> route(Object requestBody) {
+
+	    try {
+	        String url = mapServiceUrlRoute + "/route";
+
+	        HttpHeaders headers = new HttpHeaders();
+	        headers.setContentType(MediaType.APPLICATION_JSON);
+	        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+	        // Valhalla does NOT strictly require User-Agent, but safe to keep
+	        headers.set("User-Agent", "Open-Network-App/1.0 (contact: dev@yourdomain.com)");
+
+	        HttpEntity<Object> entity = new HttpEntity<>(requestBody, headers);
+
+	        ResponseEntity<String> response = restTemplate.exchange(
+	                url,
+	                HttpMethod.POST,
+	                entity,
+	                String.class
+	        );
+
+	        // ✅ Return Valhalla response AS-IS
+	        return response;
+
+	    } catch (Exception e) {
+	        return ResponseEntity
+	                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(e.getMessage());
+	    }
 	}
-
-	
-
-//	@Override
-//	public ApiResponse reverse(double lat, double lon,String searchTerm,String token) {
-//
-//	    try {
-//	        String url = String.format(
-//	                "%s/reverse.php?lat=%s&lon=%s&format=json",
-//	                mapServiceUrl,
-//	                lat,
-//	                lon
-//	        );
-//
-//	        HttpHeaders headers = new HttpHeaders();
-//	        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-//
-//	        // REQUIRED by Nominatim
-//	        headers.set("User-Agent", "Open-Network-App/1.0 (contact: dev@yourdomain.com)");
-//
-//	        HttpEntity<Void> entity = new HttpEntity<>(headers);
-//
-//	        ResponseEntity<MapServiceResponse> response =
-//	                restTemplate.exchange(
-//	                        url,
-//	                        HttpMethod.GET,
-//	                        entity,
-//	                        MapServiceResponse.class
-//	                );
-//
-//	        // Record the reverse geocoding search in history
-//	        try {
-//	        	   if (token != null && !token.isBlank()
-//	                       && searchTerm != null && !searchTerm.isBlank()) {
-//	        		   
-//	   	            SearchHistoryRequest historyRequest = SearchHistoryRequest.builder()
-//		                    .searchTerm(searchTerm)
-//		                    .build();
-//		            searchHistoryService.recordSearch(historyRequest);
-//	        	   }
-//	        } catch (Exception e) {
-//	            System.err.println("Failed to record reverse geocoding search in history: " + e.getMessage());
-//	        }
-//
-//	        return ApiResponse.builder()
-//	                .success(true)
-//	                .message("Reverse geocoding completed successfully")
-//	                .http(HttpStatus.OK)
-//	                .statusCode(HttpStatus.OK.value())
-//	                .data(response.getBody())
-//	                .build();
-//
-//	    } catch (Exception e) {
-//	        return ApiResponse.builder()
-//	                .success(false)
-//	                .message(e.getMessage())
-//	                .http(HttpStatus.INTERNAL_SERVER_ERROR)
-//	                .statusCode(500)
-//	                .build();
-//	    }
-//	}
-	
-	
 	@Override
 	public ResponseEntity<?> reverse(double lat, double lon, String searchTerm, String token) {
 
 	    try {
 	        String url = String.format(
-	        		"%s/reverse/%s/%s?size=1",
-	                mapServiceUrl,
+	        		"%s/reverse-detailed/%s/%s?size=1",
+	        		mapServiceUrlPelias,
 	                lat,
 	                lon
 	        );
@@ -149,6 +140,7 @@ public class MapServiceImpl implements IMapService {
 	        }
 
 	        // ✅ Return API response AS-IS (same as curl)
+	        System.out.println(response);
 	        return response;
 
 	    } catch (Exception e) {
