@@ -1,5 +1,8 @@
 package com.ninjamap.app.service.impl;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -11,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import com.ninjamap.app.payload.request.SearchHistoryRequest;
-import com.ninjamap.app.payload.response.ApiResponse;
 import com.ninjamap.app.service.IMapService;
 import com.ninjamap.app.service.ISearchHistoryService;
 
@@ -67,19 +69,59 @@ public class MapServiceImpl implements IMapService {
 	    }
 	}
 	@Override
+	@SuppressWarnings("unchecked")
 	public ResponseEntity<?> route(Object requestBody) {
 
 	    try {
 	        String url = mapServiceUrlRoute + "/route";
 
+	        // Incoming JSON as Map
+	        Map<String, Object> body = (Map<String, Object>) requestBody;
+
+	        // Build Valhalla locations[]
+	        List<Map<String, Object>> locations = new ArrayList<>();
+
+	        // from (required)
+	        Map<String, Object> from = (Map<String, Object>) body.get("from");
+	        if (from == null) {
+	            return ResponseEntity
+	                    .badRequest()
+	                    .body("from location is required");
+	        }
+	        locations.add(from);
+
+	        // via (optional)
+	        List<Map<String, Object>> via = (List<Map<String, Object>>) body.get("via");
+	        if (via != null && !via.isEmpty()) {
+	            locations.addAll(via);
+	        }
+
+	        // to (required)
+	        Map<String, Object> to = (Map<String, Object>) body.get("to");
+	        if (to == null) {
+	            return ResponseEntity
+	                    .badRequest()
+	                    .body("to location is required");
+	        }
+	        locations.add(to);
+
+	        // Build final Valhalla body
+	        Map<String, Object> valhallaBody = new HashMap<>();
+	        valhallaBody.put("locations", locations);
+	        
+	        body.forEach((key, value) -> {
+	            if (!"from".equals(key) && !"via".equals(key) && !"to".equals(key)) {
+	                valhallaBody.put(key, value);
+	            }
+	        });
+	        
+	        
 	        HttpHeaders headers = new HttpHeaders();
 	        headers.setContentType(MediaType.APPLICATION_JSON);
 	        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-
-	        // Valhalla does NOT strictly require User-Agent, but safe to keep
 	        headers.set("User-Agent", "Open-Network-App/1.0 (contact: dev@yourdomain.com)");
 
-	        HttpEntity<Object> entity = new HttpEntity<>(requestBody, headers);
+	        HttpEntity<Object> entity = new HttpEntity<>(valhallaBody, headers);
 
 	        ResponseEntity<String> response = restTemplate.exchange(
 	                url,
@@ -88,7 +130,6 @@ public class MapServiceImpl implements IMapService {
 	                String.class
 	        );
 
-	        // ✅ Return Valhalla response AS-IS
 	        return response;
 
 	    } catch (Exception e) {
@@ -97,6 +138,7 @@ public class MapServiceImpl implements IMapService {
 	                .body(e.getMessage());
 	    }
 	}
+
 	@Override
 	public ResponseEntity<?> reverse(double lat, double lon, String searchTerm, String token) {
 
