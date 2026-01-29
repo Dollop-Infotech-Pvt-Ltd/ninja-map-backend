@@ -18,6 +18,8 @@ public class RoutingSearchRequest {
 	private Double lat;
 	private Double lon;
 	private String searchTerm;
+	private String fullName;
+	private Boolean isSaved;
 	private Integer searchRadius;
 	private String costing;
 	private Double useFerry;

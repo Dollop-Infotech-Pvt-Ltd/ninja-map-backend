@@ -43,6 +43,7 @@ public class RoutingSearchHistoryServiceImpl implements IRoutingSearchHistorySer
 			.ferryCost(routingSearchRequest.getFerryCost())
 			.lat(routingSearchRequest.getLat())
 			.userId(user.getId())
+			.fullName(routingSearchRequest.getFullName())
 			.lon(routingSearchRequest.getLon())
 			.searchRadius(routingSearchRequest.getSearchRadius())
 			.searchTerm(routingSearchRequest.getSearchTerm())
@@ -83,7 +84,6 @@ public class RoutingSearchHistoryServiceImpl implements IRoutingSearchHistorySer
 		
 		Pageable pageable = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getPageSize());
 			Page<RoutingSearchHistory> searchHistory = this.routingRepo.findByUserId(userId, pageable);
-
 			return ApiResponse.builder()
 					.success(true)
 					.message(AppConstants.SEARCH_FETCHED_SUCCESSFULLY)
@@ -94,6 +94,7 @@ public class RoutingSearchHistoryServiceImpl implements IRoutingSearchHistorySer
 	}
 	private RoutingSearchHistoryResponse convertToResponse(RoutingSearchHistory routingSearchHistory) {
 		return RoutingSearchHistoryResponse.builder().costing(routingSearchHistory.getCosting()).ferryCost(routingSearchHistory.getFerryCost())
+				.fullName(routingSearchHistory.getFullName())
 				.id(routingSearchHistory.getId()).lat(routingSearchHistory.getLat()).lon(routingSearchHistory.getLon()).searchRadius(routingSearchHistory.getSearchRadius())
 				.searchTerm(routingSearchHistory.getSearchTerm()).useFerry(routingSearchHistory.getUseFerry()).userId(routingSearchHistory.getUserId()).build();
 	}

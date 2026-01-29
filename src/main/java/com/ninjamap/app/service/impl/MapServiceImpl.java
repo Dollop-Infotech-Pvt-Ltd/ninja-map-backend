@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.ninjamap.app.payload.request.Location;
+import com.ninjamap.app.payload.request.RouteRequest;
 import com.ninjamap.app.payload.request.RoutingSearchRequest;
 import com.ninjamap.app.payload.request.SearchHistoryRequest;
 import com.ninjamap.app.service.IMapService;
@@ -75,81 +77,81 @@ public class MapServiceImpl implements IMapService {
 	    }
 	}
 	@Override
-	@SuppressWarnings("unchecked")
-	public ResponseEntity<?> route(Object requestBody,String token) {
+	public ResponseEntity<?> route(RouteRequest requestBody, String token) {
 
 	    try {
 	        String url = mapServiceUrlRoute + "/route";
 
-	        // Incoming JSON as Map
-	        Map<String, Object> body = (Map<String, Object>) requestBody;
-
-	        // Build Valhalla locations[]
-	        List<Map<String, Object>> locations = new ArrayList<>();
-
-	        // from (required)
-	        Map<String, Object> from = (Map<String, Object>) body.get("from");
-	        if (from == null) {
+	        // ---------- Validate required fields ----------
+	        if (requestBody.getFrom() == null) {
 	            return ResponseEntity
 	                    .badRequest()
 	                    .body("from location is required");
 	        }
-	        locations.add(from);
 
-	        // via (optional)
-	        List<Map<String, Object>> via = (List<Map<String, Object>>) body.get("via");
-	        if (via != null && !via.isEmpty()) {
-	            locations.addAll(via);
-	        }
-
-	        // to (required)
-	        Map<String, Object> to = (Map<String, Object>) body.get("to");
-	        if (to == null) {
+	        if (requestBody.getTo() == null) {
 	            return ResponseEntity
 	                    .badRequest()
 	                    .body("to location is required");
 	        }
-	        locations.add(to);
-	        
-	       System.err.println(token);
-	        if(token != null && !token.isBlank()) {
-	        	  RoutingSearchRequest request = RoutingSearchRequest.builder()
-	  	                .lat((Double) to.get("lat"))
-	  	                .lon((Double) to.get("lon"))
 
-	  	                .costing((String) body.getOrDefault("costing", "auto"))
+	        // ---------- Build Valhalla locations ----------
+	        List<Map<String, Object>> locations = new ArrayList<>();
 
-	  	                .searchTerm((String) body.getOrDefault("search_term", ""))
+	        locations.add(convertLocation(requestBody.getFrom()));
 
-	  	                .searchRadius(body.get("search_radius") == null
-	  	                        ? 500
-	  	                        : ((Number) body.get("search_radius")).intValue())
-
-	  	                .useFerry(body.get("use_ferry") == null
-	  	                        ? 0.0
-	  	                        : ((Number) body.get("use_ferry")).doubleValue())
-
-	  	                .ferryCost(body.get("ferry_cost") == null
-	  	                        ? 0
-	  	                        : ((Number) body.get("ferry_cost")).intValue())
-
-	  	                .build();
-	  	        this.routingSearchHistoryService.createHistroy(request);
+	        if (requestBody.getVia() != null && !requestBody.getVia().isEmpty()) {
+	            requestBody.getVia()
+	                    .forEach(v -> locations.add(convertLocation(v)));
 	        }
 
+	        locations.add(convertLocation(requestBody.getTo()));
 
-	        // Build final Valhalla body
+	        // ---------- Save routing history (only if allowed) ----------
+	        if (token != null
+	                && !token.isBlank()
+	                && Boolean.TRUE.equals(requestBody.getIsSaved())) {
+                   Location to = requestBody.getTo();
+
+	            RoutingSearchRequest historyRequest =
+	                    RoutingSearchRequest.builder()
+	                            .lat(to.getLat())
+	                            .lon(to.getLon())
+	                            .fullName(to.getFull_name())
+	                            .searchTerm(to.getSearch_term())
+	                            .searchRadius(
+	                                    to.getSearch_radius() == null
+	                                            ? 500
+	                                            : to.getSearch_radius()
+	                            )
+	                            .costing(
+	                                    requestBody.getCosting() == null
+	                                            ? "auto"
+	                                            : requestBody.getCosting()
+	                            )
+	                            .useFerry(
+	                                    requestBody.getUse_ferry() == null
+	                                            ? 0.0
+	                                            : requestBody.getUse_ferry()
+	                            )
+	                            .ferryCost(
+	                                    requestBody.getFerry_cost() == null
+	                                            ? 0
+	                                            : requestBody.getFerry_cost()
+	                            )
+	                            .build();
+
+	            routingSearchHistoryService.createHistroy(historyRequest);
+	        }
+
+	        // ---------- Build Valhalla request body ----------
 	        Map<String, Object> valhallaBody = new HashMap<>();
 	        valhallaBody.put("locations", locations);
-	        
-	        body.forEach((key, value) -> {
-	            if (!"from".equals(key) && !"via".equals(key) && !"to".equals(key)) {
-	                valhallaBody.put(key, value);
-	            }
-	        });
-	        
-	        
-	        
+	        valhallaBody.put("costing", requestBody.getCosting());
+	        valhallaBody.put("use_ferry", requestBody.getUse_ferry());
+	        valhallaBody.put("ferry_cost", requestBody.getFerry_cost());
+
+	        // ---------- Call Valhalla ----------
 	        HttpHeaders headers = new HttpHeaders();
 	        headers.setContentType(MediaType.APPLICATION_JSON);
 	        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
@@ -157,14 +159,12 @@ public class MapServiceImpl implements IMapService {
 
 	        HttpEntity<Object> entity = new HttpEntity<>(valhallaBody, headers);
 
-	        ResponseEntity<String> response = restTemplate.exchange(
+	        return restTemplate.exchange(
 	                url,
 	                HttpMethod.POST,
 	                entity,
 	                String.class
 	        );
-
-	        return response;
 
 	    } catch (Exception e) {
 	        return ResponseEntity
@@ -173,6 +173,18 @@ public class MapServiceImpl implements IMapService {
 	    }
 	}
 
+	
+	private Map<String, Object> convertLocation(Location location) {
+	    Map<String, Object> map = new HashMap<>();
+	    map.put("lat", location.getLat());
+	    map.put("lon", location.getLon());
+	    map.put("search_term", location.getSearch_term());
+	    map.put("full_name", location.getFull_name());
+	    map.put("search_radius", location.getSearch_radius());
+	    return map;
+	}
+
+	
 	@Override
 	public ResponseEntity<?> reverse(double lat, double lon, String searchTerm, String token) {
 

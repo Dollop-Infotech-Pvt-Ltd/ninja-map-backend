@@ -16,6 +16,8 @@ public class RoutingSearchHistoryResponse {
 	private String userId;
 
 	private String searchTerm;
+	
+	private String fullName;
 
 	private Double lat;
 
