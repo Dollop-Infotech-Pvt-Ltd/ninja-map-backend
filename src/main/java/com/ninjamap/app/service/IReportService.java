@@ -1,7 +1,5 @@
 package com.ninjamap.app.service;
 
-import org.springframework.web.multipart.MultipartFile;
-
 import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.request.ReportCommentRequest;
 import com.ninjamap.app.payload.request.ReportRequest;
@@ -33,5 +31,18 @@ public interface IReportService {
 	 * Get all available report types
 	 */
 	ApiResponse getReportTypes();
+
+	/**
+	 * Get reports within 5km radius from geographic location with pagination
+	 * 
+	 * @param latitude Center point latitude (-90 to 90)
+	 * @param longitude Center point longitude (-180 to 180)
+	 * @param paginationRequest Pagination parameters (pageSize, pageNumber, sortDirection, sortKey)
+	 * @param status Optional filter by report status
+	 * @param severity Optional filter by report severity
+	 * @return ApiResponse containing paginated reports within 5km radius sorted by distance and creation date
+	 */
+	ApiResponse getReportsByLocation(Double latitude, Double longitude, 
+			PaginationRequest paginationRequest, String status, String severity);
 
 }

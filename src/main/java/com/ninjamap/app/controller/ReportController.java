@@ -82,5 +82,27 @@ public class ReportController {
 		return new ResponseEntity<>(reportService.getReportTypes(), HttpStatus.OK);
 	}
 
+	/**
+	 * Get nearby reports by geographic location within 5km radius with pagination
+	 */
+	@GetMapping("/nearby")
+	public ResponseEntity<ApiResponse> getNearbyReports(
+			@RequestParam(name = "latitude") Double latitude,
+			@RequestParam(name = "longitude") Double longitude,
+			@RequestParam(name = AppConstants.PAGE_SIZE, defaultValue = "10") Integer pageSize,
+			@RequestParam(name = AppConstants.PAGE_NUMBER, defaultValue = "0") Integer pageNumber,
+			@RequestParam(name = "status", required = false) String status,
+			@RequestParam(name = "severity", required = false) String severity) {
+
+		PaginationRequest paginationRequest = PaginationRequest.builder()
+				.pageSize(pageSize)
+				.pageNumber(pageNumber)
+				.build();
+
+		return new ResponseEntity<>(
+				reportService.getReportsByLocation(latitude, longitude, paginationRequest, status, severity),
+				HttpStatus.OK);
+	}
+
 	
 }

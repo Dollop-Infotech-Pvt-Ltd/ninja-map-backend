@@ -95,4 +95,72 @@ public interface IReportRepository extends JpaRepository<Report, String> {
 	 * Count reports by user ID
 	 */
 	long countByUserId(String userId);
+
+	/**
+	 * Find nearby reports using Haversine formula for distance calculation
+	 * Calculates distance between provided coordinates and report coordinates
+	 * Results are sorted by distance ascending, then by creation date descending
+	 * 
+	 * @param latitude Center point latitude (-90 to 90)
+	 * @param longitude Center point longitude (-180 to 180)
+	 * @param limit Maximum number of results to retrieve
+	 * @param pageable Pagination information
+	 * @return Page of nearby reports sorted by distance and creation date
+	 */
+	@Query(value = "SELECT r.* FROM reports r " +
+			"ORDER BY " +
+			"(6371 * acos(cos(radians(90 - :latitude)) * cos(radians(90 - r.latitude)) + " +
+			"sin(radians(90 - :latitude)) * sin(radians(90 - r.latitude)) * " +
+			"cos(radians(:longitude - r.longitude)))) ASC, " +
+			"r.created_date DESC " +
+			"LIMIT :limit",
+			nativeQuery = true,
+			countQuery = "SELECT COUNT(*) FROM reports")
+	Page<Report> findNearbyReports(
+			@Param("latitude") Double latitude,
+			@Param("longitude") Double longitude,
+			@Param("limit") Integer limit,
+			Pageable pageable);
+
+	@Query(
+		    value = """
+		        SELECT r.* 
+		        FROM reports r
+		        WHERE (
+		            6371 * acos(
+		                cos(radians(:latitude)) * cos(radians(r.latitude)) *
+		                cos(radians(r.longitude) - radians(:longitude)) +
+		                sin(radians(:latitude)) * sin(radians(r.latitude))
+		            )
+		        ) <= :radiusKm
+		        ORDER BY
+		            (
+		                6371 * acos(
+		                    cos(radians(:latitude)) * cos(radians(r.latitude)) *
+		                    cos(radians(r.longitude) - radians(:longitude)) +
+		                    sin(radians(:latitude)) * sin(radians(r.latitude))
+		                )
+		            ) ASC,
+		            r.created_date DESC
+		        """,
+		    countQuery = """
+		        SELECT COUNT(*)
+		        FROM reports r
+		        WHERE (
+		            6371 * acos(
+		                cos(radians(:latitude)) * cos(radians(r.latitude)) *
+		                cos(radians(r.longitude) - radians(:longitude)) +
+		                sin(radians(:latitude)) * sin(radians(r.latitude))
+		            )
+		        ) <= :radiusKm
+		        """,
+		    nativeQuery = true
+		)
+		Page<Report> findReportsWithinRadius(
+		        @Param("latitude") Double latitude,
+		        @Param("longitude") Double longitude,
+		        @Param("radiusKm") Double radiusKm,
+		        Pageable pageable
+		);
+
 }
