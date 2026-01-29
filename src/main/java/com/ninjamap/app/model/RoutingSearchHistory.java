@@ -44,6 +44,11 @@ public class RoutingSearchHistory extends AuditData{
 	private Integer searchRadius;
 	
 	@Column(nullable = false, length = 255)
+	private String fullName;
+	
+	private Boolean isSaved;
+	
+	@Column(nullable = false, length = 255)
 	private String costing;
 	
 	@Builder.Default
