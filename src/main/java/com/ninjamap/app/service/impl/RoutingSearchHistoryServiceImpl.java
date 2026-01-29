@@ -82,13 +82,6 @@ public class RoutingSearchHistoryServiceImpl implements IRoutingSearchHistorySer
 	public ApiResponse getRoutingSearchHistoryByUserId(String userId,PaginationRequest paginationRequest) {
 		
 		Pageable pageable = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getPageSize());
-		    List<RoutingSearchHistory> all = this.routingRepo.findAll();
-		    System.err.println("userId :: "+userId);
-		    System.err.println(
-		    	    all.stream()
-		    	       .map(RoutingSearchHistory::getId)
-		    	       .toList()
-		    	);
 			Page<RoutingSearchHistory> searchHistory = this.routingRepo.findByUserId(userId, pageable);
 
 			return ApiResponse.builder()
