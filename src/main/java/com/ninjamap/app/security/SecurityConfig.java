@@ -35,7 +35,7 @@ public class SecurityConfig {
 			"/api/about-us/get", "/api/contact-us/submit", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
 			"/api/categories/get-categories","/api/map/reverse-geocoding","/api/map/search","/api/map/route","/api/blogs/get","/api/customer-stories/create",
 			"/v2/api-docs/**", "/swagger-resources/**", "/webjars/**", "/api/faqs/get", "/api/blogs/get","/api/faqs/get-all","/api/customer-stories/get-all",
-			"/api/blogs/get-all", "/api/policies/get", "/api/policies/get-all", "/oauth2/authorization/google","/api/locations/**");
+			"/api/blogs/get-all", "/api/policies/get", "/api/policies/get-all", "/oauth2/authorization/google","/api/locations/**","/api/grid/**");
 
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
