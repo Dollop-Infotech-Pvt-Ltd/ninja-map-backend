@@ -66,14 +66,7 @@ public class ReportServiceImpl implements IReportService {
 	@Override
 	public ApiResponse getReports(PaginationRequest paginationRequest) {
 	
-			int pageNumber = paginationRequest.getPageNumber() != null ? paginationRequest.getPageNumber() : 0;
-			int pageSize = paginationRequest.getPageSize() != null ? paginationRequest.getPageSize() : 10;
-			String sortBy = paginationRequest.getSortKey() != null ? paginationRequest.getSortKey() : "createdAt";
-			String sortDirection = paginationRequest.getSortDirection() != null ? paginationRequest.getSortDirection()
-					: "DESC";
-
-			Sort.Direction direction = Sort.Direction.fromString(sortDirection);
-			Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(direction, sortBy));
+		Pageable pageable = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getPageSize());
 
 			String userId = userService.getCurrectUserFromToken().getId();
 
@@ -217,6 +210,59 @@ public class ReportServiceImpl implements IReportService {
 			return ApiResponse.builder()
 					.statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
 					.message("Error adding comment: " + e.getMessage())
+					.data(null)
+					.build();
+		}
+	}
+
+	@Override
+	public ApiResponse getReportsByLocation(Double latitude, Double longitude,
+			PaginationRequest paginationRequest, String status, String severity) {
+		try {
+			// Validate latitude (-90 to 90)
+			if (latitude == null || latitude < -90 || latitude > 90) {
+				return ApiResponse.builder()
+						.statusCode(HttpStatus.BAD_REQUEST.value())
+						.message("Invalid latitude. Must be between -90 and 90.")
+						.data(null)
+						.build();
+			}
+
+			// Validate longitude (-180 to 180)
+			if (longitude == null || longitude < -180 || longitude > 180) {
+				return ApiResponse.builder()
+						.statusCode(HttpStatus.BAD_REQUEST.value())
+						.message("Invalid longitude. Must be between -180 and 180.")
+						.data(null)
+						.build();
+			}
+
+			// Calculate offset for pagination
+			int offset = paginationRequest.getPageNumber() * paginationRequest.getPageSize();
+			int limit = paginationRequest.getPageSize();
+			
+			
+
+			Pageable pageable = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getPageSize());
+
+			
+			// Query nearby reports within 5km radius
+			Page<Report> reports = reportRepository.findReportsWithinRadius(
+					latitude, longitude, 5.0, pageable);
+
+			// Convert Report entities to ReportListItemResponse DTOs
+			Page<ReportListItemResponse> reportResponses = reports.map(this::convertReportToResponse);
+
+			return ApiResponse.builder()
+					.statusCode(HttpStatus.OK.value())
+					.message("Nearby reports retrieved successfully")
+					.data(new PaginatedResponse<>(reportResponses))
+					.build();
+
+		} catch (Exception e) {
+			return ApiResponse.builder()
+					.statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+					.message("Error retrieving nearby reports: " + e.getMessage())
 					.data(null)
 					.build();
 		}
