@@ -1,4 +1,6 @@
 package com.ninjamap.app.service.impl;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -80,17 +82,20 @@ public class RoutingSearchHistoryServiceImpl implements IRoutingSearchHistorySer
 	public ApiResponse getRoutingSearchHistoryByUserId(String userId,PaginationRequest paginationRequest) {
 		
 		Pageable pageable = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getPageSize());
-			
+		    List<RoutingSearchHistory> all = this.routingRepo.findAll();
+		    System.err.println("userId :: "+userId);
+		    System.err.println(
+		    	    all.stream()
+		    	       .map(RoutingSearchHistory::getId)
+		    	       .toList()
+		    	);
 			Page<RoutingSearchHistory> searchHistory = this.routingRepo.findByUserId(userId, pageable);
-			
-			
-			
-			
+
 			return ApiResponse.builder()
 					.success(true)
 					.message(AppConstants.SEARCH_FETCHED_SUCCESSFULLY)
 					.statusCode(HttpStatus.OK.value())
-					.data(null)
+					.data(new PaginatedResponse<>(searchHistory.map(this::convertToResponse)))
 					.build();
 	
 	}
