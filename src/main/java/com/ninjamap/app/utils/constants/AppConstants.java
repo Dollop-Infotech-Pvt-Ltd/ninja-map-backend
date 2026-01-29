@@ -357,5 +357,7 @@ public class AppConstants {
   public static final String STORY_UNSAVED = "Story unsaved successfully";
   public static final String STORY_VIEWED = "Story view registered";
   public static final String STATUS_UPDATED_SUCCESSFULLY = "Status updated successfully";
-
+  
+  //================================ ROUTING =======================================  
+  public static final String ROUTING_CREATED_SUCCESSFULLY = "Routing created successfully";
 }

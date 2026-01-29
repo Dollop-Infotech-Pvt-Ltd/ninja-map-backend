@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.ninjamap.app.payload.response.ApiResponse;
 import com.ninjamap.app.service.IMapService;
 import lombok.RequiredArgsConstructor;
 
@@ -31,8 +30,9 @@ public class MapController {
 	}
 	
 	@PostMapping("/route")
-	public ResponseEntity<?> routing(@RequestBody Object body){
-		return this.mapService.route(body);
+	public ResponseEntity<?> routing(@RequestBody Object body,
+			@RequestHeader(required = false) String Authorization){
+		return this.mapService.route(body,Authorization);
 	}
 	
 	@GetMapping("/reverse-geocoding")
