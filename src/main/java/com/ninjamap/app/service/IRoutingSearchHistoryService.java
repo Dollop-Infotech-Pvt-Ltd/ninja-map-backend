@@ -7,4 +7,5 @@ public interface IRoutingSearchHistoryService {
 
 	public ApiResponse createHistroy(RoutingSearchRequest routingSearchRequest);
 	
+	public ApiResponse getRoutingSearchHistory();
 }

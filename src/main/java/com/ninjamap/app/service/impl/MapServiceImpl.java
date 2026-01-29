@@ -13,8 +13,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import com.ninjamap.app.payload.request.RoutingSearchRequest;
 import com.ninjamap.app.payload.request.SearchHistoryRequest;
 import com.ninjamap.app.service.IMapService;
+import com.ninjamap.app.service.IRoutingSearchHistoryService;
 import com.ninjamap.app.service.ISearchHistoryService;
 
 @Service
@@ -29,6 +32,9 @@ public class MapServiceImpl implements IMapService {
     
     @Autowired
     private RestTemplate restTemplate;
+    
+    @Autowired
+    private IRoutingSearchHistoryService routingSearchHistoryService;
     
     @Autowired
     private ISearchHistoryService searchHistoryService;
@@ -70,7 +76,7 @@ public class MapServiceImpl implements IMapService {
 	}
 	@Override
 	@SuppressWarnings("unchecked")
-	public ResponseEntity<?> route(Object requestBody) {
+	public ResponseEntity<?> route(Object requestBody,String token) {
 
 	    try {
 	        String url = mapServiceUrlRoute + "/route";
@@ -104,6 +110,33 @@ public class MapServiceImpl implements IMapService {
 	                    .body("to location is required");
 	        }
 	        locations.add(to);
+	        
+	       System.err.println(token);
+	        if(token != null && !token.isBlank()) {
+	        	  RoutingSearchRequest request = RoutingSearchRequest.builder()
+	  	                .lat((Double) to.get("lat"))
+	  	                .lon((Double) to.get("lon"))
+
+	  	                .costing((String) body.getOrDefault("costing", "auto"))
+
+	  	                .searchTerm((String) body.getOrDefault("search_term", ""))
+
+	  	                .searchRadius(body.get("search_radius") == null
+	  	                        ? 500
+	  	                        : ((Number) body.get("search_radius")).intValue())
+
+	  	                .useFerry(body.get("use_ferry") == null
+	  	                        ? 0.0
+	  	                        : ((Number) body.get("use_ferry")).doubleValue())
+
+	  	                .ferryCost(body.get("ferry_cost") == null
+	  	                        ? 0
+	  	                        : ((Number) body.get("ferry_cost")).intValue())
+
+	  	                .build();
+	  	        this.routingSearchHistoryService.createHistroy(request);
+	        }
+
 
 	        // Build final Valhalla body
 	        Map<String, Object> valhallaBody = new HashMap<>();
@@ -114,6 +147,7 @@ public class MapServiceImpl implements IMapService {
 	                valhallaBody.put(key, value);
 	            }
 	        });
+	        
 	        
 	        
 	        HttpHeaders headers = new HttpHeaders();

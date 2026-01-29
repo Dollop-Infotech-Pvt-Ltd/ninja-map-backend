@@ -39,7 +39,7 @@ public class RoutingSearchHistory extends AuditData{
 	private Double lon;
  
 	@Column(nullable = false, length = 255)
-	private String searchRadius;
+	private Integer searchRadius;
 	
 	@Column(nullable = false, length = 255)
 	private String costing;
