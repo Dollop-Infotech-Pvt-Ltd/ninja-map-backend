@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/map")
 @RequiredArgsConstructor
 @Validated
-@CrossOrigin("*")
+@CrossOrigin(origins = "*")
 public class MapController {
 
 	@Autowired

@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -14,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ninjamap.app.payload.request.Location;
 import com.ninjamap.app.payload.request.RouteRequest;
 import com.ninjamap.app.payload.request.RoutingSearchRequest;
@@ -41,138 +44,161 @@ public class MapServiceImpl implements IMapService {
     @Autowired
     private ISearchHistoryService searchHistoryService;
 
-	@Override
-	public ResponseEntity<?> search(String searchTerm, Integer size) {
+    @Override
+    public ResponseEntity<?> search(String searchTerm, Integer size) {
 
-	    try {
-	        String url = String.format(
-	                "%s/search-detailed/%s?size=%d",
-	                mapServiceUrlPelias,
-	                searchTerm,
-	                size != null ? size : 10
-	        );
+        try {
+            String url = String.format(
+                    "%s/search-detailed/%s?size=%d",
+                    mapServiceUrlPelias,
+                    searchTerm,
+                    size != null ? size : 10
+            );
 
-	        HttpHeaders headers = new HttpHeaders();
-	        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            HttpHeaders headers = new HttpHeaders();
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            headers.set("User-Agent", "Open-Network-App/1.0 (contact: dev@yourdomain.com)");
 
-	        // Required by Pelias / Nominatim
-	        headers.set("User-Agent", "Open-Network-App/1.0 (contact: dev@yourdomain.com)");
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-	        HttpEntity<Void> entity = new HttpEntity<>(headers);
+            ResponseEntity<String> peliasResponse = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    String.class
+            );
 
-	        ResponseEntity<String> response = restTemplate.exchange(
-	                url,
-	                HttpMethod.GET,
-	                entity,
-	                String.class
-	        );
+            // 🔥 Convert String → JSON
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode json = mapper.readTree(peliasResponse.getBody());
 
-	        // ✅ Return Pelias response exactly like curl
-	        return response;
+            return ResponseEntity
+                    .status(peliasResponse.getStatusCode())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(json);
 
-	    } catch (Exception e) {
-	        return ResponseEntity
-	                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                .body(e.getMessage());
-	    }
-	}
-	@Override
-	public ResponseEntity<?> route(RouteRequest requestBody, String token) {
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of(
+                            "success", false,
+                            "message", e.getMessage()
+                    ));
+        }
+    }
 
-	    try {
-	        String url = mapServiceUrlRoute + "/route";
+    @Override
+    public ResponseEntity<?> route(RouteRequest requestBody, String token) {
 
-	        // ---------- Validate required fields ----------
-	        if (requestBody.getFrom() == null) {
-	            return ResponseEntity
-	                    .badRequest()
-	                    .body("from location is required");
-	        }
+        try {
+            String url = mapServiceUrlRoute + "/route";
 
-	        if (requestBody.getTo() == null) {
-	            return ResponseEntity
-	                    .badRequest()
-	                    .body("to location is required");
-	        }
+            // ---------- Validate required fields ----------
+            if (requestBody == null || requestBody.getFrom() == null) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("message", "from location is required"));
+            }
 
-	        // ---------- Build Valhalla locations ----------
-	        List<Map<String, Object>> locations = new ArrayList<>();
+            if (requestBody.getTo() == null) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("message", "to location is required"));
+            }
 
-	        locations.add(convertLocation(requestBody.getFrom()));
+            // ---------- Build Valhalla locations ----------
+            List<Map<String, Object>> locations = new ArrayList<>();
 
-	        if (requestBody.getVia() != null && !requestBody.getVia().isEmpty()) {
-	            requestBody.getVia()
-	                    .forEach(v -> locations.add(convertLocation(v)));
-	        }
+            locations.add(convertLocation(requestBody.getFrom()));
 
-	        locations.add(convertLocation(requestBody.getTo()));
+            if (requestBody.getVia() != null && !requestBody.getVia().isEmpty()) {
+                requestBody.getVia().forEach(v ->
+                        locations.add(convertLocation(v))
+                );
+            }
 
-	        // ---------- Save routing history (only if allowed) ----------
-	        if (token != null
-	                && !token.isBlank()
-	                && Boolean.TRUE.equals(requestBody.getIsSaved())) {
-                   Location to = requestBody.getTo();
+            locations.add(convertLocation(requestBody.getTo()));
 
-	            RoutingSearchRequest historyRequest =
-	                    RoutingSearchRequest.builder()
-	                            .lat(to.getLat())
-	                            .lon(to.getLon())
-	                            .fullName(to.getFull_name())
-	                            .searchTerm(to.getSearch_term())
-	                            .searchRadius(
-	                                    to.getSearch_radius() == null
-	                                            ? 500
-	                                            : to.getSearch_radius()
-	                            )
-	                            .costing(
-	                                    requestBody.getCosting() == null
-	                                            ? "auto"
-	                                            : requestBody.getCosting()
-	                            )
-	                            .useFerry(
-	                                    requestBody.getUse_ferry() == null
-	                                            ? 0.0
-	                                            : requestBody.getUse_ferry()
-	                            )
-	                            .ferryCost(
-	                                    requestBody.getFerry_cost() == null
-	                                            ? 0
-	                                            : requestBody.getFerry_cost()
-	                            )
-	                            .build();
+            // ---------- Save routing history ----------
+            if (token != null
+                    && !token.isBlank()
+                    && Boolean.TRUE.equals(requestBody.getIsSaved())) {
 
-	            routingSearchHistoryService.createHistroy(historyRequest);
-	        }
+                Location to = requestBody.getTo();
 
-	        // ---------- Build Valhalla request body ----------
-	        Map<String, Object> valhallaBody = new HashMap<>();
-	        valhallaBody.put("locations", locations);
-	        valhallaBody.put("alternates", requestBody.getAlternates());
-	        valhallaBody.put("costing", requestBody.getCosting());
-	        valhallaBody.put("use_ferry", requestBody.getUse_ferry());
-	        valhallaBody.put("ferry_cost", requestBody.getFerry_cost());
+                RoutingSearchRequest historyRequest =
+                        RoutingSearchRequest.builder()
+                                .lat(to.getLat())
+                                .lon(to.getLon())
+                                .fullName(to.getFull_name())
+                                .searchTerm(to.getSearch_term())
+                                .searchRadius(
+                                        to.getSearch_radius() == null
+                                                ? 500
+                                                : to.getSearch_radius()
+                                )
+                                .costing(
+                                        requestBody.getCosting() == null
+                                                ? "auto"
+                                                : requestBody.getCosting()
+                                )
+                                .useFerry(
+                                        requestBody.getUse_ferry() == null
+                                                ? 0.0
+                                                : requestBody.getUse_ferry()
+                                )
+                                .ferryCost(
+                                        requestBody.getFerry_cost() == null
+                                                ? 0
+                                                : requestBody.getFerry_cost()
+                                )
+                                .build();
 
-	        // ---------- Call Valhalla ----------
-	        HttpHeaders headers = new HttpHeaders();
-	        headers.setContentType(MediaType.APPLICATION_JSON);
-	        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-	        headers.set("User-Agent", "Open-Network-App/1.0 (contact: dev@yourdomain.com)");
+                routingSearchHistoryService.createHistroy(historyRequest);
+            }
 
-	        HttpEntity<Object> entity = new HttpEntity<>(valhallaBody, headers);
+            // ---------- Build Valhalla request body ----------
+            Map<String, Object> valhallaBody = new HashMap<>();
+            valhallaBody.put("locations", locations);
+            valhallaBody.put("costing",
+                    requestBody.getCosting() == null ? "auto" : requestBody.getCosting());
+            valhallaBody.put("use_ferry", requestBody.getUse_ferry());
+            valhallaBody.put("ferry_cost", requestBody.getFerry_cost());
 
-	        return restTemplate.exchange(
-	                url,
-	                HttpMethod.POST,
-	                entity,
-	                String.class
-	        );
+            if (requestBody.getAlternates() != null) {
+                valhallaBody.put("alternates", requestBody.getAlternates());
+            }
 
-	    } catch (Exception e) {
-	        return ResponseEntity
-	                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                .body(e.getMessage());
-	    }
-	}
+            // ---------- Call Valhalla ----------
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+            headers.set("User-Agent", "Open-Network-App/1.0 (contact: dev@yourdomain.com)");
+
+            HttpEntity<Object> entity = new HttpEntity<>(valhallaBody, headers);
+
+            ResponseEntity<String> valhallaResponse =
+                    restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+
+            // ---------- Return proper JSON ----------
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode json = mapper.readTree(valhallaResponse.getBody());
+
+            return ResponseEntity
+                    .status(valhallaResponse.getStatusCode())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(json);
+
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of(
+                            "success", false,
+                            "message", e.getMessage()
+                    ));
+        }
+    }
+
 
 	
 	private Map<String, Object> convertLocation(Location location) {
@@ -185,14 +211,13 @@ public class MapServiceImpl implements IMapService {
 	    return map;
 	}
 
-	
 	@Override
 	public ResponseEntity<?> reverse(double lat, double lon, String searchTerm, String token) {
 
 	    try {
 	        String url = String.format(
-	        		"%s/reverse-detailed/%s/%s?size=1",
-	        		mapServiceUrlPelias,
+	                "%s/reverse-detailed/%s/%s?size=1",
+	                mapServiceUrlPelias,
 	                lat,
 	                lon
 	        );
@@ -200,12 +225,12 @@ public class MapServiceImpl implements IMapService {
 	        HttpHeaders headers = new HttpHeaders();
 	        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
 
-	        // REQUIRED by Nominatim
+	        // REQUIRED by Pelias / Nominatim
 	        headers.set("User-Agent", "Open-Network-App/1.0 (contact: dev@yourdomain.com)");
 
 	        HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-	        ResponseEntity<String> response =
+	        ResponseEntity<String> peliasResponse =
 	                restTemplate.exchange(
 	                        url,
 	                        HttpMethod.GET,
@@ -213,29 +238,39 @@ public class MapServiceImpl implements IMapService {
 	                        String.class
 	                );
 
-	        // ✅ Record reverse geocoding search (unchanged)
+	        // ---------- Save search history (safe & non-blocking) ----------
 	        if (token != null && !token.isBlank()
 	                && searchTerm != null && !searchTerm.isBlank()) {
 	            try {
-	                SearchHistoryRequest historyRequest = SearchHistoryRequest.builder()
-	                        .searchTerm(searchTerm)
-	                        .build();
+	                SearchHistoryRequest historyRequest =
+	                        SearchHistoryRequest.builder()
+	                                .searchTerm(searchTerm)
+	                                .build();
 	                searchHistoryService.recordSearch(historyRequest);
 	            } catch (Exception e) {
 	                System.err.println(
-	                        "Failed to record reverse geocoding search in history: " + e.getMessage()
+	                        "Failed to record reverse geocoding history: " + e.getMessage()
 	                );
 	            }
 	        }
 
-	        // ✅ Return API response AS-IS (same as curl)
-	        System.out.println(response);
-	        return response;
+	        // ---------- Convert Pelias response to proper JSON ----------
+	        ObjectMapper mapper = new ObjectMapper();
+	        JsonNode json = mapper.readTree(peliasResponse.getBody());
+
+	        return ResponseEntity
+	                .status(peliasResponse.getStatusCode())
+	                .contentType(MediaType.APPLICATION_JSON)
+	                .body(json);
 
 	    } catch (Exception e) {
 	        return ResponseEntity
 	                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                .body(e.getMessage());
+	                .contentType(MediaType.APPLICATION_JSON)
+	                .body(Map.of(
+	                        "success", false,
+	                        "message", e.getMessage()
+	                ));
 	    }
 	}
 

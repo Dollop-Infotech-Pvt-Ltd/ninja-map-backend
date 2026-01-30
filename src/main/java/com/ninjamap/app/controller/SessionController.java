@@ -45,7 +45,7 @@ public class SessionController {
 	}
 
 	// ========================= LOGOUT ALL SESSIONS =========================
-	@PreAuthorize("hasAuthority('SESSION_MANAGEMENT.LOGOUT_SESSION')")
+//	@PreAuthorize("hasAuthority('SESSION_MANAGEMENT.LOGOUT_SESSION')")
 	@PostMapping("/logout")
 	public ResponseEntity<ApiResponse> logout() {
 		return sessionService.logout();
