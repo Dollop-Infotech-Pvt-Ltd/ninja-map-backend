@@ -92,7 +92,6 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex) {
 		String message = ex.getConstraintViolations().stream().map(v -> v.getPropertyPath() + ": " + v.getMessage())
 				.collect(Collectors.joining("; "));
-		System.out.println(message);
 		return buildErrorResponse(HttpStatus.BAD_REQUEST, message);
 	}
 

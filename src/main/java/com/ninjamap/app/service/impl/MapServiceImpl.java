@@ -147,6 +147,7 @@ public class MapServiceImpl implements IMapService {
 	        // ---------- Build Valhalla request body ----------
 	        Map<String, Object> valhallaBody = new HashMap<>();
 	        valhallaBody.put("locations", locations);
+	        valhallaBody.put("alternates", requestBody.getAlternates());
 	        valhallaBody.put("costing", requestBody.getCosting());
 	        valhallaBody.put("use_ferry", requestBody.getUse_ferry());
 	        valhallaBody.put("ferry_cost", requestBody.getFerry_cost());
