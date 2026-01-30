@@ -52,7 +52,7 @@ public class PlaceServiceImpl implements IPlaceService {
 
 		Place place;
 			// Check for duplicate custom place
-			if (placeRepository.existsByUserIdAndNameIgnoreCase(userId, placeRequest.getName())) {
+			if (placeRepository.existsByUserIdAndNameIgnoreCaseAndIsDeletedFalse(userId, placeRequest.getName())) {
 				throw new BadRequestException(AppConstants.PLACE_ALREADY_EXIST);
 			}
 

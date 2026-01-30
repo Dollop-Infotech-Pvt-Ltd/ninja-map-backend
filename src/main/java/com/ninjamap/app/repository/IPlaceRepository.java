@@ -40,7 +40,7 @@ public interface IPlaceRepository extends JpaRepository<Place, String> {
 	/**
 	 * Check if user already has a custom place with the same name
 	 */
-	boolean existsByUserIdAndNameIgnoreCase(@Param("userId") String userId, @Param("name") String name);
+	boolean existsByUserIdAndNameIgnoreCaseAndIsDeletedFalse(@Param("userId") String userId, @Param("name") String name);
 	
 	
 	@Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Place p WHERE p.userId = :userId AND p.name = :name  AND p.isDeleted = false  ANd p.id !=:placeId")
