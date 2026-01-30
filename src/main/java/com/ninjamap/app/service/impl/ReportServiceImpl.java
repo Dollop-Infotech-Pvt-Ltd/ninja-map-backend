@@ -6,13 +6,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+
 import com.ninjamap.app.enums.ReportSeverity;
 import com.ninjamap.app.enums.ReportStatus;
 import com.ninjamap.app.enums.ReportType;
@@ -20,6 +21,7 @@ import com.ninjamap.app.exception.BadRequestException;
 import com.ninjamap.app.kafka.ReportCommentEvent;
 import com.ninjamap.app.model.Report;
 import com.ninjamap.app.model.ReportComment;
+import com.ninjamap.app.model.User;
 import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.request.ReportCommentRequest;
 import com.ninjamap.app.payload.request.ReportRequest;
@@ -32,6 +34,7 @@ import com.ninjamap.app.repository.IReportRepository;
 import com.ninjamap.app.service.ICloudinaryService;
 import com.ninjamap.app.service.IReportService;
 import com.ninjamap.app.service.IUserService;
+import com.ninjamap.app.utils.StatusTransitionValidator;
 import com.ninjamap.app.utils.constants.AppConstants;
 
 @Service
@@ -48,6 +51,9 @@ public class ReportServiceImpl implements IReportService {
 
 	@Autowired
 	private ICloudinaryService cloudinaryService;
+
+	@Autowired
+	private StatusTransitionValidator statusTransitionValidator;
 
 	private static final long MAX_FILE_SIZE = 5242880;
 	private static final String[] ALLOWED_FILE_TYPES = { "image/jpeg", "image/png", "image/gif" ,"image/svg" };
@@ -82,7 +88,11 @@ public class ReportServiceImpl implements IReportService {
 	}
 	
 	private ReportListItemResponse convertReportToResponse(Report report) {
-		return ReportListItemResponse.builder()
+		
+	
+		
+		
+		 ReportListItemResponse response =  ReportListItemResponse.builder()
 				.id(report.getId())
 				.reportType(report.getReportType())
 				.status(report.getStatus())
@@ -91,11 +101,22 @@ public class ReportServiceImpl implements IReportService {
 				.latitude(report.getLatitude())
 				.longitude(report.getLongitude())
 				.address(report.getAddress())
-				.userId(report.getUserId())
 				.createdDate(report.getCreatedDate())
 				.updatedDate(report.getUpdatedDate())
 				.reportPicture(report.getReportPicture())
 				.build();
+		 
+
+			if(Boolean.FALSE.equals(report.getHideName())) {
+				
+				User user = this.userService.getUserByIdAndIsActive(report.getUserId(), Boolean.TRUE);
+				
+				response.setUserId(report.getUserId());
+				response.setFullName(user.getPersonalInfo().getFullName());
+				response.setProfilePicture(user.getPersonalInfo().getProfilePicture());
+			}
+		 
+		 return response;
 	}
 	
 	private Report convertRequestToReport(ReportRequest reportRequest) {
@@ -237,12 +258,6 @@ public class ReportServiceImpl implements IReportService {
 						.build();
 			}
 
-			// Calculate offset for pagination
-			int offset = paginationRequest.getPageNumber() * paginationRequest.getPageSize();
-			int limit = paginationRequest.getPageSize();
-			
-			
-
 			Pageable pageable = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getPageSize());
 
 			
@@ -316,6 +331,91 @@ public class ReportServiceImpl implements IReportService {
 			return "Report other map-related issues";
 		default:
 			return "Report issue";
+		}
+	}
+
+	@Override
+	public ApiResponse updateReportStatus(String reportId, ReportStatus newStatus, String userId) {
+		try {
+			// Validate report exists
+			Report report = reportRepository.findById(reportId)
+					.orElseThrow(() -> new BadRequestException(AppConstants.REPORT_NOT_FOUND));
+
+			// Validate status transition
+			if (!statusTransitionValidator.isValidTransition(report.getStatus(), newStatus)) {
+				String errorMessage = statusTransitionValidator.getTransitionErrorMessage(report.getStatus(), newStatus);
+				return ApiResponse.builder()
+						.statusCode(HttpStatus.BAD_REQUEST.value())
+						.message(errorMessage)
+						.data(null)
+						.build();
+			}
+
+			// Update report status and audit fields
+			report.setStatus(newStatus);
+			report.setUpdatedBy(userId);
+			report.setUpdatedDate(LocalDateTime.now());
+
+			// If transitioning to RESOLVED, set resolvedAt timestamp
+			if (newStatus == ReportStatus.RESOLVED) {
+				report.setResolvedAt(LocalDateTime.now());
+			}
+
+			Report updatedReport = reportRepository.save(report);
+
+			return ApiResponse.builder()
+					.statusCode(HttpStatus.OK.value())
+					.message("Report status updated successfully")
+					.data(convertReportToResponse(updatedReport))
+					.build();
+
+		} catch (BadRequestException e) {
+			return ApiResponse.builder()
+					.statusCode(HttpStatus.NOT_FOUND.value())
+					.message(e.getMessage())
+					.data(null)
+					.build();
+		} catch (Exception e) {
+			return ApiResponse.builder()
+					.statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+					.message("Error updating report status: " + e.getMessage())
+					.data(null)
+					.build();
+		}
+	}
+
+	@Override
+	public ApiResponse getReportsByStatus(ReportStatus status, PaginationRequest paginationRequest) {
+		try {
+			// Validate status parameter
+			if (status == null) {
+				return ApiResponse.builder()
+						.statusCode(HttpStatus.BAD_REQUEST.value())
+						.message("Status filter is required")
+						.data(null)
+						.build();
+			}
+
+			Pageable pageable = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getPageSize());
+
+			// Query reports by status
+			Page<Report> reports = reportRepository.findByStatus(status, pageable);
+
+			// Convert to response DTOs
+			Page<ReportListItemResponse> reportResponses = reports.map(this::convertReportToResponse);
+
+			return ApiResponse.builder()
+					.statusCode(HttpStatus.OK.value())
+					.message("Reports retrieved successfully")
+					.data(new PaginatedResponse<>(reportResponses))
+					.build();
+
+		} catch (Exception e) {
+			return ApiResponse.builder()
+					.statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+					.message("Error retrieving reports by status: " + e.getMessage())
+					.data(null)
+					.build();
 		}
 	}
 

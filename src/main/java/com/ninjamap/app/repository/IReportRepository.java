@@ -126,19 +126,32 @@ public interface IReportRepository extends JpaRepository<Report, String> {
 		    value = """
 		        SELECT r.* 
 		        FROM reports r
-		        WHERE (
-		            6371 * acos(
-		                cos(radians(:latitude)) * cos(radians(r.latitude)) *
-		                cos(radians(r.longitude) - radians(:longitude)) +
-		                sin(radians(:latitude)) * sin(radians(r.latitude))
-		            )
-		        ) <= :radiusKm
+		        WHERE r.status = 'RESOLVED'
+		          AND (
+		              6371 * acos(
+		                  LEAST(
+		                      1,
+		                      GREATEST(
+		                          -1,
+		                          cos(radians(:latitude)) * cos(radians(r.latitude)) *
+		                          cos(radians(r.longitude) - radians(:longitude)) +
+		                          sin(radians(:latitude)) * sin(radians(r.latitude))
+		                      )
+		                  )
+		              )
+		          ) <= :radiusKm
 		        ORDER BY
 		            (
 		                6371 * acos(
-		                    cos(radians(:latitude)) * cos(radians(r.latitude)) *
-		                    cos(radians(r.longitude) - radians(:longitude)) +
-		                    sin(radians(:latitude)) * sin(radians(r.latitude))
+		                    LEAST(
+		                        1,
+		                        GREATEST(
+		                            -1,
+		                            cos(radians(:latitude)) * cos(radians(r.latitude)) *
+		                            cos(radians(r.longitude) - radians(:longitude)) +
+		                            sin(radians(:latitude)) * sin(radians(r.latitude))
+		                        )
+		                    )
 		                )
 		            ) ASC,
 		            r.created_date DESC
@@ -146,13 +159,20 @@ public interface IReportRepository extends JpaRepository<Report, String> {
 		    countQuery = """
 		        SELECT COUNT(*)
 		        FROM reports r
-		        WHERE (
-		            6371 * acos(
-		                cos(radians(:latitude)) * cos(radians(r.latitude)) *
-		                cos(radians(r.longitude) - radians(:longitude)) +
-		                sin(radians(:latitude)) * sin(radians(r.latitude))
-		            )
-		        ) <= :radiusKm
+		        WHERE r.status = 'RESOLVED'
+		          AND (
+		              6371 * acos(
+		                  LEAST(
+		                      1,
+		                      GREATEST(
+		                          -1,
+		                          cos(radians(:latitude)) * cos(radians(r.latitude)) *
+		                          cos(radians(r.longitude) - radians(:longitude)) +
+		                          sin(radians(:latitude)) * sin(radians(r.latitude))
+		                      )
+		                  )
+		              )
+		          ) <= :radiusKm
 		        """,
 		    nativeQuery = true
 		)
@@ -162,5 +182,6 @@ public interface IReportRepository extends JpaRepository<Report, String> {
 		        @Param("radiusKm") Double radiusKm,
 		        Pageable pageable
 		);
+
 
 }

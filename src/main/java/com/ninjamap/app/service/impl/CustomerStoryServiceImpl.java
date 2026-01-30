@@ -94,7 +94,7 @@ public class CustomerStoryServiceImpl implements com.ninjamap.app.service.ICusto
 		}
 	    else {
 	    	StoryCategory storyCategory = StoryCategory.valueOf(category.toUpperCase());
-	    	storiesPage = storyRepository.findByIsDeletedFalseAndIsActiveTrueAndCategoryOrderByCreatedDateDesc(storyCategory, pageable);
+	    	storiesPage = storyRepository.findByIsDeletedFalseAndIsActiveTrueAndIsApprovedTrueAndCategoryOrderByCreatedDateDesc(storyCategory, pageable);
 		}
 		List<CustomerStoryResponse> responses = storiesPage.getContent()
 				.stream()

@@ -20,7 +20,7 @@ public interface ICustomerStoryRepository extends JpaRepository<CustomerStory, S
 
 	Page<CustomerStory> findByIsDeletedFalseAndIsActiveTrueAndIsApprovedTrueOrderByCreatedDateDesc(Pageable pageable);
 
-	Page<CustomerStory> findByIsDeletedFalseAndIsActiveTrueAndCategoryOrderByCreatedDateDesc(StoryCategory category,Pageable pageable);
+	Page<CustomerStory> findByIsDeletedFalseAndIsActiveTrueAndIsApprovedTrueAndCategoryOrderByCreatedDateDesc(StoryCategory category,Pageable pageable);
 
 	Page<CustomerStory> findByIsDeletedFalseAndIsActiveTrueAndTitleContainingIgnoreCaseOrderByCreatedDateDesc(
 			String title, Pageable pageable);
