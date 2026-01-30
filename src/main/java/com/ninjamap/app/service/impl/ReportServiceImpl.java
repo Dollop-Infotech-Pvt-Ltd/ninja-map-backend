@@ -20,6 +20,7 @@ import com.ninjamap.app.exception.BadRequestException;
 import com.ninjamap.app.kafka.ReportCommentEvent;
 import com.ninjamap.app.model.Report;
 import com.ninjamap.app.model.ReportComment;
+import com.ninjamap.app.model.User;
 import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.request.ReportCommentRequest;
 import com.ninjamap.app.payload.request.ReportRequest;
@@ -82,7 +83,11 @@ public class ReportServiceImpl implements IReportService {
 	}
 	
 	private ReportListItemResponse convertReportToResponse(Report report) {
-		return ReportListItemResponse.builder()
+		
+	
+		
+		
+		 ReportListItemResponse response =  ReportListItemResponse.builder()
 				.id(report.getId())
 				.reportType(report.getReportType())
 				.status(report.getStatus())
@@ -91,11 +96,22 @@ public class ReportServiceImpl implements IReportService {
 				.latitude(report.getLatitude())
 				.longitude(report.getLongitude())
 				.address(report.getAddress())
-				.userId(report.getUserId())
 				.createdDate(report.getCreatedDate())
 				.updatedDate(report.getUpdatedDate())
 				.reportPicture(report.getReportPicture())
 				.build();
+		 
+
+			if(Boolean.FALSE.equals(report.getHideName())) {
+				
+				User user = this.userService.getUserByIdAndIsActive(report.getUserId(), Boolean.TRUE);
+				
+				response.setUserId(report.getUserId());
+				response.setFullName(user.getPersonalInfo().getFullName());
+				response.setProfilePicture(user.getPersonalInfo().getProfilePicture());
+			}
+		 
+		 return response;
 	}
 	
 	private Report convertRequestToReport(ReportRequest reportRequest) {
@@ -236,12 +252,6 @@ public class ReportServiceImpl implements IReportService {
 						.data(null)
 						.build();
 			}
-
-			// Calculate offset for pagination
-			int offset = paginationRequest.getPageNumber() * paginationRequest.getPageSize();
-			int limit = paginationRequest.getPageSize();
-			
-			
 
 			Pageable pageable = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getPageSize());
 

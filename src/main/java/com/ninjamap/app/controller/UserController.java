@@ -42,7 +42,7 @@ public class UserController {
 	}
 
 	// ========================= GET USER BY ID =========================
-	@PreAuthorize("hasAuthority('USER_MANAGEMENT.VIEW_USERS')")
+//	@PreAuthorize("hasAuthority('USER_MANAGEMENT.VIEW_USERS')")
 	@GetMapping("/get")
 	public ResponseEntity<?> getUser(
 			@RequestParam(name = AppConstants.ID) @UUIDValidator(message = ValidationConstants.INVALID_UUID) String id,

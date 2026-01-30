@@ -24,6 +24,8 @@ public class ReportListItemResponse {
     private Double longitude;
     private String address;
     private String userId;
+    private String fullName;
+    private String profilePicture;
     private String reportPicture;
     private LocalDateTime createdDate;
     private LocalDateTime updatedDate;
