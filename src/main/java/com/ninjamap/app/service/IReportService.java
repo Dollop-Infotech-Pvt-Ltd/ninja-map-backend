@@ -1,5 +1,6 @@
 package com.ninjamap.app.service;
 
+import com.ninjamap.app.enums.ReportStatus;
 import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.request.ReportCommentRequest;
 import com.ninjamap.app.payload.request.ReportRequest;
@@ -44,5 +45,24 @@ public interface IReportService {
 	 */
 	ApiResponse getReportsByLocation(Double latitude, Double longitude, 
 			PaginationRequest paginationRequest, String status, String severity);
+
+	/**
+	 * Update a report's status with validation and audit trail
+	 * 
+	 * @param reportId The ID of the report to update
+	 * @param newStatus The new status to transition to
+	 * @param userId The ID of the user making the update
+	 * @return ApiResponse containing the updated report or error details
+	 */
+	ApiResponse updateReportStatus(String reportId, ReportStatus newStatus, String userId);
+
+	/**
+	 * Get reports filtered by status with pagination
+	 * 
+	 * @param status The report status to filter by
+	 * @param paginationRequest Pagination parameters (pageSize, pageNumber, sortDirection, sortKey)
+	 * @return ApiResponse containing paginated reports matching the status filter
+	 */
+	ApiResponse getReportsByStatus(ReportStatus status, PaginationRequest paginationRequest);
 
 }

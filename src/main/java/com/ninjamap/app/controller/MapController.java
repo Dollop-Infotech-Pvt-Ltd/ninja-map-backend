@@ -3,6 +3,7 @@ import org.apache.http.impl.client.RoutedRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/map")
 @RequiredArgsConstructor
 @Validated
+@CrossOrigin("*")
 public class MapController {
 
 	@Autowired

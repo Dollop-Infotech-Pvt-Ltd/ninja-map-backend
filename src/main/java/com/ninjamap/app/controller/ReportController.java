@@ -6,15 +6,19 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.ninjamap.app.enums.ReportStatus;
 import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.request.ReportCommentRequest;
 import com.ninjamap.app.payload.request.ReportRequest;
+import com.ninjamap.app.payload.request.StatusUpdateRequest;
 import com.ninjamap.app.payload.response.ApiResponse;
 import com.ninjamap.app.service.IReportService;
+import com.ninjamap.app.service.IUserService;
 import com.ninjamap.app.utils.constants.AppConstants;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +31,9 @@ public class ReportController {
 
 	@Autowired
 	private IReportService reportService;
+
+	@Autowired
+	private IUserService userService;
 
 	/**
 	 * Submit a new report
@@ -102,6 +109,58 @@ public class ReportController {
 		return new ResponseEntity<>(
 				reportService.getReportsByLocation(latitude, longitude, paginationRequest, status, severity),
 				HttpStatus.OK);
+	}
+
+	/**
+	 * Update a report's status with authorization checks
+	 */
+	@PutMapping("/{id}/status")
+	public ResponseEntity<ApiResponse> updateReportStatus(
+			@PathVariable String id,
+			@Valid @RequestBody StatusUpdateRequest statusUpdateRequest) {
+		
+		// Get current user for authorization check
+		String userId = userService.getCurrectUserFromToken().getId();
+		
+		// Call service to update status
+		ApiResponse response = reportService.updateReportStatus(id, statusUpdateRequest.getNewStatus(), userId);
+		
+		// Return appropriate HTTP status based on response
+		HttpStatus status = HttpStatus.valueOf(response.getStatusCode());
+		return new ResponseEntity<>(response, status);
+	}
+
+	/**
+	 * Get reports filtered by status with pagination
+	 */
+	@GetMapping("/filter/status")
+	public ResponseEntity<ApiResponse> getReportsByStatus(
+			@RequestParam(name = "status") String statusParam,
+			@RequestParam(name = AppConstants.PAGE_SIZE, defaultValue = "10") Integer pageSize,
+			@RequestParam(name = AppConstants.PAGE_NUMBER, defaultValue = "0") Integer pageNumber,
+			@RequestParam(name = AppConstants.SORT_DIRECTION, defaultValue = AppConstants.DESC, required = false) String sortDirection,
+			@RequestParam(name = AppConstants.SORT_KEY, required = false) String sortKey) {
+		
+		try {
+			// Parse status parameter
+			ReportStatus status = ReportStatus.valueOf(statusParam.toUpperCase());
+			
+			PaginationRequest paginationRequest = PaginationRequest.builder()
+					.pageSize(pageSize)
+					.pageNumber(pageNumber)
+					.sortDirection(sortDirection)
+					.sortKey(sortKey)
+					.build();
+			
+			return new ResponseEntity<>(reportService.getReportsByStatus(status, paginationRequest), HttpStatus.OK);
+		} catch (IllegalArgumentException e) {
+			return new ResponseEntity<>(
+					ApiResponse.builder()
+						.statusCode(HttpStatus.BAD_REQUEST.value())
+						.message("Invalid status value: " + statusParam)
+						.build(),
+					HttpStatus.BAD_REQUEST);
+		}
 	}
 
 	

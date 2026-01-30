@@ -77,4 +77,7 @@ public class Report extends AuditData {
 
 	@Column
 	private java.time.LocalDateTime resolvedAt;
+
+	@Column
+	private String updatedBy;
 }
