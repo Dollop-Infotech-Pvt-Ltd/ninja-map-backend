@@ -35,8 +35,7 @@ public class SessionController {
 		return ResponseEntity.ok(sessionService.getActiveSessions());
 	}
 
-	// ========================= GET ACCESS TOKEN BY SESSION ID
-	// =========================
+	// ========================= GET ACCESS TOKEN BY SESSION ID =========================
 	@PreAuthorize("hasAuthority('SESSION_MANAGEMENT.VIEW_SESSION')")
 	@GetMapping("/get-access-token")
 	public ResponseEntity<ApiResponse> getTokenBySessionId(

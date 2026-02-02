@@ -25,6 +25,7 @@ import com.ninjamap.app.model.User;
 import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.request.ReportCommentRequest;
 import com.ninjamap.app.payload.request.ReportRequest;
+import com.ninjamap.app.payload.request.StatusUpdateRequest;
 import com.ninjamap.app.payload.response.ApiResponse;
 import com.ninjamap.app.payload.response.PaginatedResponse;
 import com.ninjamap.app.payload.response.ReportCommentResponse;
@@ -335,15 +336,15 @@ public class ReportServiceImpl implements IReportService {
 	}
 
 	@Override
-	public ApiResponse updateReportStatus(String reportId, ReportStatus newStatus, String userId) {
+	public ApiResponse updateReportStatus(StatusUpdateRequest newStatus, String userId) {
 		try {
 			// Validate report exists
-			Report report = reportRepository.findById(reportId)
+			Report report = reportRepository.findById(newStatus.getReportId())
 					.orElseThrow(() -> new BadRequestException(AppConstants.REPORT_NOT_FOUND));
 
 			// Validate status transition
-			if (!statusTransitionValidator.isValidTransition(report.getStatus(), newStatus)) {
-				String errorMessage = statusTransitionValidator.getTransitionErrorMessage(report.getStatus(), newStatus);
+			if (!statusTransitionValidator.isValidTransition(report.getStatus(), newStatus.getNewStatus())) {
+				String errorMessage = statusTransitionValidator.getTransitionErrorMessage(report.getStatus(), newStatus.getNewStatus());
 				return ApiResponse.builder()
 						.statusCode(HttpStatus.BAD_REQUEST.value())
 						.message(errorMessage)
@@ -352,12 +353,12 @@ public class ReportServiceImpl implements IReportService {
 			}
 
 			// Update report status and audit fields
-			report.setStatus(newStatus);
+			report.setStatus(newStatus.getNewStatus());
 			report.setUpdatedBy(userId);
 			report.setUpdatedDate(LocalDateTime.now());
 
 			// If transitioning to RESOLVED, set resolvedAt timestamp
-			if (newStatus == ReportStatus.RESOLVED) {
+			if (newStatus.getNewStatus() == ReportStatus.RESOLVED) {
 				report.setResolvedAt(LocalDateTime.now());
 			}
 

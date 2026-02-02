@@ -1,7 +1,5 @@
 package com.ninjamap.app.controller;
-
 import java.util.List;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -13,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.ninjamap.app.payload.request.PermissionRequest;
 import com.ninjamap.app.payload.response.ApiResponse;
 import com.ninjamap.app.payload.response.PermissionResponse;
@@ -21,7 +18,6 @@ import com.ninjamap.app.service.IPermissionService;
 import com.ninjamap.app.utils.annotations.UUIDValidator;
 import com.ninjamap.app.utils.constants.AppConstants;
 import com.ninjamap.app.utils.constants.ValidationConstants;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 

@@ -57,4 +57,8 @@ public class MapController {
 			){
 		return this.mapService.reverse(lat,lon,searchTerm,Authorization);
 	}
+	
+	public ResponseEntity<?> createCustomPlaces(){
+		return null;
+	}
 }
