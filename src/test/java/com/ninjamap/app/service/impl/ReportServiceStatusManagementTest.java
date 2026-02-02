@@ -23,6 +23,7 @@ import com.ninjamap.app.enums.ReportStatus;
 import com.ninjamap.app.enums.ReportType;
 import com.ninjamap.app.model.Report;
 import com.ninjamap.app.payload.request.PaginationRequest;
+import com.ninjamap.app.payload.request.StatusUpdateRequest;
 import com.ninjamap.app.payload.response.ApiResponse;
 import com.ninjamap.app.payload.response.PaginatedResponse;
 import com.ninjamap.app.repository.IReportCommentRepository;
@@ -55,6 +56,7 @@ class ReportServiceStatusManagementTest {
 	private Report testReport;
 	private String reportId;
 	private String userId;
+	private StatusUpdateRequest statusUpdateRequest;
 
 	@BeforeEach
 	void setUp() {
@@ -86,7 +88,7 @@ class ReportServiceStatusManagementTest {
 		when(statusTransitionValidator.isValidTransition(ReportStatus.PENDING, newStatus)).thenReturn(true);
 		when(reportRepository.save(any(Report.class))).thenReturn(testReport);
 
-		ApiResponse response = reportService.updateReportStatus(reportId, newStatus, userId);
+		ApiResponse response = reportService.updateReportStatus(statusUpdateRequest, userId);
 
 		assertEquals(HttpStatus.OK.value(), response.getStatusCode());
 		assertEquals("Report status updated successfully", response.getMessage());
@@ -103,7 +105,7 @@ class ReportServiceStatusManagementTest {
 		when(statusTransitionValidator.getTransitionErrorMessage(ReportStatus.PENDING, newStatus))
 				.thenReturn("Cannot transition from PENDING to ARCHIVED");
 
-		ApiResponse response = reportService.updateReportStatus(reportId, newStatus, userId);
+		ApiResponse response = reportService.updateReportStatus(statusUpdateRequest, userId);
 
 		assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode());
 		assertEquals("Cannot transition from PENDING to ARCHIVED", response.getMessage());
@@ -117,7 +119,7 @@ class ReportServiceStatusManagementTest {
 		ReportStatus newStatus = ReportStatus.UNDER_REVIEW;
 		when(reportRepository.findById(reportId)).thenReturn(Optional.empty());
 
-		ApiResponse response = reportService.updateReportStatus(reportId, newStatus, userId);
+		ApiResponse response = reportService.updateReportStatus(statusUpdateRequest, userId);
 
 		assertEquals(HttpStatus.NOT_FOUND.value(), response.getStatusCode());
 		assertEquals("Report not found", response.getMessage());
