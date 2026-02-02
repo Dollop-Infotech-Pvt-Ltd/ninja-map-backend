@@ -114,16 +114,15 @@ public class ReportController {
 	/**
 	 * Update a report's status with authorization checks
 	 */
-	@PutMapping("/{id}/status")
+	@PostMapping("/status")
 	public ResponseEntity<ApiResponse> updateReportStatus(
-			@PathVariable String id,
 			@Valid @RequestBody StatusUpdateRequest statusUpdateRequest) {
 		
 		// Get current user for authorization check
 		String userId = userService.getCurrectUserFromToken().getId();
 		
 		// Call service to update status
-		ApiResponse response = reportService.updateReportStatus(id, statusUpdateRequest.getNewStatus(), userId);
+		ApiResponse response = reportService.updateReportStatus(statusUpdateRequest , userId);
 		
 		// Return appropriate HTTP status based on response
 		HttpStatus status = HttpStatus.valueOf(response.getStatusCode());

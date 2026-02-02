@@ -4,6 +4,7 @@ import com.ninjamap.app.enums.ReportStatus;
 import com.ninjamap.app.payload.request.PaginationRequest;
 import com.ninjamap.app.payload.request.ReportCommentRequest;
 import com.ninjamap.app.payload.request.ReportRequest;
+import com.ninjamap.app.payload.request.StatusUpdateRequest;
 import com.ninjamap.app.payload.response.ApiResponse;
 
 public interface IReportService {
@@ -54,7 +55,7 @@ public interface IReportService {
 	 * @param userId The ID of the user making the update
 	 * @return ApiResponse containing the updated report or error details
 	 */
-	ApiResponse updateReportStatus(String reportId, ReportStatus newStatus, String userId);
+	ApiResponse updateReportStatus( StatusUpdateRequest newStatus, String userId);
 
 	/**
 	 * Get reports filtered by status with pagination
